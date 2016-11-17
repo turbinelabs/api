@@ -1,4 +1,4 @@
-package handler
+package http
 
 import (
 	"errors"
@@ -54,7 +54,7 @@ func TestWriteEnvelopeNoContent(t *testing.T) {
 func TestWriteEnvelopeBadResult(t *testing.T) {
 	rrw, rec := getRRWTestWriter(t)
 	rrw.WriteEnvelope(nil, poisonRRWStruct{})
-	wantBody := `{"error": {"message":"failed to encode response object: '{Error:<nil> Payload:whelp}'; error was: 'json: error calling MarshalJSON for type handler.poisonRRWStruct: w\"at'","code":"UnknownEncodingCode"}}`
+	wantBody := `{"error": {"message":"failed to encode response object: '{Error:<nil> Payload:whelp}'; error was: 'json: error calling MarshalJSON for type http.poisonRRWStruct: w\"at'","code":"UnknownEncodingCode"}}`
 	rec.AssertBody(wantBody)
 	rec.AssertStatus(http.StatusInternalServerError)
 	rec.AssertHeader("content-type", "application/json")

@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/turbinelabs/api"
+	apihttp "github.com/turbinelabs/api/http"
 	"github.com/turbinelabs/api/queryargs"
-	tbnhttp "github.com/turbinelabs/client/http"
 )
 
 func (hc *httpClusterV1) AddInstance(
@@ -28,7 +28,7 @@ func (hc *httpClusterV1) AddInstance(
 	reqFn := func() (*http.Request, error) {
 		return hc.post(
 			fmt.Sprintf("/%s/instance", url.QueryEscape(string(clusterKey))),
-			tbnhttp.Params{queryargs.Checksum: checksum.Checksum},
+			apihttp.Params{queryargs.Checksum: checksum.Checksum},
 			encoded)
 	}
 	response := api.Cluster{}
@@ -51,7 +51,7 @@ func (hc *httpClusterV1) RemoveInstance(
 	instPath := fmt.Sprintf("/%s/instance/%s:%s", ckey, host, port)
 
 	reqFn := func() (*http.Request, error) {
-		return hc.delete(instPath, tbnhttp.Params{queryargs.Checksum: checksum.Checksum})
+		return hc.delete(instPath, apihttp.Params{queryargs.Checksum: checksum.Checksum})
 	}
 	response := api.Cluster{}
 

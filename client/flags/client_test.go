@@ -8,13 +8,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	clienthttp "github.com/turbinelabs/client/http"
+	apihttp "github.com/turbinelabs/api/http"
 	"github.com/turbinelabs/test/assert"
 )
 
 var (
 	fakeClient      = &http.Client{}
-	fakeEndpoint, _ = clienthttp.NewEndpoint(clienthttp.HTTPS, "localhost", 1234)
+	fakeEndpoint, _ = apihttp.NewEndpoint(apihttp.HTTPS, "localhost", 1234)
 )
 
 func TestNewClientFromFlags(t *testing.T) {
@@ -62,7 +62,7 @@ func TestClientFromFlagsMakeError(t *testing.T) {
 
 	mockApiConfig := NewMockAPIConfigFromFlags(ctrl)
 
-	mockApiConfig.EXPECT().MakeEndpoint().Return(clienthttp.Endpoint{}, errors.New("nope"))
+	mockApiConfig.EXPECT().MakeEndpoint().Return(apihttp.Endpoint{}, errors.New("nope"))
 
 	ff := &clientFromFlags{mockApiConfig}
 

@@ -5,7 +5,7 @@ package flags
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	http0 "github.com/turbinelabs/client/http"
+	http0 "github.com/turbinelabs/api/http"
 	http "net/http"
 )
 

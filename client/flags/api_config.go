@@ -1,11 +1,11 @@
 package flags
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "clienthttp=$TBN_HOME/client/http/fromflags.go" -imports http=net/http
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=$TBN_HOME/api/http/fromflags.go" -imports http=net/http
 
 import (
 	"flag"
 
-	clienthttp "github.com/turbinelabs/client/http"
+	apihttp "github.com/turbinelabs/api/http"
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 )
 
@@ -13,7 +13,7 @@ import (
 // API authentication key, host, port and SSL settings for the Turbine
 // Labs API.
 type APIConfigFromFlags interface {
-	clienthttp.FromFlags
+	apihttp.FromFlags
 
 	// APIKey Returns the API authentication key from the command line.
 	// Equivalent to calling APIAuthKeyFromFlags().Make()
@@ -58,13 +58,13 @@ func NewPrefixedAPIConfigFromFlags(
 		ff.apiKeyConfig = NewPrefixedAPIAuthKeyFromFlags(flagset, ff.requiredFlag)
 	}
 
-	ff.FromFlags = clienthttp.NewFromFlags("api.turbinelabs.io", flagset)
+	ff.FromFlags = apihttp.NewFromFlags("api.turbinelabs.io", flagset)
 
 	return ff
 }
 
 type apiConfigFromFlags struct {
-	clienthttp.FromFlags
+	apihttp.FromFlags
 	apiKeyConfig APIAuthKeyFromFlags
 	requiredFlag bool
 }

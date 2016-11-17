@@ -13,7 +13,6 @@ import (
 	apihttp "github.com/turbinelabs/api/http"
 	"github.com/turbinelabs/api/http/envelope"
 	"github.com/turbinelabs/api/service"
-	tbnhttp "github.com/turbinelabs/client/http"
 	"github.com/turbinelabs/test/assert"
 )
 
@@ -77,15 +76,15 @@ func stripURLPrefix(url, prefix string) string {
 	return url[len(prefix):]
 }
 
-func newTestEndpoint(host string, port int) tbnhttp.Endpoint {
-	e, err := tbnhttp.NewEndpoint(tbnhttp.HTTP, host, port)
+func newTestEndpoint(host string, port int) apihttp.Endpoint {
+	e, err := apihttp.NewEndpoint(apihttp.HTTP, host, port)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return e
 }
 
-func newTestEndpointFromServer(server *httptest.Server) tbnhttp.Endpoint {
+func newTestEndpointFromServer(server *httptest.Server) apihttp.Endpoint {
 	u, e := url.Parse(server.URL)
 	if e != nil {
 		log.Fatal(e)

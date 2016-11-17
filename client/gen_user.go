@@ -12,16 +12,16 @@ import (
 	"strings"
 
 	"github.com/turbinelabs/api"
+	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
 	"github.com/turbinelabs/api/queryargs"
 	"github.com/turbinelabs/api/service"
-	tbnhttp "github.com/turbinelabs/client/http"
 )
 
 type httpUserV1 struct {
-	dest tbnhttp.Endpoint
+	dest apihttp.Endpoint
 
-	requestHandler tbnhttp.RequestHandler
+	requestHandler apihttp.RequestHandler
 }
 
 // Construct a new HTTP backed User API implementation.
@@ -31,7 +31,7 @@ type httpUserV1 struct {
 //	apiKey - key used to sign our API requests; cf. NewService
 //	client - HTTP client used to make these requests; must NOT be nil
 func NewUserV1(
-	dest tbnhttp.Endpoint,
+	dest apihttp.Endpoint,
 	apiKey string,
 	client *http.Client,
 ) (*httpUserV1, error) {
@@ -41,7 +41,7 @@ func NewUserV1(
 		// of some cool go internals
 		return nil, fmt.Errorf("Attempting to configure User with nil *http.Client")
 	}
-	return &httpUserV1{dest, tbnhttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
+	return &httpUserV1{dest, apihttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
 }
 
 // creates a user-scoped version of the specified path
@@ -54,7 +54,7 @@ func (hc *httpUserV1) path(p string) string {
 func (hc *httpUserV1) request(
 	method httpMethod,
 	path string,
-	params tbnhttp.Params,
+	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
 	rdr := strings.NewReader(body)
@@ -67,13 +67,13 @@ func (hc *httpUserV1) request(
 	return req, nil
 }
 
-func (hc *httpUserV1) get(path string, params tbnhttp.Params) (*http.Request, error) {
+func (hc *httpUserV1) get(path string, params apihttp.Params) (*http.Request, error) {
 	return hc.request(mGET, path, params, "")
 }
 
 func (hc *httpUserV1) post(
 	path string,
-	params tbnhttp.Params,
+	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
 	return hc.request(mPOST, path, params, body)
@@ -81,18 +81,18 @@ func (hc *httpUserV1) post(
 
 func (hc *httpUserV1) put(
 	path string,
-	params tbnhttp.Params,
+	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
 	return hc.request(mPUT, path, params, body)
 }
 
-func (hc *httpUserV1) delete(path string, params tbnhttp.Params) (*http.Request, error) {
+func (hc *httpUserV1) delete(path string, params apihttp.Params) (*http.Request, error) {
 	return hc.request(mDELETE, path, params, "")
 }
 
 func (hc *httpUserV1) Index(filters ...service.UserFilter) (api.Users, error) {
-	params := tbnhttp.Params{}
+	params := apihttp.Params{}
 
 	if filters != nil && len(filters) != 0 {
 		filterBytes, e := json.Marshal(filters)
@@ -179,7 +179,7 @@ func (hc *httpUserV1) Delete(
 	reqFn := func() (*http.Request, error) {
 		return hc.delete(
 			"/"+url.QueryEscape(string(userKey)),
-			tbnhttp.Params{queryargs.Checksum: checksum.Checksum},
+			apihttp.Params{queryargs.Checksum: checksum.Checksum},
 		)
 	}
 

@@ -12,16 +12,16 @@ import (
 	"strings"
 
 	"github.com/turbinelabs/api"
+	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
 	"github.com/turbinelabs/api/queryargs"
 	"github.com/turbinelabs/api/service"
-	tbnhttp "github.com/turbinelabs/client/http"
 )
 
 type httpProxyV1 struct {
-	dest tbnhttp.Endpoint
+	dest apihttp.Endpoint
 
-	requestHandler tbnhttp.RequestHandler
+	requestHandler apihttp.RequestHandler
 }
 
 // Construct a new HTTP backed Proxy API implementation.
@@ -31,7 +31,7 @@ type httpProxyV1 struct {
 //	apiKey - key used to sign our API requests; cf. NewService
 //	client - HTTP client used to make these requests; must NOT be nil
 func NewProxyV1(
-	dest tbnhttp.Endpoint,
+	dest apihttp.Endpoint,
 	apiKey string,
 	client *http.Client,
 ) (*httpProxyV1, error) {
@@ -41,7 +41,7 @@ func NewProxyV1(
 		// of some cool go internals
 		return nil, fmt.Errorf("Attempting to configure Proxy with nil *http.Client")
 	}
-	return &httpProxyV1{dest, tbnhttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
+	return &httpProxyV1{dest, apihttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
 }
 
 // creates a proxy-scoped version of the specified path
@@ -54,7 +54,7 @@ func (hc *httpProxyV1) path(p string) string {
 func (hc *httpProxyV1) request(
 	method httpMethod,
 	path string,
-	params tbnhttp.Params,
+	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
 	rdr := strings.NewReader(body)
@@ -67,13 +67,13 @@ func (hc *httpProxyV1) request(
 	return req, nil
 }
 
-func (hc *httpProxyV1) get(path string, params tbnhttp.Params) (*http.Request, error) {
+func (hc *httpProxyV1) get(path string, params apihttp.Params) (*http.Request, error) {
 	return hc.request(mGET, path, params, "")
 }
 
 func (hc *httpProxyV1) post(
 	path string,
-	params tbnhttp.Params,
+	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
 	return hc.request(mPOST, path, params, body)
@@ -81,18 +81,18 @@ func (hc *httpProxyV1) post(
 
 func (hc *httpProxyV1) put(
 	path string,
-	params tbnhttp.Params,
+	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
 	return hc.request(mPUT, path, params, body)
 }
 
-func (hc *httpProxyV1) delete(path string, params tbnhttp.Params) (*http.Request, error) {
+func (hc *httpProxyV1) delete(path string, params apihttp.Params) (*http.Request, error) {
 	return hc.request(mDELETE, path, params, "")
 }
 
 func (hc *httpProxyV1) Index(filters ...service.ProxyFilter) (api.Proxies, error) {
-	params := tbnhttp.Params{}
+	params := apihttp.Params{}
 
 	if filters != nil && len(filters) != 0 {
 		filterBytes, e := json.Marshal(filters)
@@ -179,7 +179,7 @@ func (hc *httpProxyV1) Delete(
 	reqFn := func() (*http.Request, error) {
 		return hc.delete(
 			"/"+url.QueryEscape(string(proxyKey)),
-			tbnhttp.Params{queryargs.Checksum: checksum.Checksum},
+			apihttp.Params{queryargs.Checksum: checksum.Checksum},
 		)
 	}
 

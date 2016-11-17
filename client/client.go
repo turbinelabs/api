@@ -19,8 +19,8 @@ package client
 import (
 	"net/http"
 
+	apihttp "github.com/turbinelabs/api/http"
 	"github.com/turbinelabs/api/service"
-	tbnhttp "github.com/turbinelabs/client/http"
 )
 
 type httpMethod string
@@ -42,20 +42,20 @@ const apiClientID string = "tbn-api-client (v0.1)"
 // Endpoint is a valid, or live, Turbine service.
 //
 // Parameters:
-//	dest - a server we want to communicate with, construct via tbnhttp.NewEndpoint
+//	dest - a server we want to communicate with, construct via apihttp.NewEndpoint
 //	apiKey - an API key assigned to your organization during setup process
 // 	httpClient
 //	  nil (should be the most common value) will default to a standard
 //	  http.Client that has been modified to carry forward headers if it
-//	  sees a 3xx redirect (cf. tbnhttp.HeaderPreserving()). Other values
+//	  sees a 3xx redirect (cf. apihttp.HeaderPreservingClient()). Other values
 //	  may be used if custom behavior is necessary.
 func NewAll(
-	dest tbnhttp.Endpoint,
+	dest apihttp.Endpoint,
 	apiKey string,
 	httpClient *http.Client,
 ) (service.All, error) {
 	if httpClient == nil {
-		httpClient = tbnhttp.HeaderPreserving()
+		httpClient = apihttp.HeaderPreservingClient()
 	}
 
 	c, err := NewClusterV1(dest, apiKey, httpClient)
@@ -101,12 +101,12 @@ func NewAll(
 //
 // Parameters: See NewService.
 func NewAdmin(
-	dest tbnhttp.Endpoint,
+	dest apihttp.Endpoint,
 	apiKey string,
 	httpClient *http.Client,
 ) (service.Admin, error) {
 	if httpClient == nil {
-		httpClient = tbnhttp.HeaderPreserving()
+		httpClient = apihttp.HeaderPreservingClient()
 	}
 
 	u, err := NewUserV1(dest, apiKey, httpClient)

@@ -8,17 +8,17 @@ import (
 	"time"
 
 	"github.com/turbinelabs/api"
+	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
 	"github.com/turbinelabs/api/queryargs"
 	"github.com/turbinelabs/api/service/changelog"
-	tbnhttp "github.com/turbinelabs/client/http"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 )
 
 type httpHistoryV1 struct {
-	dest tbnhttp.Endpoint
+	dest apihttp.Endpoint
 
-	requestHandler tbnhttp.RequestHandler
+	requestHandler apihttp.RequestHandler
 }
 
 // Construct a new HTTP backed History API implementation.
@@ -27,14 +27,14 @@ type httpHistoryV1 struct {
 //	dest - service handling our HTTP requests; cf. NewService
 //	apiKey - key used to sign our API requests; cf. NewService
 //	client - HTTP client used to make these requests; must NOT be nil
-func NewHistoryV1(dest tbnhttp.Endpoint, apiKey string, client *http.Client) (*httpHistoryV1, error) {
+func NewHistoryV1(dest apihttp.Endpoint, apiKey string, client *http.Client) (*httpHistoryV1, error) {
 	if client == nil {
 		// Future investigation note: when nil is passed in here the actual failure
 		// is way upstream in a curious way; investigating could lend understanding
 		// of some cool go internals
 		return nil, fmt.Errorf("Attempting to configure Cluster with nil *http.Client")
 	}
-	return &httpHistoryV1{dest, tbnhttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
+	return &httpHistoryV1{dest, apihttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
 }
 
 // creates a cluster-scoped version of the specified path
@@ -47,7 +47,7 @@ func (hh *httpHistoryV1) path(p string) string {
 func (hh *httpHistoryV1) request(
 	method httpMethod,
 	path string,
-	params tbnhttp.Params,
+	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
 	rdr := strings.NewReader(body)
@@ -60,7 +60,7 @@ func (hh *httpHistoryV1) request(
 	return req, nil
 }
 
-func (hh *httpHistoryV1) get(path string, params tbnhttp.Params) (*http.Request, error) {
+func (hh *httpHistoryV1) get(path string, params apihttp.Params) (*http.Request, error) {
 	return hh.request(mGET, path, params, "")
 }
 
@@ -74,7 +74,7 @@ func (hh *httpHistoryV1) Index(
 			httperr.UnknownUnclassifiedCode)
 	}
 
-	params := tbnhttp.Params{
+	params := apihttp.Params{
 		queryargs.IndexFilters: string(b),
 	}
 
@@ -87,8 +87,8 @@ func (hh *httpHistoryV1) Index(
 	return response, nil
 }
 
-func mkTimeArgs(start, stop time.Time) tbnhttp.Params {
-	result := tbnhttp.Params{}
+func mkTimeArgs(start, stop time.Time) apihttp.Params {
+	result := apihttp.Params{}
 	fillTime := func(n string, t time.Time) {
 		if t.IsZero() {
 			return
