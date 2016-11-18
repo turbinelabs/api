@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/turbinelabs/api"
-	tbnauth "github.com/turbinelabs/server/auth"
 )
 
 /*
@@ -58,13 +57,13 @@ type User interface {
 }
 
 type UserFilter struct {
-	UserKey       api.UserKey        `json:"user_key"`
-	LoginEmail    string             `json:"login_email"`
-	APIAuthKey    tbnauth.APIAuthKey `json:"api_auth_key"`
-	OrgKey        api.OrgKey         `json:"org_key"`
-	Active        *bool              `json:"active"`
-	DeletedBefore *time.Time         `json:"deleted_before"`
-	DeletedAfter  *time.Time         `json:"deleted_after"`
+	UserKey       api.UserKey    `json:"user_key"`
+	LoginEmail    string         `json:"login_email"`
+	APIAuthKey    api.APIAuthKey `json:"api_auth_key"`
+	OrgKey        api.OrgKey     `json:"org_key"`
+	Active        *bool          `json:"active"`
+	DeletedBefore *time.Time     `json:"deleted_before"`
+	DeletedAfter  *time.Time     `json:"deleted_after"`
 }
 
 func (uf UserFilter) IsNil() bool {

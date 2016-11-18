@@ -5,20 +5,20 @@ import (
 	"time"
 
 	tbntime "github.com/turbinelabs/nonstdlib/time"
-	tbnauth "github.com/turbinelabs/server/auth"
 )
 
 type UserKey string
 type Users []User
+type APIAuthKey string
 
 // A User is an actor of an Org. An API key is set if they're allowed to make
 // API calls.
 type User struct {
-	UserKey    UserKey            `json:"user_key"`
-	LoginEmail string             `json:"login_email"`
-	APIAuthKey tbnauth.APIAuthKey `json:"api_auth_key"`
-	OrgKey     OrgKey             `json:"org_key"`
-	DeletedAt  *time.Time         `json:"deleted_at"`
+	UserKey    UserKey    `json:"user_key"`
+	LoginEmail string     `json:"login_email"`
+	APIAuthKey APIAuthKey `json:"api_auth_key"`
+	OrgKey     OrgKey     `json:"org_key"`
+	DeletedAt  *time.Time `json:"deleted_at"`
 	Checksum
 }
 

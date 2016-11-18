@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/turbinelabs/api"
-	tbnauth "github.com/turbinelabs/server/auth"
 )
 
 // Map() exposes a copy of the fixture test data in a map fromat. As this
@@ -55,13 +54,13 @@ type DataFixturesT struct {
 
 	UserKey1        api.UserKey
 	UserLoginEmail1 string
-	UserAPIAuthKey1 tbnauth.APIAuthKey
+	UserAPIAuthKey1 api.APIAuthKey
 	UserDeletedAt1  *time.Time
 	UserChecksum1   api.Checksum
 	UserOrgKey1     api.OrgKey
 	UserKey2        api.UserKey
 	UserLoginEmail2 string
-	UserAPIAuthKey2 tbnauth.APIAuthKey
+	UserAPIAuthKey2 api.APIAuthKey
 	UserOrgKey2     api.OrgKey
 	UserDeletedAt2  *time.Time
 	UserChecksum2   api.Checksum
@@ -196,14 +195,14 @@ var DataFixtures DataFixturesT = DataFixturesT{
 
 	UserKey1:        api.UserKey("1"),
 	UserLoginEmail1: "someuser@example.com",
-	UserAPIAuthKey1: tbnauth.APIAuthKey("user-api-key-1"),
+	UserAPIAuthKey1: api.APIAuthKey("user-api-key-1"),
 	UserOrgKey1:     "1",
 	UserDeletedAt1:  nil,
 	UserChecksum1:   api.Checksum{"user-cs-1"},
 
 	UserKey2:        api.UserKey("2"),
 	UserLoginEmail2: "otheruser@example.com",
-	UserAPIAuthKey2: tbnauth.APIAuthKey("user-api-key-2"),
+	UserAPIAuthKey2: api.APIAuthKey("user-api-key-2"),
 	UserOrgKey2:     "1",
 	UserDeletedAt2:  nil,
 	UserChecksum2:   api.Checksum{"user-cs-2"},
