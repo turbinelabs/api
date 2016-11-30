@@ -46,7 +46,6 @@ func TestClientFromFlagsMake(t *testing.T) {
 	mockApiConfig := NewMockAPIConfigFromFlags(ctrl)
 
 	mockApiConfig.EXPECT().APIKey().Return("api-key")
-	mockApiConfig.EXPECT().MakeClient().Return(fakeClient)
 	mockApiConfig.EXPECT().MakeEndpoint().Return(fakeEndpoint, nil)
 
 	ff := &clientFromFlags{mockApiConfig}

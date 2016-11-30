@@ -28,20 +28,10 @@ type httpZoneV1 struct {
 //
 // Parameters:
 //	dest - service handling our HTTP requests; cf. NewService
-//	apiKey - key used to sign our API requests; cf. NewService
-//	client - HTTP client used to make these requests; must NOT be nil
 func NewZoneV1(
 	dest apihttp.Endpoint,
-	apiKey string,
-	client *http.Client,
 ) (*httpZoneV1, error) {
-	if client == nil {
-		// Future investigation note: when nil is passed in here the actual failure
-		// is way upstream in a curious way; investigating could lend understanding
-		// of some cool go internals
-		return nil, fmt.Errorf("Attempting to configure Zone with nil *http.Client")
-	}
-	return &httpZoneV1{dest, apihttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
+	return &httpZoneV1{dest, apihttp.NewRequestHandler(dest.Client())}, nil
 }
 
 // creates a zone-scoped version of the specified path
@@ -58,7 +48,7 @@ func (hc *httpZoneV1) request(
 	body string,
 ) (*http.Request, error) {
 	rdr := strings.NewReader(body)
-	req, err := http.NewRequest(string(method), hc.dest.Url(hc.path(path), params), rdr)
+	req, err := hc.dest.NewRequest(string(method), hc.path(path), params, rdr)
 
 	if err != nil {
 		return nil, err

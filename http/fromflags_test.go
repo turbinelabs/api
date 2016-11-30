@@ -26,23 +26,49 @@ func TestNewFromFlags(t *testing.T) {
 		"-api.port=999",
 		"-api.ssl=false",
 		"-api.insecure=true",
+		"-api.header=fred: flintstone",
+		"-api.header=barney: rubble",
 	})
 
 	assert.Equal(t, ffImpl.host, "example.com")
 	assert.Equal(t, ffImpl.port, 999)
 	assert.False(t, ffImpl.ssl)
 	assert.True(t, ffImpl.insecure)
+	assert.ArrayEqual(t, ffImpl.headers.Strings, []string{"fred: flintstone", "barney: rubble"})
+}
+
+func TestFromFlagsValidate(t *testing.T) {
+	ff := &fromFlags{
+		port:    443,
+		headers: tbnflag.NewStrings(),
+	}
+
+	assert.Nil(t, ff.Validate())
+
+	ff.port = 0
+	assert.ErrorContains(t, ff.Validate(), "invalid API port")
+
+	ff.port = 65536
+	assert.ErrorContains(t, ff.Validate(), "invalid API port")
+
+	ff.port = 443
+	ff.headers.Set("not a header")
+	assert.ErrorContains(t, ff.Validate(), "invalid header")
+
+	ff.headers.ResetDefault()
+	ff.headers.Set("X-Header: Value")
+	assert.Nil(t, ff.Validate())
 }
 
 func TestFromFlagsMakeClient(t *testing.T) {
 	ff := &fromFlags{}
-	client := ff.MakeClient()
+	client := ff.makeClient()
 	assert.Nil(t, client.Transport)
 }
 
 func TestFromFlagsMakeClientInsecure(t *testing.T) {
 	ff := &fromFlags{insecure: true}
-	client := ff.MakeClient()
+	client := ff.makeClient()
 
 	switch transport := client.Transport.(type) {
 	case *http.Transport:
@@ -55,13 +81,19 @@ func TestFromFlagsMakeClientInsecure(t *testing.T) {
 
 func TestFromFlagsMakeEndpoint(t *testing.T) {
 	ff := &fromFlags{
-		host: "example.com",
-		port: 80,
+		host:    "example.com",
+		port:    80,
+		headers: tbnflag.NewStrings(),
 	}
+
+	ff.headers.Set("x-fred: flintstone,x-barney: rubble")
 
 	e, err := ff.MakeEndpoint()
 	assert.Nil(t, err)
 	assert.Equal(t, e.urlBase.String(), "http://example.com:80")
+	assert.NonNil(t, e.client)
+	assert.Equal(t, e.header.Get("X-Fred"), "flintstone")
+	assert.Equal(t, e.header.Get("X-Barney"), "rubble")
 
 	ff.port = 443
 	ff.ssl = true
@@ -69,6 +101,7 @@ func TestFromFlagsMakeEndpoint(t *testing.T) {
 	e, err = ff.MakeEndpoint()
 	assert.Nil(t, err)
 	assert.Equal(t, e.urlBase.String(), "https://example.com:443")
+	assert.NonNil(t, e.client)
 
 	ff.host = "not a domain"
 

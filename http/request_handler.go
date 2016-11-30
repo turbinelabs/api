@@ -8,21 +8,14 @@ import (
 
 	"github.com/turbinelabs/api/http/envelope"
 	httperr "github.com/turbinelabs/api/http/error"
-	"github.com/turbinelabs/api/http/header"
 )
 
 type RequestHandler struct {
-	client   *http.Client
-	apiKey   string
-	clientID string
+	client *http.Client
 }
 
-func NewRequestHandler(client *http.Client, apiKey, clientID string) RequestHandler {
-	return RequestHandler{
-		client:   client,
-		apiKey:   apiKey,
-		clientID: clientID,
-	}
+func NewRequestHandler(client *http.Client) RequestHandler {
+	return RequestHandler{client}
 }
 
 func getBody(response *http.Response) ([]byte, *httperr.Error) {
@@ -114,9 +107,6 @@ func (rh RequestHandler) Do(
 		return httperr.New400(
 			"could not create request: "+err.Error(), httperr.UnknownTransportCode)
 	}
-
-	req.Header.Add(header.APIKey, rh.apiKey)
-	req.Header.Add(header.ClientID, rh.clientID)
 
 	// make HTTP request
 	resp, err := rh.client.Do(req)

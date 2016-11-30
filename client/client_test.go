@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -12,12 +13,13 @@ import (
 	"github.com/turbinelabs/api/fixture"
 	apihttp "github.com/turbinelabs/api/http"
 	"github.com/turbinelabs/api/http/envelope"
+	apiheader "github.com/turbinelabs/api/http/header"
 	"github.com/turbinelabs/api/service"
 	"github.com/turbinelabs/test/assert"
 )
 
 const (
-	clusterTestApiKey    = "whee-whee-whee"
+	clientTestApiKey     = "whee-whee-whee"
 	clusterCommonURL     = "/v1.0/cluster"
 	domainCommonURL      = "/v1.0/domain"
 	proxyCommonURL       = "/v1.0/proxy"
@@ -46,6 +48,32 @@ type verifyingHandler struct {
 func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rr := apihttp.NewRichRequest(r)
 	rrw := apihttp.RichResponseWriter{rw}
+
+	apiKey := rr.Underlying().Header.Get(http.CanonicalHeaderKey(apiheader.APIKey))
+	if apiKey != clientTestApiKey {
+		rw.WriteHeader(400)
+		rw.Write([]byte(
+			fmt.Sprintf(
+				"wrong api key header, got %s, want %s",
+				apiKey,
+				clientTestApiKey,
+			),
+		))
+		return
+	}
+
+	clientId := rr.Underlying().Header.Get(http.CanonicalHeaderKey(apiheader.ClientID))
+	if clientId != apiClientID {
+		rw.WriteHeader(400)
+		rw.Write([]byte(
+			fmt.Sprintf(
+				"wrong client id header: got %s, want %s",
+				clientId,
+				apiClientID,
+			),
+		))
+		return
+	}
 
 	w.fn(rr)
 
@@ -102,7 +130,7 @@ func newTestEndpointFromServer(server *httptest.Server) apihttp.Endpoint {
 
 func getAllInterface(server *httptest.Server) service.All {
 	endpoint := newTestEndpointFromServer(server)
-	serviceall, err := NewAll(endpoint, clusterTestApiKey, http.DefaultClient)
+	serviceall, err := NewAll(endpoint, clientTestApiKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,7 +139,7 @@ func getAllInterface(server *httptest.Server) service.All {
 
 func getAdminInterface(server *httptest.Server) service.Admin {
 	endpoint := newTestEndpointFromServer(server)
-	admin, err := NewAdmin(endpoint, clusterTestApiKey, http.DefaultClient)
+	admin, err := NewAdmin(endpoint, clientTestApiKey)
 	if err != nil {
 		log.Fatal(err)
 	}

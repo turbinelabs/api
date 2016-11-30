@@ -5,7 +5,6 @@ package http
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	http "net/http"
 )
 
 // Mock of FromFlags interface
@@ -29,14 +28,14 @@ func (_m *MockFromFlags) EXPECT() *_MockFromFlagsRecorder {
 	return _m.recorder
 }
 
-func (_m *MockFromFlags) MakeClient() *http.Client {
-	ret := _m.ctrl.Call(_m, "MakeClient")
-	ret0, _ := ret[0].(*http.Client)
+func (_m *MockFromFlags) Validate() error {
+	ret := _m.ctrl.Call(_m, "Validate")
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockFromFlagsRecorder) MakeClient() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "MakeClient")
+func (_mr *_MockFromFlagsRecorder) Validate() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Validate")
 }
 
 func (_m *MockFromFlags) MakeEndpoint() (Endpoint, error) {

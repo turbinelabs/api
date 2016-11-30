@@ -13,14 +13,13 @@ import (
 
 	"github.com/turbinelabs/api/http/envelope"
 	httperr "github.com/turbinelabs/api/http/error"
-	"github.com/turbinelabs/api/http/header"
+	tbnheader "github.com/turbinelabs/api/http/header"
 	"github.com/turbinelabs/test/assert"
 	testio "github.com/turbinelabs/test/io"
 )
 
 const (
-	testAPIKey   = "some-api-key"
-	testClientID = "some-client-id"
+	testAPIKey = "some-api-key"
 )
 
 type testPayload struct {
@@ -32,10 +31,8 @@ type testMalformedPayload struct {
 }
 
 func TestNewRequestHandler(t *testing.T) {
-	rh := NewRequestHandler(http.DefaultClient, testAPIKey, testClientID)
+	rh := NewRequestHandler(http.DefaultClient)
 	assert.SameInstance(t, rh.client, http.DefaultClient)
-	assert.Equal(t, rh.apiKey, testAPIKey)
-	assert.Equal(t, rh.clientID, testClientID)
 }
 
 func TestRequestHandlerGetBody(t *testing.T) {
@@ -159,7 +156,7 @@ func TestExpectsPayload(t *testing.T) {
 }
 
 func TestDoMkReqError(t *testing.T) {
-	rh := NewRequestHandler(http.DefaultClient, testAPIKey, testClientID)
+	rh := NewRequestHandler(http.DefaultClient)
 	assert.ErrorContains(
 		t,
 		rh.Do(
@@ -173,7 +170,7 @@ func TestDoMkReqError(t *testing.T) {
 }
 
 func TestDoRequestFailure(t *testing.T) {
-	rh := NewRequestHandler(http.DefaultClient, testAPIKey, testClientID)
+	rh := NewRequestHandler(http.DefaultClient)
 
 	mkReq := func() (*http.Request, error) {
 		return http.NewRequest("GET", "http://127.0.0.1:1/nope", nil)
@@ -187,18 +184,21 @@ func TestDoRequestFailure(t *testing.T) {
 func TestDoWithoutPayload(t *testing.T) {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, r.Header.Get(header.APIKey), testAPIKey)
-			assert.Equal(t, r.Header.Get(header.ClientID), testClientID)
+			assert.Equal(t, r.Header.Get(tbnheader.APIKey), testAPIKey)
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, "OK")
 		}),
 	)
 	defer server.Close()
 
-	rh := NewRequestHandler(http.DefaultClient, testAPIKey, testClientID)
+	rh := NewRequestHandler(http.DefaultClient)
 
 	mkReq := func() (*http.Request, error) {
-		return http.NewRequest("GET", server.URL, nil)
+		r, err := http.NewRequest("GET", server.URL, nil)
+		if err == nil {
+			r.Header.Add(tbnheader.APIKey, testAPIKey)
+		}
+		return r, err
 	}
 
 	assert.Nil(t, rh.Do(mkReq, nil))
@@ -209,15 +209,13 @@ func TestDoWithPayload(t *testing.T) {
 
 	server := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, r.Header.Get(header.APIKey), testAPIKey)
-			assert.Equal(t, r.Header.Get(header.ClientID), testClientID)
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, mkBody(t, nil, expectedPayload))
 		}),
 	)
 	defer server.Close()
 
-	rh := NewRequestHandler(http.DefaultClient, testAPIKey, testClientID)
+	rh := NewRequestHandler(http.DefaultClient)
 
 	mkReq := func() (*http.Request, error) {
 		return http.NewRequest("GET", server.URL, nil)

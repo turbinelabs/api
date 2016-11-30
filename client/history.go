@@ -25,16 +25,11 @@ type httpHistoryV1 struct {
 //
 // Parameters:
 //	dest - service handling our HTTP requests; cf. NewService
-//	apiKey - key used to sign our API requests; cf. NewService
-//	client - HTTP client used to make these requests; must NOT be nil
-func NewHistoryV1(dest apihttp.Endpoint, apiKey string, client *http.Client) (*httpHistoryV1, error) {
-	if client == nil {
-		// Future investigation note: when nil is passed in here the actual failure
-		// is way upstream in a curious way; investigating could lend understanding
-		// of some cool go internals
-		return nil, fmt.Errorf("Attempting to configure Cluster with nil *http.Client")
-	}
-	return &httpHistoryV1{dest, apihttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
+func NewHistoryV1(dest apihttp.Endpoint) (*httpHistoryV1, error) {
+	return &httpHistoryV1{
+		dest,
+		apihttp.NewRequestHandler(dest.Client()),
+	}, nil
 }
 
 // creates a cluster-scoped version of the specified path
@@ -51,7 +46,7 @@ func (hh *httpHistoryV1) request(
 	body string,
 ) (*http.Request, error) {
 	rdr := strings.NewReader(body)
-	req, err := http.NewRequest(string(method), hh.dest.Url(hh.path(path), params), rdr)
+	req, err := hh.dest.NewRequest(string(method), hh.path(path), params, rdr)
 
 	if err != nil {
 		return nil, err

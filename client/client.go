@@ -9,7 +9,7 @@
 			return err
 		}
 
-		service := NewService(Endpoint, apiKey, nil)
+		service := NewAll(Endpoint, apiKey)
 
 	For a detailed discussion about what each of these values mean see method
 	docs.
@@ -17,9 +17,8 @@
 package client
 
 import (
-	"net/http"
-
 	apihttp "github.com/turbinelabs/api/http"
+	apiheader "github.com/turbinelabs/api/http/header"
 	"github.com/turbinelabs/api/service"
 )
 
@@ -44,45 +43,38 @@ const apiClientID string = "tbn-api-client (v0.1)"
 // Parameters:
 //	dest - a server we want to communicate with, construct via apihttp.NewEndpoint
 //	apiKey - an API key assigned to your organization during setup process
-// 	httpClient
-//	  nil (should be the most common value) will default to a standard
-//	  http.Client that has been modified to carry forward headers if it
-//	  sees a 3xx redirect (cf. apihttp.HeaderPreservingClient()). Other values
-//	  may be used if custom behavior is necessary.
 func NewAll(
 	dest apihttp.Endpoint,
 	apiKey string,
-	httpClient *http.Client,
 ) (service.All, error) {
-	if httpClient == nil {
-		httpClient = apihttp.HeaderPreservingClient()
-	}
+	dest.AddHeader(apiheader.APIKey, apiKey)
+	dest.AddHeader(apiheader.ClientID, apiClientID)
 
-	c, err := NewClusterV1(dest, apiKey, httpClient)
+	c, err := NewClusterV1(dest)
 	if err != nil {
 		return nil, err
 	}
-	d, err := NewDomainV1(dest, apiKey, httpClient)
+	d, err := NewDomainV1(dest)
 	if err != nil {
 		return nil, err
 	}
-	r, err := NewRouteV1(dest, apiKey, httpClient)
+	r, err := NewRouteV1(dest)
 	if err != nil {
 		return nil, err
 	}
-	s, err := NewSharedRulesV1(dest, apiKey, httpClient)
+	s, err := NewSharedRulesV1(dest)
 	if err != nil {
 		return nil, err
 	}
-	p, err := NewProxyV1(dest, apiKey, httpClient)
+	p, err := NewProxyV1(dest)
 	if err != nil {
 		return nil, err
 	}
-	z, err := NewZoneV1(dest, apiKey, httpClient)
+	z, err := NewZoneV1(dest)
 	if err != nil {
 		return nil, err
 	}
-	h, err := NewHistoryV1(dest, apiKey, httpClient)
+	h, err := NewHistoryV1(dest)
 	if err != nil {
 		return nil, err
 	}
@@ -103,13 +95,11 @@ func NewAll(
 func NewAdmin(
 	dest apihttp.Endpoint,
 	apiKey string,
-	httpClient *http.Client,
 ) (service.Admin, error) {
-	if httpClient == nil {
-		httpClient = apihttp.HeaderPreservingClient()
-	}
+	dest.AddHeader(apiheader.APIKey, apiKey)
+	dest.AddHeader(apiheader.ClientID, apiClientID)
 
-	u, err := NewUserV1(dest, apiKey, httpClient)
+	u, err := NewUserV1(dest)
 	if err != nil {
 		return nil, err
 	}

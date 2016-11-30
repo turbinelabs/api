@@ -29,6 +29,16 @@ func (_m *MockClientFromFlags) EXPECT() *_MockClientFromFlagsRecorder {
 	return _m.recorder
 }
 
+func (_m *MockClientFromFlags) Validate() error {
+	ret := _m.ctrl.Call(_m, "Validate")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockClientFromFlagsRecorder) Validate() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Validate")
+}
+
 func (_m *MockClientFromFlags) Make() (service.All, error) {
 	ret := _m.ctrl.Call(_m, "Make")
 	ret0, _ := ret[0].(service.All)

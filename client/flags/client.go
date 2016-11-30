@@ -9,21 +9,23 @@ import (
 	"github.com/turbinelabs/api/service"
 )
 
-// ServiceFromFlags represents command-line flags specifying
+// ClientFromFlags represents command-line flags specifying
 // configuration of a service.All backed by the Turbine Labs API.
 type ClientFromFlags interface {
+	Validate() error
+
 	// Make produces a service.All from the provided flags, or an
 	// error.
 	Make() (service.All, error)
 }
 
-// NewServiceFromFlags creates a ServiceFromFlags, which configures
-// the necessary flags to construct a service.All instance.
+// NewClientFromFlags creates a ServiceFromFlags, which configures the
+// necessary flags to construct a service.All instance.
 func NewClientFromFlags(flagset *flag.FlagSet) ClientFromFlags {
 	return NewClientFromFlagsWithSharedAPIConfig(flagset, nil)
 }
 
-// NewServiceFromFlagsWithSharedAPIConfig creates a ServiceFromFlags,
+// NewClientFromFlagsWithSharedAPIConfig creates a ClientFromFlags,
 // which configures the necessary flags to construct a service.All
 // instance. The given APIConfigFromFlags is used to obtain the API
 // auth key.
@@ -46,6 +48,10 @@ type clientFromFlags struct {
 	apiConfigFromFlags APIConfigFromFlags
 }
 
+func (ff *clientFromFlags) Validate() error {
+	return ff.apiConfigFromFlags.Validate()
+}
+
 func (ff *clientFromFlags) Make() (service.All, error) {
 	endpoint, err := ff.apiConfigFromFlags.MakeEndpoint()
 	if err != nil {
@@ -53,7 +59,6 @@ func (ff *clientFromFlags) Make() (service.All, error) {
 	}
 
 	apiKey := ff.apiConfigFromFlags.APIKey()
-	c := ff.apiConfigFromFlags.MakeClient()
 
-	return client.NewAll(endpoint, apiKey, c)
+	return client.NewAll(endpoint, apiKey)
 }

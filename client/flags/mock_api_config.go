@@ -5,8 +5,7 @@ package flags
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	http0 "github.com/turbinelabs/api/http"
-	http "net/http"
+	http "github.com/turbinelabs/api/http"
 )
 
 // Mock of APIConfigFromFlags interface
@@ -30,19 +29,19 @@ func (_m *MockAPIConfigFromFlags) EXPECT() *_MockAPIConfigFromFlagsRecorder {
 	return _m.recorder
 }
 
-func (_m *MockAPIConfigFromFlags) MakeClient() *http.Client {
-	ret := _m.ctrl.Call(_m, "MakeClient")
-	ret0, _ := ret[0].(*http.Client)
+func (_m *MockAPIConfigFromFlags) Validate() error {
+	ret := _m.ctrl.Call(_m, "Validate")
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockAPIConfigFromFlagsRecorder) MakeClient() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "MakeClient")
+func (_mr *_MockAPIConfigFromFlagsRecorder) Validate() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Validate")
 }
 
-func (_m *MockAPIConfigFromFlags) MakeEndpoint() (http0.Endpoint, error) {
+func (_m *MockAPIConfigFromFlags) MakeEndpoint() (http.Endpoint, error) {
 	ret := _m.ctrl.Call(_m, "MakeEndpoint")
-	ret0, _ := ret[0].(http0.Endpoint)
+	ret0, _ := ret[0].(http.Endpoint)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
