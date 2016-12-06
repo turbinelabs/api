@@ -34,6 +34,7 @@ func (tc getTestCase) run(t *testing.T) {
 		},
 		http.StatusOK,
 		tc.responseObj,
+		apiClientID,
 	}
 
 	s := httptest.NewServer(verifier)

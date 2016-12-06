@@ -43,11 +43,16 @@ type verifyingHandler struct {
 	fn       func(apihttp.RichRequest)
 	status   int
 	response interface{}
+	clientID string
 }
 
 func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rr := apihttp.NewRichRequest(r)
 	rrw := apihttp.RichResponseWriter{rw}
+
+	if w.clientID == "" {
+		w.clientID = apiClientID
+	}
 
 	apiKey := rr.Underlying().Header.Get(http.CanonicalHeaderKey(apiheader.APIKey))
 	if apiKey != clientTestApiKey {
@@ -62,14 +67,14 @@ func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientId := rr.Underlying().Header.Get(http.CanonicalHeaderKey(apiheader.ClientID))
-	if clientId != apiClientID {
+	clientID := rr.Underlying().Header.Get(http.CanonicalHeaderKey(apiheader.ClientID))
+	if clientID != w.clientID {
 		rw.WriteHeader(400)
 		rw.Write([]byte(
 			fmt.Sprintf(
-				"wrong client id header: got %s, want %s",
-				clientId,
-				apiClientID,
+				"wrong client ID header: got %s, want %s",
+				clientID,
+				w.clientID,
 			),
 		))
 		return

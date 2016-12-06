@@ -112,10 +112,6 @@ func (hs *httpBatchingStatsV1) Close() error {
 	return nil
 }
 
-func (hs *httpBatchingStatsV1) Query(*statsapi.Query) (*statsapi.QueryResult, error) {
-	panic("NOT IMPLEMENTED YET")
-}
-
 type payloadBatcher struct {
 	client *httpBatchingStatsV1
 	source string
@@ -172,7 +168,7 @@ func (b *payloadBatcher) forward(s []statsapi.Stat) {
 		Stats:  s,
 	}
 
-	err := b.client.IssueRequest(
+	err := b.client.ForwardWithCallback(
 		payload,
 		func(try executor.Try) {
 			if try.IsError() {

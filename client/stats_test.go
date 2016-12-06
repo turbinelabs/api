@@ -272,3 +272,60 @@ func TestStatsClientForwardExecFuncFailure(t *testing.T) {
 	assert.Nil(t, result)
 	assert.Equal(t, err.Error(), expectedErr.Error())
 }
+
+func TestStatsClientQuerySuccess(t *testing.T) {
+	wantQueryStr := `{"zone_name":"","time_range":{"granularity":"seconds"},"timeseries":null}`
+
+	want := &statsapi.QueryResult{}
+
+	verifier := verifyingHandler{
+		func(rr apihttp.RichRequest) {
+			assert.Equal(t, rr.Underlying().URL.Path, queryPath)
+			assert.NonNil(t, rr.Underlying().URL.Query()["query"])
+			assert.Equal(t, len(rr.Underlying().URL.Query()["query"]), 1)
+			assert.Equal(t, rr.Underlying().URL.Query()["query"][0], wantQueryStr)
+		},
+		http.StatusOK,
+		want,
+		statsClientID,
+	}
+
+	server := httptest.NewServer(verifier)
+	defer server.Close()
+
+	endpoint := newTestEndpointFromServer(server)
+	client, _ := NewStatsClient(endpoint, clientTestApiKey, nil)
+
+	got, gotErr := client.Query(&statsapi.Query{})
+	assert.Nil(t, gotErr)
+
+	assert.DeepEqual(t, got, want)
+}
+
+func TestStatsClientQueryError(t *testing.T) {
+	wantQueryStr := `{"zone_name":"","time_range":{"granularity":"seconds"},"timeseries":null}`
+
+	wantErr := httperr.New500("Gah!", httperr.UnknownUnclassifiedCode)
+
+	verifier := verifyingHandler{
+		func(rr apihttp.RichRequest) {
+			assert.Equal(t, rr.Underlying().URL.Path, queryPath)
+			assert.NonNil(t, rr.Underlying().URL.Query()["query"])
+			assert.Equal(t, len(rr.Underlying().URL.Query()["query"]), 1)
+			assert.Equal(t, rr.Underlying().URL.Query()["query"][0], wantQueryStr)
+		},
+		http.StatusInternalServerError,
+		envelope.Response{wantErr, nil},
+		statsClientID,
+	}
+
+	server := httptest.NewServer(verifier)
+	defer server.Close()
+
+	endpoint := newTestEndpointFromServer(server)
+	client, _ := NewStatsClient(endpoint, clientTestApiKey, nil)
+
+	got, gotErr := client.Query(&statsapi.Query{})
+	assert.DeepEqual(t, gotErr, wantErr)
+	assert.Nil(t, got)
+}

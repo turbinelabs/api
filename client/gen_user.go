@@ -85,11 +85,12 @@ func (hc *httpUserV1) Index(filters ...service.UserFilter) (api.Users, error) {
 	params := apihttp.Params{}
 
 	if filters != nil && len(filters) != 0 {
-		filterBytes, e := json.Marshal(filters)
-		if e != nil {
+		filterBytes, err := json.Marshal(filters)
+		if err != nil {
 			return nil, httperr.New400(
-				fmt.Sprintf("unable to encode user filters: %v", filters),
-				httperr.UnknownUnclassifiedCode)
+				fmt.Sprintf("unable to encode user filters: %v: %s", filters, err),
+				httperr.UnknownUnclassifiedCode,
+			)
 		}
 
 		params[queryargs.IndexFilters] = string(filterBytes)

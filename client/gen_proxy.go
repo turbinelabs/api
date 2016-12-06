@@ -85,11 +85,12 @@ func (hc *httpProxyV1) Index(filters ...service.ProxyFilter) (api.Proxies, error
 	params := apihttp.Params{}
 
 	if filters != nil && len(filters) != 0 {
-		filterBytes, e := json.Marshal(filters)
-		if e != nil {
+		filterBytes, err := json.Marshal(filters)
+		if err != nil {
 			return nil, httperr.New400(
-				fmt.Sprintf("unable to encode proxy filters: %v", filters),
-				httperr.UnknownUnclassifiedCode)
+				fmt.Sprintf("unable to encode proxy filters: %v: %s", filters, err),
+				httperr.UnknownUnclassifiedCode,
+			)
 		}
 
 		params[queryargs.IndexFilters] = string(filterBytes)

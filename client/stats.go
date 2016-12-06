@@ -1,6 +1,6 @@
 package client
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go
 
 import (
 	"context"
@@ -20,14 +20,17 @@ const (
 	statsClientID string = "tbn-stats-client (v0.1)"
 
 	forwardPath = "/v1.0/stats/forward"
+	queryPath   = "/v1.0/stats/query"
+	queryArg    = "query"
 )
 
 // internalStatsClient is an internal interface for issuing forwarding
-// requests.
+// requests with a callback
 type internalStatsClient interface {
+	statsapi.StatsService
 	// Issues a forwarding request for the given payload with the
 	// given executor.CallbackFunc.
-	IssueRequest(*statsapi.Payload, executor.CallbackFunc) error
+	ForwardWithCallback(*statsapi.Payload, executor.CallbackFunc) error
 }
 
 type httpStatsV1 struct {
@@ -35,9 +38,6 @@ type httpStatsV1 struct {
 	requestHandler apihttp.RequestHandler
 	exec           executor.Executor
 }
-
-var _ statsapi.StatsService = &httpStatsV1{}
-var _ internalStatsClient = &httpStatsV1{}
 
 // NewStatsClient returns a blocking implementation of Stats. Each
 // invocation of Forward accepts a single Payload, issues a forwarding
@@ -54,7 +54,7 @@ func newInternalStatsClient(
 	dest apihttp.Endpoint,
 	apiKey string,
 	exec executor.Executor,
-) (*httpStatsV1, error) {
+) (internalStatsClient, error) {
 	dest.AddHeader(apiheader.APIKey, apiKey)
 	dest.AddHeader(apiheader.ClientID, statsClientID)
 
@@ -74,7 +74,10 @@ func encodePayload(payload *statsapi.Payload) (string, error) {
 	}
 }
 
-func (hs *httpStatsV1) IssueRequest(payload *statsapi.Payload, cb executor.CallbackFunc) error {
+func (hs *httpStatsV1) ForwardWithCallback(
+	payload *statsapi.Payload,
+	cb executor.CallbackFunc,
+) error {
 	encoded, err := encodePayload(payload)
 	if err != nil {
 		return err
@@ -113,7 +116,7 @@ func (hs *httpStatsV1) Forward(payload *statsapi.Payload) (*statsapi.ForwardResu
 	responseChan := make(chan executor.Try, 1)
 	defer close(responseChan)
 
-	err := hs.IssueRequest(
+	err := hs.ForwardWithCallback(
 		payload,
 		func(try executor.Try) {
 			responseChan <- try
@@ -135,6 +138,29 @@ func (hs *httpStatsV1) Close() error {
 	return nil
 }
 
-func (hs *httpStatsV1) Query(*statsapi.Query) (*statsapi.QueryResult, error) {
-	panic("NOT IMPLEMENTED YET") // #1860
+func (hs *httpStatsV1) Query(query *statsapi.Query) (*statsapi.QueryResult, error) {
+	params := apihttp.Params{}
+
+	if query != nil {
+		queryBytes, err := json.Marshal(query)
+		if err != nil {
+			return nil, httperr.New400(
+				fmt.Sprintf("unable to encode query: %v: %s", query, err),
+				httperr.UnknownUnclassifiedCode,
+			)
+		}
+
+		params[queryArg] = string(queryBytes)
+	}
+
+	response := &statsapi.QueryResult{}
+	reqFn := func() (*http.Request, error) {
+		return hs.dest.NewRequest(string(mGET), queryPath, params, nil)
+	}
+
+	if err := hs.requestHandler.Do(reqFn, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

@@ -30,12 +30,44 @@ func (_m *MockinternalStatsClient) EXPECT() *_MockinternalStatsClientRecorder {
 	return _m.recorder
 }
 
-func (_m *MockinternalStatsClient) IssueRequest(_param0 *stats.Payload, _param1 executor.CallbackFunc) error {
-	ret := _m.ctrl.Call(_m, "IssueRequest", _param0, _param1)
+func (_m *MockinternalStatsClient) Forward(_param0 *stats.Payload) (*stats.ForwardResult, error) {
+	ret := _m.ctrl.Call(_m, "Forward", _param0)
+	ret0, _ := ret[0].(*stats.ForwardResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockinternalStatsClientRecorder) Forward(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Forward", arg0)
+}
+
+func (_m *MockinternalStatsClient) Query(_param0 *stats.Query) (*stats.QueryResult, error) {
+	ret := _m.ctrl.Call(_m, "Query", _param0)
+	ret0, _ := ret[0].(*stats.QueryResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockinternalStatsClientRecorder) Query(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Query", arg0)
+}
+
+func (_m *MockinternalStatsClient) Close() error {
+	ret := _m.ctrl.Call(_m, "Close")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockinternalStatsClientRecorder) IssueRequest(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "IssueRequest", arg0, arg1)
+func (_mr *_MockinternalStatsClientRecorder) Close() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Close")
+}
+
+func (_m *MockinternalStatsClient) ForwardWithCallback(_param0 *stats.Payload, _param1 executor.CallbackFunc) error {
+	ret := _m.ctrl.Call(_m, "ForwardWithCallback", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockinternalStatsClientRecorder) ForwardWithCallback(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ForwardWithCallback", arg0, arg1)
 }

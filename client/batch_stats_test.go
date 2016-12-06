@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -54,7 +55,7 @@ func (bt batcherTest) run(t *testing.T) {
 	for _, payloadSize := range bt.expectedPayloadSizes {
 		expectedPayload := payloadOfSize(payloadSize)
 		mockUnderlyingStatsClient.EXPECT().
-			IssueRequest(expectedPayload, gomock.Any()).
+			ForwardWithCallback(expectedPayload, gomock.Any()).
 			Do(func(_ *statsapi.Payload, cb executor.CallbackFunc) { cbfChan <- cb }).
 			Return(nil)
 	}
@@ -363,4 +364,38 @@ func TestPayloadBatcherRunSendsOnClose(t *testing.T) {
 			)
 		},
 	}.run(t)
+}
+
+func TestBatchingStatsClientQuery(t *testing.T) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	query := &statsapi.Query{}
+	want := &statsapi.QueryResult{}
+
+	mockClient := NewMockinternalStatsClient(ctrl)
+	mockClient.EXPECT().Query(query).Return(want, nil)
+
+	client := &httpBatchingStatsV1{internalStatsClient: mockClient}
+
+	got, gotErr := client.Query(query)
+	assert.Equal(t, got, want)
+	assert.Nil(t, gotErr)
+}
+
+func TestBatchingStatsClientQueryErr(t *testing.T) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	wantErr := errors.New("Gah!")
+	query := &statsapi.Query{}
+
+	mockClient := NewMockinternalStatsClient(ctrl)
+	mockClient.EXPECT().Query(query).Return(nil, wantErr)
+
+	client := &httpBatchingStatsV1{internalStatsClient: mockClient}
+
+	got, gotErr := client.Query(query)
+	assert.Nil(t, got)
+	assert.Equal(t, gotErr, wantErr)
 }

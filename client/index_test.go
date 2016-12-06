@@ -69,6 +69,7 @@ func (tc indexTestCase) run(t *testing.T) {
 		},
 		http.StatusOK,
 		tc.responseObj,
+		apiClientID,
 	}
 
 	s := httptest.NewServer(verifier)
