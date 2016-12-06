@@ -1,6 +1,8 @@
 package client
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -67,26 +69,29 @@ var (
 )
 
 func TestEncodePayload(t *testing.T) {
-	json, err := encodePayload(payload)
-	assert.Nil(t, err)
-	assert.Equal(
-		t,
-		json,
+	expectedJson :=
 		fmt.Sprintf(
-			`{"source":"%s","stats":[{"name":"%s","value":%g,"timestamp":%d,"tags":{"%s":"%s"}}]}`,
+			`{"source":"%s","stats":[{"name":"%s","value":%g,"timestamp":%d,"tags":{"%s":"%s"}}]}`+"\n",
 			sourceString1,
 			metricName1,
 			1.41421,
 			when1Micros,
 			"tag",
 			"tag-value",
-		),
-	)
+		)
+	var expectedBytes bytes.Buffer
+	gw := gzip.NewWriter(&expectedBytes)
+	gw.Write([]byte(expectedJson))
+	gw.Close()
+
+	json, err := encodePayload(payload)
+	assert.Nil(t, err)
+	assert.DeepEqual(t, json, expectedBytes.Bytes())
 }
 
 func TestEncodePayloadError(t *testing.T) {
 	json, err := encodePayload(badPayload)
-	assert.Equal(t, json, "")
+	assert.Nil(t, json)
 	assert.NonNil(t, err)
 }
 
@@ -210,8 +215,11 @@ func (h *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	body := req.Body
 	assert.NonNil(h.t, body)
 
-	bytes, err := ioutil.ReadAll(body)
-	defer body.Close()
+	gzipReader, err := gzip.NewReader(body)
+	assert.Nil(h.t, err)
+
+	bytes, err := ioutil.ReadAll(gzipReader)
+	defer gzipReader.Close()
 	assert.Nil(h.t, err)
 
 	stats := &statsapi.Payload{}

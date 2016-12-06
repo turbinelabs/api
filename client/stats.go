@@ -3,11 +3,12 @@ package client
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
@@ -58,6 +59,10 @@ func newInternalStatsClient(
 	dest.AddHeader(apiheader.APIKey, apiKey)
 	dest.AddHeader(apiheader.ClientID, statsClientID)
 
+	// see encodePayload; payloads are sent as gzipped json
+	dest.AddHeader("Content-Type", "application/json")
+	dest.AddHeader("Content-Encoding", "gzip")
+
 	return &httpStatsV1{
 		dest,
 		apihttp.NewRequestHandler(dest.Client()),
@@ -65,13 +70,26 @@ func newInternalStatsClient(
 	}, nil
 }
 
-func encodePayload(payload *statsapi.Payload) (string, error) {
-	if b, err := json.Marshal(payload); err == nil {
-		return string(b), nil
-	} else {
+func encodePayload(payload *statsapi.Payload) ([]byte, error) {
+	var buffer bytes.Buffer
+	gzip := gzip.NewWriter(&buffer)
+	encoder := json.NewEncoder(gzip)
+
+	if err := encoder.Encode(payload); err != nil {
 		msg := fmt.Sprintf("could not encode stats payload: %+v\n%+v", err, payload)
-		return "", httperr.New400(msg, httperr.UnknownEncodingCode)
+		return nil, httperr.New400(msg, httperr.UnknownEncodingCode)
 	}
+
+	if err := gzip.Close(); err != nil {
+		msg := fmt.Sprintf(
+			"could not finish encoding stats payload: %+v\n%+v",
+			err,
+			payload,
+		)
+		return nil, httperr.New400(msg, httperr.UnknownEncodingCode)
+	}
+
+	return buffer.Bytes(), nil
 }
 
 func (hs *httpStatsV1) ForwardWithCallback(
@@ -88,7 +106,7 @@ func (hs *httpStatsV1) ForwardWithCallback(
 			response := &statsapi.ForwardResult{}
 			if err := hs.requestHandler.Do(
 				func() (*http.Request, error) {
-					rdr := strings.NewReader(encoded)
+					rdr := bytes.NewReader(encoded)
 					req, err := hs.dest.NewRequest(
 						"POST",
 						forwardPath,
