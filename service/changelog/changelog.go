@@ -99,8 +99,6 @@ func (tr TimeRange) EndTime() *time.Time {
 //
 // Before, if set, limits results to changes that moved from this value
 // After, if set, limits results to changes that set this value
-//
-// TODO: https://github.com/turbinelabs/tbn/issues/966
 type FieldFilter struct {
 	AbsoluteMatchOnly  bool       `json:"absolute_match_only"`
 	AttributePath      string     `json:"attribute_path"`
