@@ -1,6 +1,6 @@
 package flags
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=$TBN_HOME/api/http/fromflags.go" -imports http=net/http
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=../../http/fromflags.go"
 
 import (
 	"flag"
