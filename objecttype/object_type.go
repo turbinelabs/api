@@ -5,6 +5,34 @@ import (
 	"strings"
 )
 
+var all []ObjectType
+
+func init() {
+	for i := 1; ; i++ {
+		ot, err := FromID(i)
+		if err != nil {
+			break
+		}
+		all = append(all, ot)
+	}
+}
+
+// All returns a slice of all object types.
+func All() []ObjectType {
+	r := make([]ObjectType, 0, len(all))
+	copy(r, all)
+	return r
+}
+
+// AllNames returns a slice containing the names of all object types.
+func AllNames() []string {
+	r := make([]string, 0, len(all))
+	for _, ot := range all {
+		r = append(r, ot.Name)
+	}
+	return r
+}
+
 // ObjectType is representation of an object that can have the changes made
 // made to it tracked in a persistant changelog.
 type ObjectType struct {
@@ -31,7 +59,7 @@ func (ot ObjectType) ID() int64 {
 
 var UnrecognizedObjectTypeError = fmt.Errorf("unrecognized object type")
 
-func ObjectTypeFromName(s string) (ObjectType, error) {
+func FromName(s string) (ObjectType, error) {
 	s = strings.ToLower(s)
 
 	switch s {
@@ -56,7 +84,7 @@ func ObjectTypeFromName(s string) (ObjectType, error) {
 	return ObjectType{}, UnrecognizedObjectTypeError
 }
 
-func ObjectTypeFromID(i int) (ObjectType, error) {
+func FromID(i int) (ObjectType, error) {
 	switch int64(i) {
 	case Org.id:
 		return Org, nil

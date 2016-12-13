@@ -49,3 +49,14 @@ func (_m *MockClientFromFlags) Make() (service.All, error) {
 func (_mr *_MockClientFromFlagsRecorder) Make() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Make")
 }
+
+func (_m *MockClientFromFlags) MakeAdmin() (service.Admin, error) {
+	ret := _m.ctrl.Call(_m, "MakeAdmin")
+	ret0, _ := ret[0].(service.Admin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockClientFromFlagsRecorder) MakeAdmin() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "MakeAdmin")
+}

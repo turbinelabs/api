@@ -17,6 +17,10 @@ type ClientFromFlags interface {
 	// Make produces a service.All from the provided flags, or an
 	// error.
 	Make() (service.All, error)
+
+	// MakeAdmin produces a service.Admin from the provided flags,
+	// or an error.
+	MakeAdmin() (service.Admin, error)
 }
 
 // NewClientFromFlags creates a ServiceFromFlags, which configures the
@@ -61,4 +65,15 @@ func (ff *clientFromFlags) Make() (service.All, error) {
 	apiKey := ff.apiConfigFromFlags.APIKey()
 
 	return client.NewAll(endpoint, apiKey)
+}
+
+func (ff *clientFromFlags) MakeAdmin() (service.Admin, error) {
+	endpoint, err := ff.apiConfigFromFlags.MakeEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	apiKey := ff.apiConfigFromFlags.APIKey()
+
+	return client.NewAdmin(endpoint, apiKey)
 }

@@ -24,7 +24,7 @@ func (ct ChangeType) ID() int64 {
 
 var UnrecognizedChangeTypeError = fmt.Errorf("unrecognized change type")
 
-func ChangeTypeFromName(s string) (ChangeType, error) {
+func FromName(s string) (ChangeType, error) {
 	switch s {
 	case Addition.Name:
 		return Addition, nil
@@ -35,7 +35,7 @@ func ChangeTypeFromName(s string) (ChangeType, error) {
 	return ChangeType{}, UnrecognizedChangeTypeError
 }
 
-func ChangeTypeFromID(i int) (ChangeType, error) {
+func FromID(i int) (ChangeType, error) {
 	switch int64(i) {
 	case Addition.id:
 		return Addition, nil
