@@ -120,7 +120,7 @@ func TestNewBatchingStatsClient(t *testing.T) {
 	assert.NonNil(t, clientImpl.internalStatsClient)
 	underlyingImpl, ok := clientImpl.internalStatsClient.(*httpStatsV1)
 	assert.True(t, ok)
-	assert.DeepEqual(t, underlyingImpl.dest, endpoint)
+	assert.NotDeepEqual(t, underlyingImpl.dest, endpoint)
 	assert.SameInstance(t, underlyingImpl.exec, exec)
 
 	assert.Equal(t, clientImpl.maxDelay, time.Second)

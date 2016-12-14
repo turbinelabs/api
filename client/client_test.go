@@ -54,7 +54,7 @@ func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		w.clientID = apiClientID
 	}
 
-	apiKey := rr.Underlying().Header.Get(http.CanonicalHeaderKey(apiheader.APIKey))
+	apiKey := rr.Underlying().Header.Get(apiheader.APIKey)
 	if apiKey != clientTestApiKey {
 		rw.WriteHeader(400)
 		rw.Write([]byte(
@@ -67,7 +67,7 @@ func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID := rr.Underlying().Header.Get(http.CanonicalHeaderKey(apiheader.ClientID))
+	clientID := rr.Underlying().Header.Get(apiheader.ClientID)
 	if clientID != w.clientID {
 		rw.WriteHeader(400)
 		rw.Write([]byte(
@@ -149,4 +149,52 @@ func getAdminInterface(server *httptest.Server) service.Admin {
 		log.Fatal(err)
 	}
 	return admin
+}
+
+func TestNewAllCopiesEndpoint(t *testing.T) {
+	e := newTestEndpoint("example.com", 80)
+
+	r, err := e.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 0)
+
+	all, err := NewAll(endpoint, clientTestApiKey)
+	assert.Nil(t, err)
+	assert.NonNil(t, all)
+
+	allEndpoint := all.(*httpServiceV1).clusterV1.dest
+
+	r, err = e.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 0)
+
+	r, err = allEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 2)
+	assert.ArrayEqual(t, r.Header[apiheader.APIKey], []string{clientTestApiKey})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{apiClientID})
+}
+
+func TestNewAdminCopiesEndpoint(t *testing.T) {
+	e := newTestEndpoint("example.com", 80)
+
+	r, err := e.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 0)
+
+	all, err := NewAdmin(endpoint, clientTestApiKey)
+	assert.Nil(t, err)
+	assert.NonNil(t, all)
+
+	adminEndpoint := all.(*httpAdminV1).userV1.dest
+
+	r, err = e.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 0)
+
+	r, err = adminEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 2)
+	assert.ArrayEqual(t, r.Header[apiheader.APIKey], []string{clientTestApiKey})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{apiClientID})
 }

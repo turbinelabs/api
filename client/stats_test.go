@@ -186,7 +186,7 @@ type testHandler struct {
 }
 
 func (h *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	apiKey := req.Header.Get(http.CanonicalHeaderKey(apiheader.APIKey))
+	apiKey := req.Header.Get(apiheader.APIKey)
 	if apiKey != testApiKey {
 		resp.WriteHeader(400)
 		resp.Write([]byte(
@@ -336,4 +336,30 @@ func TestStatsClientQueryError(t *testing.T) {
 	got, gotErr := client.Query(&statsapi.Query{})
 	assert.DeepEqual(t, gotErr, wantErr)
 	assert.Nil(t, got)
+}
+
+func TestNewInternalStatsClientCopiesEndpoint(t *testing.T) {
+	endpoint := newTestEndpoint("example.com", 80)
+
+	r, err := endpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 0)
+
+	client, err := newInternalStatsClient(endpoint, clientTestApiKey, nil)
+	assert.Nil(t, err)
+	assert.NonNil(t, client)
+
+	statsEndpoint := client.(*httpStatsV1).dest
+
+	r, err = endpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 0)
+
+	r, err = statsEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, len(r.Header), 4)
+	assert.ArrayEqual(t, r.Header[apiheader.APIKey], []string{clientTestApiKey})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{statsClientID})
+	assert.ArrayEqual(t, r.Header["Content-Type"], []string{"application/json"})
+	assert.ArrayEqual(t, r.Header["Content-Encoding"], []string{"gzip"})
 }

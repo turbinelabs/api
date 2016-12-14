@@ -63,6 +63,22 @@ type Endpoint struct {
 	urlBase *url.URL // computed at construction
 }
 
+// Makes a copy of the Endpoint. Insures that modifications to custom
+// headers of the new Endpoint are not made to the original Endpoint
+// and vice versa.
+func (e *Endpoint) Copy() Endpoint {
+	headerCopy := make(http.Header, len(e.header))
+	for header, values := range e.header {
+		for _, value := range values {
+			headerCopy.Add(header, value)
+		}
+	}
+
+	newE := *e
+	newE.header = headerCopy
+	return newE
+}
+
 // Returns the net/http.Client for this Endpoint.
 func (e *Endpoint) Client() *http.Client {
 	return e.client

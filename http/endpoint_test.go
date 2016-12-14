@@ -119,3 +119,28 @@ func TestEndpointNewRequestError(t *testing.T) {
 	assert.Nil(t, r)
 	assert.NonNil(t, err)
 }
+
+func TestEndpointCopy(t *testing.T) {
+	simple, _ := NewEndpoint(HTTPS, "example.com", 443)
+	simpleCopy := simple.Copy()
+	assert.DeepEqual(t, simpleCopy, simple)
+
+	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e.AddHeader("before", "preserved")
+
+	e2 := e.Copy()
+	e2.AddHeader("before", "private-to-e2")
+	e2.AddHeader("after", "private-to-e2")
+
+	e.AddHeader("before", "private-to-e")
+	e.AddHeader("after", "private-to-e")
+
+	assert.Equal(t, len(e.header), 2)
+	assert.ArrayEqual(t, e.header["Before"], []string{"preserved", "private-to-e"})
+	assert.ArrayEqual(t, e.header["After"], []string{"private-to-e"})
+
+	assert.Equal(t, len(e2.header), 2)
+	assert.ArrayEqual(t, e2.header["Before"], []string{"preserved", "private-to-e2"})
+	assert.ArrayEqual(t, e2.header["After"], []string{"private-to-e2"})
+
+}

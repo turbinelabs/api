@@ -35,7 +35,9 @@ const apiClientID string = "tbn-api-client (v0.1)"
 
 // Create a new Service backed by a Turbine api server at dest. Communication
 // with this server will happen via HTTP (or HTTPS as specified in the
-// Endpoint) and will sign your requests with the provided apiKey.
+// Endpoint) and will sign your requests with the provided apiKey. The
+// Endpoint is copied so changes to headers or clients must be made before
+// invoking NewAdmin.
 //
 // Service creation can not fail but it does not guarantee that the target
 // Endpoint is a valid, or live, Turbine service.
@@ -47,8 +49,7 @@ func NewAll(
 	dest apihttp.Endpoint,
 	apiKey string,
 ) (service.All, error) {
-	dest.AddHeader(apiheader.APIKey, apiKey)
-	dest.AddHeader(apiheader.ClientID, apiClientID)
+	dest = configureEndpoint(dest, apiKey)
 
 	c, err := NewClusterV1(dest)
 	if err != nil {
@@ -86,18 +87,19 @@ func NewAll(
 
 // Create a new Admin backed by a Turbine api server at dest. Communication
 // with this server will happen via HTTP (or HTTPS as specified in the
-// Endpoint) and will sign your requests with the provided apiKey.
+// Endpoint) and will sign your requests with the provided apiKey. The
+// Endpoint is copied so changes to headers or clients must be made before
+// invoking NewAdmin.
 //
 // Service creation can not fail but it does not guarantee that the target
 // Endpoint is a valid, or live, Turbine service.
 //
-// Parameters: See NewService.
+// Parameters: See NewAll.
 func NewAdmin(
 	dest apihttp.Endpoint,
 	apiKey string,
 ) (service.Admin, error) {
-	dest.AddHeader(apiheader.APIKey, apiKey)
-	dest.AddHeader(apiheader.ClientID, apiClientID)
+	dest = configureEndpoint(dest, apiKey)
 
 	u, err := NewUserV1(dest)
 	if err != nil {
@@ -107,6 +109,15 @@ func NewAdmin(
 	httpAdmin := httpAdminV1{u}
 
 	return &httpAdmin, nil
+}
+
+func configureEndpoint(dest apihttp.Endpoint, apiKey string) apihttp.Endpoint {
+	// Copy the Endpoint to avoid polluting the original with our
+	// headers.
+	dest = dest.Copy()
+	dest.AddHeader(apiheader.APIKey, apiKey)
+	dest.AddHeader(apiheader.ClientID, apiClientID)
+	return dest
 }
 
 // v1 http-backed service that implements service.All via HTTP calls to some

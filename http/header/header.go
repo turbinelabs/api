@@ -11,5 +11,13 @@ const (
 
 	// ClientID indicates which Turbine client is making a request (go http
 	// client vs js web client etc.)
-	ClientID = "X-Turbine-Api-ClientId"
+	ClientID = "X-Turbine-Api-Clientid"
+)
+
+var (
+	headers = []string{
+		APIKey,
+		Authorization,
+		ClientID,
+	}
 )

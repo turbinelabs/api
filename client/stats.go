@@ -56,6 +56,10 @@ func newInternalStatsClient(
 	apiKey string,
 	exec executor.Executor,
 ) (internalStatsClient, error) {
+	// Copy the Endpoint to avoid polluting the original with our
+	// headers.
+	dest = dest.Copy()
+
 	dest.AddHeader(apiheader.APIKey, apiKey)
 	dest.AddHeader(apiheader.ClientID, statsClientID)
 
