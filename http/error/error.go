@@ -102,8 +102,6 @@ func FromError(err error, code ErrorCode) *Error {
 	}
 
 	switch httpErr := err.(type) {
-	case Error:
-		return &httpErr
 	case *Error:
 		return httpErr
 	default:
@@ -111,6 +109,6 @@ func FromError(err error, code ErrorCode) *Error {
 	}
 }
 
-func (e Error) Error() string {
+func (e *Error) Error() string {
 	return fmt.Sprintf("{Message: %s, Code: %s}", e.Message, e.Code)
 }

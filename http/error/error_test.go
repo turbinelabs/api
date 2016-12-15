@@ -46,14 +46,6 @@ func TestAuthorizationError(t *testing.T) {
 	assert.Equal(t, err.Status, 403)
 }
 
-func TestFromErrorWithError(t *testing.T) {
-	x := Error{Message: "piu piu", Code: UnknownUnclassifiedCode, Status: 503}
-
-	err := FromError(x, UnknownTransportCode)
-	assert.NonNil(t, err)
-	assert.DeepEqual(t, *err, x)
-}
-
 func TestFromErrorWithErrorPointer(t *testing.T) {
 	x := &Error{Message: "piu piu", Code: UnknownUnclassifiedCode, Status: 503}
 
