@@ -107,6 +107,11 @@ func (hc *httpClusterV1) Index(filters ...service.ClusterFilter) (api.Clusters, 
 }
 
 func (hc *httpClusterV1) Get(key api.ClusterKey) (api.Cluster, error) {
+	if key == "" {
+		return api.Cluster{}, httperr.New400(
+			"ClusterKey is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}

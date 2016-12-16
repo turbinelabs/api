@@ -107,6 +107,11 @@ func (hc *httpUserV1) Index(filters ...service.UserFilter) (api.Users, error) {
 }
 
 func (hc *httpUserV1) Get(key api.UserKey) (api.User, error) {
+	if key == "" {
+		return api.User{}, httperr.New400(
+			"UserKey is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}

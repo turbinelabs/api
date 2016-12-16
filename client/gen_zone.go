@@ -107,6 +107,11 @@ func (hc *httpZoneV1) Index(filters ...service.ZoneFilter) (api.Zones, error) {
 }
 
 func (hc *httpZoneV1) Get(key api.ZoneKey) (api.Zone, error) {
+	if key == "" {
+		return api.Zone{}, httperr.New400(
+			"ZoneKey is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}

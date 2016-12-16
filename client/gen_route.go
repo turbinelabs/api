@@ -107,6 +107,11 @@ func (hc *httpRouteV1) Index(filters ...service.RouteFilter) (api.Routes, error)
 }
 
 func (hc *httpRouteV1) Get(key api.RouteKey) (api.Route, error) {
+	if key == "" {
+		return api.Route{}, httperr.New400(
+			"RouteKey is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}

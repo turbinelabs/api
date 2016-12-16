@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -298,6 +299,23 @@ func (tc sharedRulesGetTest) run(t *testing.T) {
 		wantErr:       tc.wantErr,
 		assertURL:     mkAssertGetURL(sharedRulesCommonURL),
 	}.run(t)
+}
+
+func TestGetNoKey(t *testing.T) {
+	e := func(t string) error {
+		return httperr.New400(
+			fmt.Sprintf("%sKey is a required parameter", t),
+			"ObjectKeyRequiredErrorCode",
+		)
+	}
+
+	clusterGetTest{wantErr: e("Cluster")}.run(t)
+	domainGetTest{wantErr: e("Domain")}.run(t)
+	routeGetTest{wantErr: e("Route")}.run(t)
+	sharedRulesGetTest{wantErr: e("SharedRules")}.run(t)
+	proxyGetTest{wantErr: e("Proxy")}.run(t)
+	userGetTest{wantErr: e("User")}.run(t)
+	zoneGetTest{wantErr: e("Zone")}.run(t)
 }
 
 func TestGetSimple(t *testing.T) {

@@ -107,6 +107,11 @@ func (hc *httpProxyV1) Index(filters ...service.ProxyFilter) (api.Proxies, error
 }
 
 func (hc *httpProxyV1) Get(key api.ProxyKey) (api.Proxy, error) {
+	if key == "" {
+		return api.Proxy{}, httperr.New400(
+			"ProxyKey is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}

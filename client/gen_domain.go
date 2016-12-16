@@ -107,6 +107,11 @@ func (hc *httpDomainV1) Index(filters ...service.DomainFilter) (api.Domains, err
 }
 
 func (hc *httpDomainV1) Get(key api.DomainKey) (api.Domain, error) {
+	if key == "" {
+		return api.Domain{}, httperr.New400(
+			"DomainKey is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}

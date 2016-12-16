@@ -7,13 +7,14 @@ const (
 	DataConstraintErrorCode ErrorCode = "DataConstraintErrorCode" // some integrity constraint rejected the change
 	OwningOrgImmutable      ErrorCode = "OwningOrgImmutable"      // an attempt was made to change the org an object belongs to
 
-	DuplicateKeyErrorCode  ErrorCode = "DuplicateClusterKeyCode" // an object with that key already exists
-	InvalidObjectErrorCode ErrorCode = "InvalidObjectCode"       // attempted to pass on object that did not have valid data
-	KeyImmutableErrorCode  ErrorCode = "KeyImmutable"            // can't change the generated object key
-	MiscErrorCode          ErrorCode = "MiscCode"                // misc errors
-	NotFoundErrorCode      ErrorCode = "NotFound"                // the object requested didn't exist
-	AuthMethodDeniedCode   ErrorCode = "AuthMethodDenied"        // auth method not allowed
-	BadParameterErrorCode  ErrorCode = "BadParameterErrorCode"   // some parameter was bad
+	DuplicateKeyErrorCode      ErrorCode = "DuplicateClusterKeyCode"    // an object with that key already exists
+	InvalidObjectErrorCode     ErrorCode = "InvalidObjectCode"          // attempted to pass on object that did not have valid data
+	KeyImmutableErrorCode      ErrorCode = "KeyImmutable"               // can't change the generated object key
+	MiscErrorCode              ErrorCode = "MiscCode"                   // misc errors
+	NotFoundErrorCode          ErrorCode = "NotFound"                   // the object requested didn't exist
+	AuthMethodDeniedCode       ErrorCode = "AuthMethodDenied"           // auth method not allowed
+	BadParameterErrorCode      ErrorCode = "BadParameterErrorCode"      // some parameter was bad
+	ObjectKeyRequiredErrorCode ErrorCode = "ObjectKeyRequiredErrorCode" // returned when a Get attempt is made with no key
 )
 
 const (

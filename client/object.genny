@@ -9,10 +9,9 @@ import (
 
 	"github.com/turbinelabs/api"
 	apihttp "github.com/turbinelabs/api/http"
+	httperr "github.com/turbinelabs/api/http/error"
 	"github.com/turbinelabs/api/queryargs"
 	"github.com/turbinelabs/api/service"
-	apihttp "github.com/turbinelabs/api/http"
-	httperr "github.com/turbinelabs/api/http/error"
 )
 
 type http__Type__V1 struct {
@@ -104,6 +103,11 @@ func (hc *http__Type__V1) Index(filters ...service.__Type__Filter) (api.__Coll__
 }
 
 func (hc *http__Type__V1) Get(key api.__Type__Key) (api.__Type__, error) {
+	if key == "" {
+		return api.__Type__{}, httperr.New400(
+			"__Type__Key is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}
@@ -127,7 +131,7 @@ func (hc *http__Type__V1) Create(new__Type__ api.__Type__) (api.__Type__, error)
 	if b, err := json.Marshal(new__Type__); err == nil {
 		encoded = string(b)
 	} else {
-                return api.__Type__{}, mkEncode__Type__Error(new__Type__)
+		return api.__Type__{}, mkEncode__Type__Error(new__Type__)
 	}
 
 	reqFn := func() (*http.Request, error) { return hc.post("", nil, encoded) }
@@ -145,7 +149,7 @@ func (hc *http__Type__V1) Modify(__type__ api.__Type__) (api.__Type__, error) {
 	if b, err := json.Marshal(__type__); err == nil {
 		encoded = string(b)
 	} else {
-                return api.__Type__{}, mkEncode__Type__Error(__type__)
+		return api.__Type__{}, mkEncode__Type__Error(__type__)
 	}
 
 	response := api.__Type__{}

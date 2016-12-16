@@ -107,6 +107,11 @@ func (hc *httpSharedRulesV1) Index(filters ...service.SharedRulesFilter) (api.Sh
 }
 
 func (hc *httpSharedRulesV1) Get(key api.SharedRulesKey) (api.SharedRules, error) {
+	if key == "" {
+		return api.SharedRules{}, httperr.New400(
+			"SharedRulesKey is a required parameter", httperr.ObjectKeyRequiredErrorCode)
+	}
+
 	reqFn := func() (*http.Request, error) {
 		return hc.get("/"+url.QueryEscape(string(key)), nil)
 	}
