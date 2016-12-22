@@ -34,7 +34,13 @@ import (
 
 var stockCD = []api.ChangeDescription{
 	{
-		api.ChangeMeta{tbntime.ToUnixMilli(time.Now().UTC()), "some-txn", "org-key", "actor-key", "comment"},
+		api.ChangeMeta{
+			tbntime.ToUnixMilli(time.Now().UTC()),
+			"some-txn",
+			"", // org key is blank because we don't render it in json
+			"actor-key",
+			"comment",
+		},
 		[]api.ChangeEntry{
 			{ObjectKey: "obj-key", Path: "path", Value: "value"},
 		},

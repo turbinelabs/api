@@ -45,7 +45,7 @@ type ChangeMeta struct {
 	Txn string `json:"txn"`
 
 	// OrgKey is the owning organization of the object(s) changed.
-	OrgKey OrgKey `json:"org_key"`
+	OrgKey OrgKey `json:"-"`
 
 	// ActorKey is the user key of the person making the recorded change.
 	ActorKey UserKey `json:"actor_key"`

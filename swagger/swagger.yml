@@ -1400,10 +1400,6 @@ definitions:
           A unique identifier for all this transaction. It is shared by all
           attribute updates within a change.
         x-example: 1c7b1c5e-1a23-4d04-5cb4-eccea4d5994c
-      org_key:
-        type: string
-        description: The organization the objects being updated belong to.
-        x-example: 1c7b1c5e-1a23-4d04-5cb4-eccea4d5994c
       actor_key:
         type: string
         description: The user who made the change.
