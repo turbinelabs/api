@@ -323,36 +323,6 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-    put:
-      summary: modify zone
-      description: |
-        Modify the definition of an existing zone
-      tags:
-        - Zone
-      consumes:
-        - application/json
-      parameters:
-        - name: zoneKey
-          in: path
-          description: the zone key
-          required: true
-          type: string
-          x-example: 9cd24183-f848-48f8-6f55-0f0724070000
-        - name: zone
-          in: body
-          description: the zone to modify
-          required: true
-          schema:
-            $ref: "#/definitions/Zone"
-      responses:
-        200:
-          description: A result containing the modified zone
-          schema:
-            $ref: "#/definitions/ZoneResult"
-        default:
-          description: Unexpected error
-          schema:
-            $ref: "#/definitions/Error"
     delete:
       summary: delete zone
       description: |
@@ -442,35 +412,6 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-    put:
-      summary: modify domain
-      description: Modify an existing domain
-      tags:
-        - Domains
-      consumes:
-        - application/json
-      parameters:
-        - name: domainKey
-          in: path
-          description: the domain key
-          required: true
-          type: string
-          x-example: 48cf1c9b-f027-4223-b405-d48018ffb900
-        - name: domain
-          in: body
-          description: the domain to modify
-          required: true
-          schema:
-            $ref: "#/definitions/Domain"
-      responses:
-        200:
-          description: A result containing the modified zone
-          schema:
-            $ref: "#/definitions/DomainResult"
-        default:
-          description: Unexpected error
-          schema:
-            $ref: "#/definitions/Error"
     delete:
       summary: delete domain
       description: Delete an existing domain
@@ -498,6 +439,7 @@ paths:
           description: Unexpected error
           schema:
             $ref: "#/definitions/Error"
+
   /proxy:
     get:
       tags:
@@ -558,35 +500,6 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-    put:
-      summary: modify proxy
-      description: Modify an existing proxy
-      tags:
-        - Proxies
-      consumes:
-        - application/json
-      parameters:
-        - name: proxyKey
-          in: path
-          description: the proxy key
-          required: true
-          type: string
-          x-example: 72c86057-ee8d-4a2b-a3a7-760fbd1d3b9f
-        - name: proxy
-          in: body
-          description: the proxy to modify
-          required: true
-          schema:
-            $ref: "#/definitions/Proxy"
-      responses:
-        200:
-          description: A result containing the modified proxy
-          schema:
-            $ref: "#/definitions/ProxyResult"
-        default:
-          description: Unexpected error
-          schema:
-            $ref: "#/definitions/Error"
     delete:
       summary: delete proxy
       description: Delete existing proxy
@@ -909,35 +822,6 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-    put:
-      summary: modify cluster
-      description: Modify details for an existing cluster
-      tags:
-        - Cluster
-      consumes:
-        - application/json
-      parameters:
-        - name: clusterKey
-          in: path
-          description: the cluster key
-          required: true
-          type: string
-          x-example: 7ef80556-60bb-46bd-4cec-f4e2533aa75c
-        - name: cluster
-          in: body
-          description: the cluster to modify
-          required: true
-          schema:
-            $ref: "#/definitions/Cluster"
-      responses:
-        200:
-          description: A result containing the modified cluster
-          schema:
-            $ref: "#/definitions/ClusterResult"
-        default:
-          description: Unexpected error
-          schema:
-            $ref: "#/definitions/Error"
     delete:
       summary: delete cluster
       description: Delete an existing cluster

@@ -11,6 +11,7 @@ var defaultSharedRulesName = "dredd-shared-rules-" + Math.random().toString(36).
 var proxyName = "dredd-proxy-" + Math.random().toString(36).substring(7);
 var routeName = "dredd-route-" + Math.random().toString(36).substring(7);
 var clusterName = "dredd-cluster-" + Math.random().toString(36).substring(7);
+var sharedRulesName = "dredd-shared-rules-" + Math.random().toString(36).substring(7);
 
 // set up default objects. The default objects are used in cases where a test case (e.g. route) needs
 // a pre-existng object to attach to. Other test cases (e.g. zone itself) are ordered, so they'll create,
@@ -25,6 +26,7 @@ hooks.beforeAll(function(transactions, done) {
       getOrMakeObject(transactions[0], "cluster", defaultClusterName, cluster, function(response, body, err) {
         var newCluster = responseStash[defaultClusterName];
         var sr = {
+          name: defaultSharedRulesName,
           zone_key: zone.zone_key,
           default: {
             light: [{
@@ -107,21 +109,6 @@ hooks.before("Zone > /v1.0/zone/{zoneKey} > get zone > 200 > application/json", 
   transaction.request.uri = "/v1.0/zone/" + dz.zone_key
 });
 
-// mutate the path to modify the zone we created previously
-hooks.before("Zone > /v1.0/zone/{zoneKey} > modify zone > 200 > application/json", function(transaction) {
-  var body = responseStash[zoneName];
-  body.name = body.name + "-modified";
-  transaction.request.body = JSON.stringify(body);
-  transaction.fullPath = "/v1.0/zone/" + body.zone_key
-  transaction.request.uri = "/v1.0/zone/" + body.zone_key
-});
-
-// in the after hook we stash the modified object so we can use the new checksum in the delete call
-hooks.after("Zone > /v1.0/zone/{zoneKey} > modify zone > 200 > application/json", function(transaction) {
-  zone = JSON.parse(transaction.real.body).result;
-  responseStash[zoneName] = zone;
-});
-
 // mutate path to delete the zone we created previously
 hooks.before("Zone > /v1.0/zone/{zoneKey} > delete zone > 200 > application/json", function(transaction) {
   ddz = responseStash[zoneName];
@@ -152,19 +139,6 @@ hooks.before("Domain > /v1.0/domain/{domainKey} > get domain > 200 > application
   transaction.request.uri = "/v1.0/domain/" + domain.domain_key;
 });
 
-hooks.before("Domain > /v1.0/domain/{domainKey} > modify domain > 200 > application/json", function(transaction) {
-  var body = responseStash[domainName];
-  body.name = body.name + "-modified";
-  transaction.request.body = JSON.stringify(body);
-  transaction.fullPath = "/v1.0/domain/" + body.domain_key
-  transaction.request.uri = "/v1.0/domain/" + body.domain_key
-});
-
-hooks.after("Domain > /v1.0/domain/{domainKey} > modify domain > 200 > application/json", function(transaction) {
-  domain = JSON.parse(transaction.real.body).result;
-  responseStash[domainName] = domain;
-});
-
 hooks.before("Domain > /v1.0/domain/{domainKey} > delete domain > 200 > application/json", function(transaction) {
   domain = responseStash[domainName];
   transaction.fullPath = "/v1.0/domain/" + domain.domain_key + "?checksum=" + domain.checksum;
@@ -191,19 +165,6 @@ hooks.before("Proxy > /v1.0/proxy/{proxyKey} > get proxy > 200 > application/jso
   proxy = responseStash[proxyName];
   transaction.fullPath = "/v1.0/proxy/" + proxy.proxy_key;
   transaction.request.uri = "/v1.0/proxy/" + proxy.proxy_key;
-});
-
-hooks.before("Proxy > /v1.0/proxy/{proxyKey} > modify proxy > 200 > application/json", function(transaction) {
-  var body = responseStash[proxyName];
-  body.name = body.name + "-modified";
-  transaction.request.body = JSON.stringify(body);
-  transaction.fullPath = "/v1.0/proxy/" + body.proxy_key
-  transaction.request.uri = "/v1.0/proxy/" + body.proxy_key
-});
-
-hooks.after("Proxy > /v1.0/proxy/{proxyKey} > modify proxy > 200 > application/json", function(transaction) {
-  proxy = JSON.parse(transaction.real.body).result;
-  responseStash[proxyName] = proxy;
 });
 
 hooks.before("Proxy > /v1.0/proxy/{proxyKey} > delete proxy > 200 > application/json", function(transaction) {
@@ -250,6 +211,7 @@ hooks.before("Shared Rules > /v1.0/shared_rules > create shared_rules > 200 > ap
   // it also results in better validation, as we can verify array elements
   var sr = {
     zone_key: zone.zone_key,
+    name: sharedRulesName,
     default: {
       light: [{
         weight: 1,
@@ -527,6 +489,42 @@ hooks.before("Cluster > /v1.0/cluster/{clusterKey}/instances/{instanceIdentifier
   transaction.request.uri = path;
 });
 
+// this hook is another exception. WHen we do a get, we're looking at the cluster we just deleted the only instance from.
+// This fixes up any instances members that are null and swaps them out with empty arrays
+hooks.beforeValidation("Cluster > /v1.0/cluster/{clusterKey}/instances/{instanceIdentifier} > remove instance > 200 > application/json", function(transaction) {
+  clusters = JSON.parse(transaction.real.body);
+  for (var i = 0; i < clusters.result.length; i++) {
+    cluster = clusters.result[i];
+    if (cluster.instances == null) {
+      cluster.instances = [];
+    }
+  }
+  transaction.real.body = JSON.stringify(clusters);
+});
+
+// changelog hooks. Basically just get domain objects that exist into the queries
+
+hooks.before("Audit Log > /v1.0/changelog/domain-graph/{domainKey} > get changes related to the indicated domain > 200 > application/json", function(transaction) {
+  domain = responseStash[domainName];
+  transaction.fullPath = "/v1.0/changelog/domain-graph/" + domain.domain_key;
+  transaction.request.uri = transaction.fullPath;
+});
+
+hooks.before("Audit Log > /v1.0/changelog/route-graph/{routeKey} > get changes related to the indicated route > 200 > application/json", function(transaction) {
+  route = responseStash[routeName];
+  transaction.fullPath = "/v1.0/changelog/route-graph/" + route.route_key;
+  transaction.request.uri = transaction.fullPath;
+});
+hooks.before("Audit Log > /v1.0/changelog/shared-rules-graph/{sharedRulesKey} > get changes related to the indicated SharedRules > 200 > application/json", function(transaction) {
+  sharedRules = responseStash[sharedRulesName];
+  transaction.fullPath = "/v1.0/changelog/domain-graph/" + sharedRules.shared_rules_key;
+  transaction.request.uri = transaction.fullPath;
+});
+hooks.before("Audit Log > /v1.0/changelog/cluster-graph/{clusterKey} > get changes related to the indicated cluster > 200 > application/json", function(transaction) {
+  cluster = responseStash[clusterName];
+  transaction.fullPath = "/v1.0/changelog/cluster-graph/" + domain.cluster_key;
+  transaction.request.uri = transaction.fullPath;
+});
 
 // utility functiosn
 
