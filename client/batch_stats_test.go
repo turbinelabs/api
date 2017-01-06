@@ -31,6 +31,8 @@ import (
 	"github.com/turbinelabs/test/log"
 )
 
+const sourceString1 = "the-source"
+
 func payloadOfSize(s int) *statsapi.Payload {
 	switch s {
 	case 0:

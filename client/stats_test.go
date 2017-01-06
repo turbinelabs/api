@@ -38,28 +38,21 @@ import (
 	httperr "github.com/turbinelabs/api/http/error"
 	apiheader "github.com/turbinelabs/api/http/header"
 	statsapi "github.com/turbinelabs/api/service/stats"
-	"github.com/turbinelabs/logparser/metric"
 	"github.com/turbinelabs/nonstdlib/executor"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 	"github.com/turbinelabs/test/assert"
 )
 
+const metricName1 = "group.metric"
+
 var (
-	sourceString1 = "the-source"
-
-	source1, _ = metric.NewSource(sourceString1, "")
-
-	metricName1 = "group.metric"
-	metric1, _  = source1.NewMetric(metricName1)
-
-	when1       = time.Now()
-	when1Micros = tbntime.ToUnixMicro(when1)
+	when1Micros = tbntime.ToUnixMicro(time.Now())
 
 	payload = &statsapi.Payload{
 		Source: sourceString1,
 		Stats: []statsapi.Stat{
 			{
-				Name:      metric1.Name(),
+				Name:      metricName1,
 				Value:     1.41421,
 				Timestamp: when1Micros,
 				Tags:      map[string]string{"tag": "tag-value"},
@@ -71,7 +64,7 @@ var (
 		Source: sourceString1,
 		Stats: []statsapi.Stat{
 			{
-				Name:      metric1.Name(),
+				Name:      metricName1,
 				Value:     math.Inf(1),
 				Timestamp: when1Micros,
 				Tags:      map[string]string{},
