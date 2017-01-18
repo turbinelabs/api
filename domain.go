@@ -28,6 +28,7 @@ type Domain struct {
 	ZoneKey   ZoneKey   `json:"zone_key"`
 	Name      string    `json:"name"`
 	Port      int       `json:"port"`
+	Redirects Redirects `json:"redirects"`
 	OrgKey    OrgKey    `json:"-"`
 	Checksum
 }
@@ -71,6 +72,11 @@ func (d Domain) IsValid(precreation bool) *ValidationError {
 		errs.AddNew(ecase("port", "must be non-zero"))
 	}
 
+	errs.MergePrefixed(
+		d.Redirects.IsValid(),
+		fmt.Sprintf("domain[%v]", d.DomainKey),
+	)
+
 	return errs.OrNil()
 }
 
@@ -82,7 +88,8 @@ func (d Domain) Equals(o Domain) bool {
 		d.Name == o.Name &&
 		d.Port == o.Port &&
 		d.Checksum.Equals(o.Checksum) &&
-		d.OrgKey == o.OrgKey
+		d.OrgKey == o.OrgKey &&
+		d.Redirects.Equals(o.Redirects)
 }
 
 // Check for semantic equality between this Domain an another. Domains must

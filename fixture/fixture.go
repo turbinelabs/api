@@ -106,12 +106,14 @@ type DataFixturesT struct {
 	DomainZone1       api.ZoneKey   // zone of domain 1
 	DomainName1       string        // name of domain 1
 	DomainPort1       int           // port of domain 1
+	DomainRedirects1  api.Redirects // part of domain 1
 	DomainChecksum1   api.Checksum  // checks for domain 1
 	DomainOrgKey1     api.OrgKey
 	DomainKey2        api.DomainKey // UUID of domain 2
 	DomainName2       string        // name of domain 2
 	DomainZone2       api.ZoneKey   // zone of domain 2
 	DomainPort2       int           // port of domain 2
+	DomainRedirects2  api.Redirects // part of domain 2
 	DomainOrgKey2     api.OrgKey
 	DomainChecksum2   api.Checksum // checks for domain 2
 	Domain1           api.Domain   // domain 1
@@ -234,18 +236,21 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	ClusterOrgKey2:   "1",
 	ClusterChecksum2: api.Checksum{"cluster-checksum-2"},
 
-	DomainKey1:      "asonetuhasonetuh",
-	DomainZone1:     "zk1",
-	DomainName1:     "domain-1",
-	DomainPort1:     8080,
-	DomainChecksum1: api.Checksum{"ck1"},
-	DomainOrgKey1:   "1",
-	DomainKey2:      "sntaohesntahoesuntaohe",
-	DomainZone2:     "zk2",
-	DomainName2:     "domain-2",
-	DomainPort2:     5050,
-	DomainOrgKey2:   "1",
-	DomainChecksum2: api.Checksum{"ck2"},
+	DomainKey1:  "asonetuhasonetuh",
+	DomainZone1: "zk1",
+	DomainName1: "domain-1",
+	DomainPort1: 8080,
+	DomainRedirects1: api.Redirects{
+		{"redirect1", ".*", "http://www.example.com", api.PermanentRedirect}},
+	DomainChecksum1:  api.Checksum{"ck1"},
+	DomainOrgKey1:    "1",
+	DomainKey2:       "sntaohesntahoesuntaohe",
+	DomainZone2:      "zk2",
+	DomainName2:      "domain-2",
+	DomainPort2:      5050,
+	DomainRedirects2: nil,
+	DomainOrgKey2:    "1",
+	DomainChecksum2:  api.Checksum{"ck2"},
 
 	ProxyKey1:      "proxy-1",
 	ProxyZone1:     "proxy-zone-1",
@@ -380,6 +385,7 @@ func init() {
 		DataFixtures.DomainZone1,
 		DataFixtures.DomainName1,
 		DataFixtures.DomainPort1,
+		DataFixtures.DomainRedirects1,
 		DataFixtures.DomainOrgKey1,
 		DataFixtures.DomainChecksum1,
 	}
@@ -389,6 +395,7 @@ func init() {
 		DataFixtures.DomainZone2,
 		DataFixtures.DomainName2,
 		DataFixtures.DomainPort2,
+		DataFixtures.DomainRedirects2,
 		DataFixtures.DomainOrgKey2,
 		DataFixtures.DomainChecksum2,
 	}

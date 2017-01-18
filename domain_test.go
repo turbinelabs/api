@@ -23,7 +23,15 @@ import (
 )
 
 func getDomains() (Domain, Domain) {
-	d := Domain{"dkey", "zkey", "name", 1234, "okey", Checksum{"aoeusnth"}}
+	d := Domain{
+		"dkey",
+		"zkey",
+		"name",
+		1234,
+		Redirects{{"redir", ".*", "http://www.example.com", PermanentRedirect}},
+		"okey",
+		Checksum{"aoeusnth"},
+	}
 	return d, d
 }
 
@@ -90,7 +98,15 @@ func TestDomainNotEqualsPortVaries(t *testing.T) {
 }
 
 func getDomain() Domain {
-	return Domain{"dkey", "zk", "name", 1234, "okey", Checksum{}}
+	return Domain{
+		"dkey",
+		"zk",
+		"name",
+		1234,
+		Redirects{{"sample-redirect", ".*", "http://www.example.com", PermanentRedirect}},
+		"okey",
+		Checksum{},
+	}
 }
 
 func TestDomainIsValidSuccessPreCreation(t *testing.T) {
@@ -132,10 +148,20 @@ func TestDomainIsValidFailedPort(t *testing.T) {
 	assert.NonNil(t, d1.IsValid(false))
 }
 
+func TestDomainIsValidFailedRedirect(t *testing.T) {
+	d1 := getDomain()
+	d1.Redirects[0].To = ""
+	err := d1.IsValid(true)
+	assert.NonNil(t, err)
+	assert.HasSameElements(t, err.Errors, []ErrorCase{
+		{"domain[dkey].redirects[sample-redirect].to", "must not be empty"},
+	})
+}
+
 func getThreeDomains() (Domain, Domain, Domain) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, "okey", Checksum{}}
 
 	return d1, d2, d3
 }
@@ -168,9 +194,9 @@ func TestDomainsEqualsFailure(t *testing.T) {
 }
 
 func TestDomainsIsValidSuccess(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.Nil(t, ds.IsValid(true))
@@ -178,9 +204,9 @@ func TestDomainsIsValidSuccess(t *testing.T) {
 }
 
 func TestDomainsIsValidFailureDupe(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1, d3}
 
 	assert.NonNil(t, ds.IsValid(true))
@@ -188,9 +214,9 @@ func TestDomainsIsValidFailureDupe(t *testing.T) {
 }
 
 func TestDomainsIsValidFailureBadDomain(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "", "name", 20, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "", "name", 20, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.NonNil(t, ds.IsValid(true))
