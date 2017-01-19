@@ -104,8 +104,8 @@ func mkTimeArgs(start, stop time.Time) apihttp.Params {
 		if t.IsZero() {
 			return
 		}
-		s := tbntime.Format(&t)
-		result[n] = s
+		s := tbntime.ToUnixMicro(t)
+		result[n] = fmt.Sprintf("%v", s)
 	}
 
 	fillTime(queryargs.WindowStart, start)

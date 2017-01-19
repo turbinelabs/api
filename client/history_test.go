@@ -138,13 +138,13 @@ func TestGraph(t *testing.T) {
 							if start.IsZero() {
 								assert.Equal(t, startGot, "")
 							} else {
-								assert.Equal(t, startGot, tbntime.Format(&start))
+								assert.Equal(t, startGot, fmt.Sprintf("%v", tbntime.ToUnixMicro(start)))
 							}
 
 							if stop.IsZero() {
 								assert.Equal(t, stopGot, "")
 							} else {
-								assert.Equal(t, stopGot, tbntime.Format(&stop))
+								assert.Equal(t, stopGot, fmt.Sprintf("%v", tbntime.ToUnixMicro(stop)))
 							}
 						},
 						status:   200,
