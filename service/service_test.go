@@ -223,7 +223,6 @@ func TestProxyFilterMatches(t *testing.T) {
 func getProxyFilter() ProxyFilter {
 	return ProxyFilter{
 		"proxy-key",
-		api.Instance{"host", 8080, nil},
 		"proxy-name",
 		[]api.DomainKey{"key", "key2"},
 		"zone-key",
@@ -242,14 +241,6 @@ func TestProxyFilterEqualsMismatchProxyKey(t *testing.T) {
 	p1 := getProxyFilter()
 	p2 := getProxyFilter()
 	p2.ProxyKey = "aoesutnh"
-
-	assert.False(t, p1.Equals(p2))
-}
-
-func TestProxyFilterEqualsMismatchInstance(t *testing.T) {
-	p1 := getProxyFilter()
-	p2 := getProxyFilter()
-	p2.Instance = api.Instance{"asoetunh", 8080, nil}
 
 	assert.False(t, p1.Equals(p2))
 }

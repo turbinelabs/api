@@ -26,7 +26,6 @@ type ProxyKey string
 
 // A Proxy is a named Instance, responsible for serving one or more Domains.
 type Proxy struct {
-	Instance               // TODO: we should replace Instance with HostSpecifier or something
 	ProxyKey   ProxyKey    `json:"proxy_key"` // overwritten on create
 	ZoneKey    ZoneKey     `json:"zone_key"`
 	Name       string      `json:"name"`
@@ -60,8 +59,6 @@ func (p Proxy) IsValid(precreation bool) *ValidationError {
 		errs.AddNew(ecase("name", "must not be empty"))
 	}
 
-	errs.MergePrefixed(p.Instance.IsValid(precreation), "")
-
 	return errs.OrNil()
 }
 
@@ -73,7 +70,6 @@ func (p Proxy) IsNil() bool {
 // derived fields).
 func (p Proxy) Equals(o Proxy) bool {
 	var (
-		instEq = p.Instance.Equals(o.Instance)
 		keyEq  = p.ProxyKey == o.ProxyKey
 		zoneEq = p.ZoneKey == o.ZoneKey
 		nameEq = p.Name == o.Name
@@ -81,7 +77,7 @@ func (p Proxy) Equals(o Proxy) bool {
 		csEq   = p.Checksum.Equals(o.Checksum)
 	)
 
-	if !(instEq && keyEq && zoneEq && nameEq && csEq && orgEq) {
+	if !(keyEq && zoneEq && nameEq && csEq && orgEq) {
 		return false
 	}
 

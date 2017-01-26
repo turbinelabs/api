@@ -124,7 +124,6 @@ type DataFixturesT struct {
 	ProxyKey1        api.ProxyKey
 	ProxyZone1       api.ZoneKey
 	ProxyMetadata1   api.Metadata
-	ProxyInstance1   api.Instance
 	ProxyName1       string
 	ProxyDomainKeys1 []api.DomainKey
 	ProxyChecksum1   api.Checksum
@@ -132,7 +131,6 @@ type DataFixturesT struct {
 	ProxyKey2        api.ProxyKey
 	ProxyZone2       api.ZoneKey
 	ProxyMetadata2   api.Metadata
-	ProxyInstance2   api.Instance
 	ProxyName2       string
 	ProxyDomainKeys2 []api.DomainKey
 	ProxyChecksum2   api.Checksum
@@ -256,13 +254,11 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	ProxyZone1:     "proxy-zone-1",
 	ProxyName1:     "proxy-name-1",
 	ProxyChecksum1: api.Checksum{"proxy-cs-1"},
-	ProxyInstance1: api.Instance{"proxy-host-1", 8085, api.Metadata{{"key", "value"}}},
 	ProxyOrgKey1:   "1",
 	ProxyKey2:      "proxy-2",
 	ProxyZone2:     "proxy-zone-2",
 	ProxyName2:     "proxy-name-2",
 	ProxyOrgKey2:   "1",
-	ProxyInstance2: api.Instance{"proxy-host-2", 8085, api.Metadata{}},
 	ProxyChecksum2: api.Checksum{"proxy-cs-2"},
 
 	RouteKey1:      "route-key-1",
@@ -413,7 +409,6 @@ func init() {
 		DataFixtures.Domain2.DomainKey,
 	}
 	DataFixtures.Proxy1 = api.Proxy{
-		DataFixtures.ProxyInstance1,
 		DataFixtures.ProxyKey1,
 		DataFixtures.ProxyZone1,
 		DataFixtures.ProxyName1,
@@ -424,7 +419,6 @@ func init() {
 
 	DataFixtures.ProxyDomainKeys2 = DataFixtures.ProxyDomainKeys1
 	DataFixtures.Proxy2 = api.Proxy{
-		DataFixtures.ProxyInstance2,
 		DataFixtures.ProxyKey2,
 		DataFixtures.ProxyZone2,
 		DataFixtures.ProxyName2,

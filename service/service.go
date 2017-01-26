@@ -199,7 +199,6 @@ type Domain interface {
 
 type ProxyFilter struct {
 	ProxyKey   api.ProxyKey    `json:"proxy_key"`
-	Instance   api.Instance    `json:"instance"` // Matches Host/Port, ignores Metadata
 	Name       string          `json:"name"`
 	DomainKeys []api.DomainKey `json:"domain_keys"` // Matches Proxies with a superset of the specified DomainKeys
 	ZoneKey    api.ZoneKey     `json:"zone_key"`
@@ -209,13 +208,12 @@ type ProxyFilter struct {
 func (pf ProxyFilter) Matches(p api.Proxy) bool {
 	var (
 		keyMatch  = pf.ProxyKey == "" || pf.ProxyKey == p.ProxyKey
-		instMatch = pf.Instance.IsNil() || pf.Instance.Equivalent(p.Instance)
 		nameMatch = pf.Name == "" || pf.Name == p.Name
 		zoneMatch = pf.ZoneKey == "" || pf.ZoneKey == p.ZoneKey
 		orgMatch  = pf.OrgKey == "" || pf.OrgKey == p.OrgKey
 	)
 
-	if !(keyMatch && instMatch && nameMatch && zoneMatch && orgMatch) {
+	if !(keyMatch && nameMatch && zoneMatch && orgMatch) {
 		return false
 	}
 
@@ -243,7 +241,6 @@ func (pf ProxyFilter) IsNil() bool {
 
 func (pf ProxyFilter) Equals(o ProxyFilter) bool {
 	if !(pf.ProxyKey == o.ProxyKey &&
-		pf.Instance.Equals(o.Instance) &&
 		pf.Name == o.Name &&
 		pf.ZoneKey == o.ZoneKey &&
 		pf.OrgKey == o.OrgKey &&
