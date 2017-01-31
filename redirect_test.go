@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -24,7 +25,7 @@ import (
 
 func getRedir() Redirect {
 	return Redirect{
-		"Name",
+		"0-Name",
 		"(.*)",
 		"http://www.example.com?original=$1",
 		PermanentRedirect,
@@ -111,6 +112,18 @@ func TestRedirectIsValid(t *testing.T) {
 	assert.Nil(t, r.IsValid())
 }
 
+func TestRedirectIsValidFailsNameBadChar(t *testing.T) {
+	r := getRedir()
+	r.Name = "aoeu snth"
+	assert.DeepEqual(t,
+		r.IsValid(),
+		&ValidationError{[]ErrorCase{{
+			"redirects[aoeu snth].name",
+			fmt.Sprintf("must match %s", NamePattern.String()),
+		}}},
+	)
+}
+
 func TestRedirectIsValidFailsNoName(t *testing.T) {
 	r := getRedir()
 	r.Name = ""
@@ -125,7 +138,7 @@ func TestRedirectIsValidFailsNoFrom(t *testing.T) {
 	r.From = ""
 	assert.DeepEqual(t,
 		r.IsValid(),
-		&ValidationError{[]ErrorCase{{"redirects[Name].from", "must not be empty"}}},
+		&ValidationError{[]ErrorCase{{"redirects[0-Name].from", "must not be empty"}}},
 	)
 }
 
@@ -134,7 +147,7 @@ func TestRedirectIsValidFailsNoTo(t *testing.T) {
 	r.To = ""
 	assert.DeepEqual(t,
 		r.IsValid(),
-		&ValidationError{[]ErrorCase{{"redirects[Name].to", "must not be empty"}}},
+		&ValidationError{[]ErrorCase{{"redirects[0-Name].to", "must not be empty"}}},
 	)
 }
 
@@ -146,7 +159,7 @@ func TestRedirectIsValidFailsBadRegex(t *testing.T) {
 		t,
 		err,
 		&ValidationError{[]ErrorCase{{
-			"redirects[Name].from",
+			"redirects[0-Name].from",
 			"invalid url match expression 'error parsing regexp: missing closing ): `asonetu(asontehu`'",
 		}}},
 	)

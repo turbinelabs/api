@@ -33,6 +33,8 @@ const (
 	TemporaryRedirect RedirectType = "temporary"
 )
 
+var NamePattern = regexp.MustCompile("^[0-9a-zA-Z_-]+$")
+
 // Redirects is a collection of Domain redirect definitions
 type Redirects []Redirect
 
@@ -123,7 +125,7 @@ func (r Redirect) Equals(o Redirect) bool {
 // IsValid checks the validity of a Redirect; we currently verify that a
 // redirect:
 //
-//   * has a non-empty name
+//   * has a non-empty name matching NamePattern
 //   * contains a valid regex in From
 //   * contains a non-empty to
 //   * has a valid redirect type
@@ -140,6 +142,13 @@ func (r Redirect) IsValid() *ValidationError {
 
 	if r.Name == "" {
 		errs.AddNew(ecase("name", "must not be empty"))
+	} else {
+		if !NamePattern.Match([]byte(r.Name)) {
+			errs.AddNew(ecase(
+				"name",
+				fmt.Sprintf("must match %s", NamePattern.String()),
+			))
+		}
 	}
 
 	if r.From == "" {

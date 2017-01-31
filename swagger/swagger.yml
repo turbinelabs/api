@@ -416,7 +416,7 @@ paths:
       summary: delete domain
       description: Delete an existing domain
       tags:
-        - Domains
+        - Domain
       parameters:
         - name: domainKey
           in: path
@@ -972,6 +972,10 @@ definitions:
         type: string
       port:
         type: integer
+      redirects:
+        type: array
+        items:
+          $ref: "#/definitions/DomainRedirect"
       checksum:
         type: string
   DomainCreate:
@@ -1004,10 +1008,6 @@ definitions:
         type: string
       zone_key:
         type: string
-      host:
-        type: string
-      port:
-        type: integer
       domain_keys:
         type: array
         items:
@@ -1020,10 +1020,6 @@ definitions:
       name:
         type: string
       zone_key:
-        type: string
-      host:
-        type: string
-      port:
         type: string
       domain_keys:
         type: array
@@ -1041,6 +1037,35 @@ definitions:
     properties:
       result:
         $ref: "#/definitions/Proxy"
+
+  DomainRedirect:
+    type: object
+    required:
+      - name
+      - from
+      - to
+      - redirect_type
+    properties:
+      name:
+        description: "A descriptive name for this redirection."
+        type: string
+      from:
+        description: "A valid regex which is used to match against the requested URL."
+        type: string
+      to:
+        description: "If 'from' is a successful match this URL will be returned as a redirect. Capture groups in from may be referenced as $1, $2, etc. This should include a schema prefix and the server may be referenced by $host."
+        type: string
+      redirect_type:
+        description: "Indicates which HTTP response code (301 / 302) should be used to deliver the redirect."
+        type: string
+        enum:
+          - permanent
+          - temporary
+    example:
+      name: "force-https"
+      from: "(.*)"
+      to: "https://$host$1"
+      redirect_type: "permanent"
 
   Route:
     type: object
