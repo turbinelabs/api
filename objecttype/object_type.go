@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package objecttype defines the pseudo-enum ObjectType, which can be passed
+// along with an untyped object to recover the type without reflection.
 package objecttype
 
 import (

@@ -14,9 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-	Collection of all query args that might be passed to the Turbine Labs API.
-*/
+// Package queryargs is a collection of all query arguments that might be passed
+// to the Turbine Labs API.
 package queryargs
 
 const (

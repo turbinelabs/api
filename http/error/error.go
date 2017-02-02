@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 /*
-	service.http.error contains an error definition intended to be serialized
+	Package error contains an error definition intended to be serialized
 	and sent over the wire between the api-server and clients.
 
 	An error can be associated with either one of the top level domain objects

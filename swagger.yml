@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   title: Turbine Labs API
-  description: Traffic Management API
+  description: Turbine Labs Public REST API
   version: "1.0"
 # the domain of the service
 host: api.turbinelabs.io

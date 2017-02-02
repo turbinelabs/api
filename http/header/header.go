@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// package header defines constants for HTTP headers used by the Turbine Labs API
+// Package header defines constants for HTTP headers used by the Turbine Labs API
 package header
 
 const (

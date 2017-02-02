@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package fixture provides a set of fixtures for use in testing that requires
+// a fairly sane universe of api objects.
 package fixture
 
 import (

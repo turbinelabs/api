@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package api defines the types used by the Turbine Labs public API.
 package api
 
 import (
@@ -99,6 +100,7 @@ func (ve *ValidationError) MergePrefixed(children *ValidationError, under string
 	ve.Merge(c2)
 }
 
+// ValidationErrorsByAttribute implements sort.Interface
 type ValidationErrorsByAttribute struct {
 	e *ValidationError
 }

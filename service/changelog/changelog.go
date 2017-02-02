@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// changelog includes the filter definition necessary to make adhoc queries
-// against the object audit history that we track.
+// Package changelog includes the filter definition necessary to make adhoc
+// queries against the object audit history that we track.
 //
 // changelog filtering is represented by a Sum-of-Products format. This is
 // sufficient to encode any boolean expression. In short this means that a query

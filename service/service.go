@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package service defines interfaces representing the Turbine Labs public API
 package service
 
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE

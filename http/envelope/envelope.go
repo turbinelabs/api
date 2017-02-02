@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Contains the Response envelope which the http service and api server use to
-// encapsulate server behavior.
+// Package envelope contains the Response envelope used by the Turbine Labs
+// public API to encapsulate server behavior.
 package envelope
 
 import httperr "github.com/turbinelabs/api/http/error"

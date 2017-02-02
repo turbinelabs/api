@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package changetype defines the pseudo-enum ChangeType, which describes
+// the type of changes that can be made to data within a struct.
 package changetype
 
 import (

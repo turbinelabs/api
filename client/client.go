@@ -14,22 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-	Implements the Turbine service interface by constructing a HTTP client to a
-	specified backend api server.
-
-	In order to configure the desired Turbine service and Endpoint must be
-	specified which then may be passed into the constructor for a HTTP service:
-		endpoint, err := NewEndpoint(HTTP, "dev.turbinelabs.io", 8080)
-		if err != nil {
-			return err
-		}
-
-		service := NewAll(Endpoint, apiKey)
-
-	For a detailed discussion about what each of these values mean see method
-	docs.
-*/
+// Package client implements the Turbine service interface by constructing an
+// HTTP client to a specified backend api server.
+//
+// In order to configure the desired Turbine service and Endpoint must be
+// specified which then may be passed into the constructor for a HTTP service:
+// 	endpoint, err := NewEndpoint(HTTP, "dev.turbinelabs.io", 8080)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	service := NewAll(Endpoint, apiKey)
+//
+// For a detailed discussion about what each of these values mean see method
+// docs.
 package client
 
 import (
