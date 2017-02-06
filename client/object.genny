@@ -1,0 +1,191 @@
+package client
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
+	"github.com/turbinelabs/api"
+	"github.com/turbinelabs/api/queryargs"
+	"github.com/turbinelabs/api/service"
+	tbnhttp "github.com/turbinelabs/client/http"
+	httperr "github.com/turbinelabs/api/http/error"
+)
+
+type http__Type__V1 struct {
+	dest tbnhttp.Endpoint
+
+	requestHandler tbnhttp.RequestHandler
+}
+
+// Construct a new HTTP backed __Type__ API implementation.
+//
+// Parameters:
+//	dest - service handling our HTTP requests; cf. NewService
+//	apiKey - key used to sign our API requests; cf. NewService
+//	client - HTTP client used to make these requests; must NOT be nil
+func New__Type__V1(
+	dest tbnhttp.Endpoint,
+	apiKey string,
+	client *http.Client,
+) (*http__Type__V1, error) {
+	if client == nil {
+		// Future investigation note: when nil is passed in here the actual failure
+		// is way upstream in a curious way; investigating could lend understanding
+		// of some cool go internals
+		return nil, fmt.Errorf("Attempting to configure __Type__ with nil *http.Client")
+	}
+	return &http__Type__V1{dest, tbnhttp.NewRequestHandler(client, apiKey, apiClientID)}, nil
+}
+
+// creates a __type__-scoped version of the specified path
+func (hc *http__Type__V1) path(p string) string {
+	return "/v1.0__root__/__snake__" + p
+}
+
+// Construct a request to the associated __type__ Endpoint with a specified
+// method, path, query params, and body.
+func (hc *http__Type__V1) request(
+	method httpMethod,
+	path string,
+	params tbnhttp.Params,
+	body string,
+) (*http.Request, error) {
+	rdr := strings.NewReader(body)
+	req, err := http.NewRequest(string(method), hc.dest.Url(hc.path(path), params), rdr)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+func (hc *http__Type__V1) get(path string, params tbnhttp.Params) (*http.Request, error) {
+	return hc.request(mGET, path, params, "")
+}
+
+func (hc *http__Type__V1) post(
+	path string,
+	params tbnhttp.Params,
+	body string,
+) (*http.Request, error) {
+	return hc.request(mPOST, path, params, body)
+}
+
+func (hc *http__Type__V1) put(
+	path string,
+	params tbnhttp.Params,
+	body string,
+) (*http.Request, error) {
+	return hc.request(mPUT, path, params, body)
+}
+
+func (hc *http__Type__V1) delete(path string, params tbnhttp.Params) (*http.Request, error) {
+	return hc.request(mDELETE, path, params, "")
+}
+
+func (hc *http__Type__V1) Index(filters ...service.__Type__Filter) (api.__Coll__, error) {
+	params := tbnhttp.Params{}
+
+	if filters != nil && len(filters) != 0 {
+		filterBytes, e := json.Marshal(filters)
+		if e != nil {
+			return nil, httperr.New400(
+				fmt.Sprintf("unable to encode __type__ filters: %v", filters),
+				httperr.UnknownUnclassifiedCode)
+		}
+
+		params[queryargs.IndexFilters] = string(filterBytes)
+	}
+
+	response := make(api.__Coll__, 0, 10)
+	reqFn := func() (*http.Request, error) { return hc.get("", params) }
+
+	if err := hc.requestHandler.Do(reqFn, &response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (hc *http__Type__V1) Get(key api.__Type__Key) (api.__Type__, error) {
+	reqFn := func() (*http.Request, error) {
+		return hc.get("/"+url.QueryEscape(string(key)), nil)
+	}
+
+	response := api.__Type__{}
+	if err := hc.requestHandler.Do(reqFn, &response); err != nil {
+		return api.__Type__{}, err
+	}
+
+	return response, nil
+}
+
+func mkEncode__Type__Error(__type__ api.__Type__) *httperr.Error {
+	msg := fmt.Sprintf("could not encode provided __type__: %+v", __type__)
+	return httperr.New400(msg, httperr.UnknownEncodingCode)
+}
+
+func (hc *http__Type__V1) Create(new__Type__ api.__Type__) (api.__Type__, error) {
+	encoded := ""
+
+	if b, err := json.Marshal(new__Type__); err == nil {
+		encoded = string(b)
+	} else {
+                return api.__Type__{}, mkEncode__Type__Error(new__Type__)
+	}
+
+	reqFn := func() (*http.Request, error) { return hc.post("", nil, encoded) }
+	response := api.__Type__{}
+	if err := hc.requestHandler.Do(reqFn, &response); err != nil {
+		return api.__Type__{}, err
+	}
+
+	return response, nil
+}
+
+func (hc *http__Type__V1) Modify(__type__ api.__Type__) (api.__Type__, error) {
+	encoded := ""
+
+	if b, err := json.Marshal(__type__); err == nil {
+		encoded = string(b)
+	} else {
+                return api.__Type__{}, mkEncode__Type__Error(__type__)
+	}
+
+	response := api.__Type__{}
+	reqFn := func() (*http.Request, error) {
+		return hc.put("/"+url.QueryEscape(string(__type__.__Type__Key)), nil, encoded)
+	}
+
+	if err := hc.requestHandler.Do(reqFn, &response); err != nil {
+		return api.__Type__{}, err
+	}
+
+	return response, nil
+}
+
+func (hc *http__Type__V1) Delete(
+	__type__Key api.__Type__Key,
+	checksum api.Checksum,
+) error {
+	reqFn := func() (*http.Request, error) {
+		return hc.delete(
+			"/"+url.QueryEscape(string(__type__Key)),
+			tbnhttp.Params{queryargs.Checksum: checksum.Checksum},
+		)
+	}
+
+	if err := hc.requestHandler.Do(reqFn, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (hc *http__Type__V1) Purge(_ api.__Type__Key, _ api.Checksum) error {
+	return httperr.New501("Purge not implemented", httperr.MiscErrorCode)
+}

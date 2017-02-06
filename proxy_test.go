@@ -1,0 +1,127 @@
+package api
+
+import (
+	"testing"
+
+	"github.com/turbinelabs/test/assert"
+)
+
+func getProxies() (Proxy, Proxy) {
+	p := Proxy{
+		Instance:   Instance{Host: "host1", Port: 1},
+		ProxyKey:   "pkey1",
+		Name:       "name1",
+		ZoneKey:    "zkey1",
+		OrgKey:     "okey1",
+		Checksum:   Checksum{"csum1"},
+		DomainKeys: []DomainKey{"dkey1", "dkey2"},
+	}
+
+	return p, p
+}
+func TestProxyEquals(t *testing.T) {
+	p1, p2 := getProxies()
+
+	assert.True(t, p1.Equals(p2))
+	assert.True(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffHost(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.Host = "host2"
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffPort(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.Instance.Port = 2
+
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffProxyKey(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.ProxyKey = "pkey2"
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffZoneKey(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.ZoneKey = "zkey2"
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffName(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.Name = "name2"
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEquasDiffOrgKey(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.OrgKey = "okey2"
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEquasDiffChecksum(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.Checksum = Checksum{"csum2"}
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffDomains(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.DomainKeys = []DomainKey{"dkey1"}
+	assert.False(t, p1.Equals(p2))
+	assert.False(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffDomainOrder(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.DomainKeys = []DomainKey{"dkey2", "dkey1"}
+	assert.True(t, p1.Equals(p2))
+	assert.True(t, p2.Equals(p1))
+}
+
+func TestIsValid(t *testing.T) {
+	p := Proxy{Instance: Instance{Host: "host1", Port: 1}, ProxyKey: "pkey1", Name: "name1", ZoneKey: "zkey1"}
+	assert.Nil(t, p.IsValid(true))
+	assert.Nil(t, p.IsValid(false))
+}
+
+func TestIsValidNoProxyKey(t *testing.T) {
+	p := Proxy{Instance: Instance{Host: "host1", Port: 1}, Name: "name1", ZoneKey: "zkey1"}
+	assert.Nil(t, p.IsValid(true))
+	assert.NonNil(t, p.IsValid(false))
+}
+
+func TestIsValidNoHost(t *testing.T) {
+	p := Proxy{Instance: Instance{Port: 1}, ProxyKey: "pkey1", Name: "name1", ZoneKey: "zkey1"}
+	assert.NonNil(t, p.IsValid(true))
+	assert.NonNil(t, p.IsValid(false))
+}
+
+func TestIsValidNoPort(t *testing.T) {
+	p := Proxy{Instance: Instance{Host: "host1"}, ProxyKey: "pkey1", Name: "name1", ZoneKey: "zkey1"}
+	assert.NonNil(t, p.IsValid(true))
+	assert.NonNil(t, p.IsValid(false))
+}
+
+func TestIsValidNoName(t *testing.T) {
+	p := Proxy{Instance: Instance{Host: "host1", Port: 1}, ProxyKey: "pkey1", ZoneKey: "zkey1"}
+	assert.NonNil(t, p.IsValid(true))
+	assert.NonNil(t, p.IsValid(false))
+}
+
+func TestIsValidNoZoneKey(t *testing.T) {
+	p := Proxy{Instance: Instance{Host: "host1", Port: 1}, ProxyKey: "pkey1", Name: "name1"}
+	assert.NonNil(t, p.IsValid(true))
+	assert.NonNil(t, p.IsValid(false))
+}
