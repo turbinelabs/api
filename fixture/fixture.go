@@ -104,24 +104,26 @@ type DataFixturesT struct {
 	ClusterSlice       api.Clusters // slice of the two clusters
 	PublicClusterSlice api.Clusters
 
-	DomainKey1        api.DomainKey // UUID of domain 1
-	DomainZone1       api.ZoneKey   // zone of domain 1
-	DomainName1       string        // name of domain 1
-	DomainPort1       int           // port of domain 1
-	DomainRedirects1  api.Redirects // part of domain 1
-	DomainChecksum1   api.Checksum  // checks for domain 1
-	DomainOrgKey1     api.OrgKey
-	DomainKey2        api.DomainKey // UUID of domain 2
-	DomainName2       string        // name of domain 2
-	DomainZone2       api.ZoneKey   // zone of domain 2
-	DomainPort2       int           // port of domain 2
-	DomainRedirects2  api.Redirects // part of domain 2
-	DomainOrgKey2     api.OrgKey
-	DomainChecksum2   api.Checksum // checks for domain 2
-	Domain1           api.Domain   // domain 1
-	Domain2           api.Domain   // domain 2
-	DomainSlice       api.Domains  // slice of the two domains
-	PublicDomainSlice api.Domains
+	DomainKey1         api.DomainKey // UUID of domain 1
+	DomainZone1        api.ZoneKey   // zone of domain 1
+	DomainName1        string        // name of domain 1
+	DomainPort1        int           // port of domain 1
+	DomainRedirects1   api.Redirects // part of domain 1
+	DomainGzipEnabled1 bool          // part of domain 1
+	DomainChecksum1    api.Checksum  // checks for domain 1
+	DomainOrgKey1      api.OrgKey
+	DomainKey2         api.DomainKey // UUID of domain 2
+	DomainName2        string        // name of domain 2
+	DomainZone2        api.ZoneKey   // zone of domain 2
+	DomainPort2        int           // port of domain 2
+	DomainRedirects2   api.Redirects // part of domain 2
+	DomainGzipEnabled2 bool          // part of domain 2
+	DomainOrgKey2      api.OrgKey
+	DomainChecksum2    api.Checksum // checks for domain 2
+	Domain1            api.Domain   // domain 1
+	Domain2            api.Domain   // domain 2
+	DomainSlice        api.Domains  // slice of the two domains
+	PublicDomainSlice  api.Domains
 
 	ProxyKey1        api.ProxyKey
 	ProxyZone1       api.ZoneKey
@@ -242,15 +244,17 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	DomainPort1: 8080,
 	DomainRedirects1: api.Redirects{
 		{"redirect1", ".*", "http://www.example.com", api.PermanentRedirect}},
-	DomainChecksum1:  api.Checksum{"ck1"},
-	DomainOrgKey1:    "1",
-	DomainKey2:       "sntaohesntahoesuntaohe",
-	DomainZone2:      "zk2",
-	DomainName2:      "domain-2",
-	DomainPort2:      5050,
-	DomainRedirects2: nil,
-	DomainOrgKey2:    "1",
-	DomainChecksum2:  api.Checksum{"ck2"},
+	DomainGzipEnabled1: true,
+	DomainChecksum1:    api.Checksum{"ck1"},
+	DomainOrgKey1:      "1",
+	DomainKey2:         "sntaohesntahoesuntaohe",
+	DomainZone2:        "zk2",
+	DomainName2:        "domain-2",
+	DomainPort2:        5050,
+	DomainRedirects2:   nil,
+	DomainGzipEnabled2: false,
+	DomainOrgKey2:      "1",
+	DomainChecksum2:    api.Checksum{"ck2"},
 
 	ProxyKey1:      "proxy-1",
 	ProxyZone1:     "proxy-zone-1",
@@ -384,6 +388,7 @@ func init() {
 		DataFixtures.DomainName1,
 		DataFixtures.DomainPort1,
 		DataFixtures.DomainRedirects1,
+		DataFixtures.DomainGzipEnabled1,
 		DataFixtures.DomainOrgKey1,
 		DataFixtures.DomainChecksum1,
 	}
@@ -394,6 +399,7 @@ func init() {
 		DataFixtures.DomainName2,
 		DataFixtures.DomainPort2,
 		DataFixtures.DomainRedirects2,
+		DataFixtures.DomainGzipEnabled2,
 		DataFixtures.DomainOrgKey2,
 		DataFixtures.DomainChecksum2,
 	}

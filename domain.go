@@ -24,12 +24,13 @@ type DomainKey string
 
 // A Domain represents the TLD or subdomain under which which a set of Routes is served.
 type Domain struct {
-	DomainKey DomainKey `json:"domain_key"` // overwritten for create
-	ZoneKey   ZoneKey   `json:"zone_key"`
-	Name      string    `json:"name"`
-	Port      int       `json:"port"`
-	Redirects Redirects `json:"redirects"`
-	OrgKey    OrgKey    `json:"-"`
+	DomainKey   DomainKey `json:"domain_key"` // overwritten for create
+	ZoneKey     ZoneKey   `json:"zone_key"`
+	Name        string    `json:"name"`
+	Port        int       `json:"port"`
+	Redirects   Redirects `json:"redirects"`
+	GzipEnabled bool      `json:"gzip_enabled"`
+	OrgKey      OrgKey    `json:"-"`
 	Checksum
 }
 
@@ -89,6 +90,7 @@ func (d Domain) Equals(o Domain) bool {
 		d.Port == o.Port &&
 		d.Checksum.Equals(o.Checksum) &&
 		d.OrgKey == o.OrgKey &&
+		d.GzipEnabled == o.GzipEnabled &&
 		d.Redirects.Equals(o.Redirects)
 }
 

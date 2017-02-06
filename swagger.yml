@@ -974,6 +974,9 @@ definitions:
         type: integer
       checksum:
         type: string
+      gzip_enabled:
+        description: "EXPERIMENTAL: if set to true will enable gzip compression on data that passes trough this domain"
+        type: boolean
   DomainCreate:
     type: object
     properties:
