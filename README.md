@@ -14,7 +14,7 @@
 # turbinelabs/api
 
 [![Apache 2.0](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
-[![GoDoc](https://https://godoc.org/github.com/turbinelabs/api?status.svg)](https://https://godoc.org/github.com/turbinelabs/api)
+[![GoDoc](https://godoc.org/github.com/turbinelabs/api?status.svg)](https://godoc.org/github.com/turbinelabs/api)
 [![CircleCI](https://circleci.com/gh/turbinelabs/api.svg?style=shield)](https://circleci.com/gh/turbinelabs/api)
 
 The api project provides Go bindings for the Turbine Labs public API. We use
