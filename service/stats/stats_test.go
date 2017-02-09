@@ -80,14 +80,14 @@ func TestStatsInc(t *testing.T) {
 	})
 
 	assert.Equal(t, st.Name, "metric")
-	assert.Equal(t, st.Value, 1.0)
+	assert.Equal(t, *st.Value, 1.0)
 
 	st = testStatsWithScope(t, "a/b/c", func(s *asStats) error {
 		return s.Inc("metric", 2)
 	})
 
 	assert.Equal(t, st.Name, "a/b/c/metric")
-	assert.Equal(t, st.Value, 2.0)
+	assert.Equal(t, *st.Value, 2.0)
 }
 
 func TestStatsGauge(t *testing.T) {
@@ -96,14 +96,14 @@ func TestStatsGauge(t *testing.T) {
 	})
 
 	assert.Equal(t, st.Name, "metric")
-	assert.Equal(t, st.Value, 123.0)
+	assert.Equal(t, *st.Value, 123.0)
 
 	st = testStatsWithScope(t, "a/b/c", func(s *asStats) error {
 		return s.Gauge("metric", 200)
 	})
 
 	assert.Equal(t, st.Name, "a/b/c/metric")
-	assert.Equal(t, st.Value, 200.0)
+	assert.Equal(t, *st.Value, 200.0)
 }
 
 func TestStatsTimingDuration(t *testing.T) {
@@ -112,12 +112,12 @@ func TestStatsTimingDuration(t *testing.T) {
 	})
 
 	assert.Equal(t, st.Name, "metric")
-	assert.Equal(t, st.Value, 1.234)
+	assert.Equal(t, *st.Value, 1.234)
 
 	st = testStatsWithScope(t, "a/b/c", func(s *asStats) error {
 		return s.TimingDuration("metric", 2*time.Second)
 	})
 
 	assert.Equal(t, st.Name, "a/b/c/metric")
-	assert.Equal(t, st.Value, 2.0)
+	assert.Equal(t, *st.Value, 2.0)
 }

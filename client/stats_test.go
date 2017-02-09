@@ -39,6 +39,7 @@ import (
 	apiheader "github.com/turbinelabs/api/http/header"
 	statsapi "github.com/turbinelabs/api/service/stats"
 	"github.com/turbinelabs/nonstdlib/executor"
+	"github.com/turbinelabs/nonstdlib/ptr"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 	"github.com/turbinelabs/test/assert"
 )
@@ -53,7 +54,7 @@ var (
 		Stats: []statsapi.Stat{
 			{
 				Name:      metricName1,
-				Value:     1.41421,
+				Value:     ptr.Float64(1.41421),
 				Timestamp: when1Micros,
 				Tags:      map[string]string{"tag": "tag-value"},
 			},
@@ -65,7 +66,7 @@ var (
 		Stats: []statsapi.Stat{
 			{
 				Name:      metricName1,
-				Value:     math.Inf(1),
+				Value:     ptr.Float64(math.Inf(1)),
 				Timestamp: when1Micros,
 				Tags:      map[string]string{},
 			},

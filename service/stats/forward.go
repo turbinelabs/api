@@ -16,12 +16,48 @@ limitations under the License.
 
 package stats
 
-// A Stat is a named, timestamped, and tagged data point.
+import (
+	"fmt"
+)
+
+// A Stat is a named, timestamped, and tagged data point or histogram
 type Stat struct {
-	Name      string            `json:"name"`
-	Value     float64           `json:"value"`
+	Name string `json:"name"`
+
+	// Only one of Value and Histogram may be set.
+	Value     *float64   `json:"value,omitempty"`
+	Histogram *Histogram `json:"histogram,omitempty"`
+
 	Timestamp int64             `json:"timestamp"` // microseconds since the Unix epoch, UTC
 	Tags      map[string]string `json:"tags,omitempty"`
+}
+
+func (s Stat) String() string {
+	v := "-"
+	if s.Value != nil {
+		v = fmt.Sprintf("%g (%p)", *s.Value, s.Value)
+	}
+	return fmt.Sprintf(
+		"{Name:%s, Value:%s Histogram:%v, Timestamp:%d, Tags:%s}",
+		s.Name,
+		v,
+		s.Histogram,
+		s.Timestamp,
+		s.Tags,
+	)
+}
+
+// A Histogram is a distribution of values into ranges.
+type Histogram struct {
+	Buckets [][2]float64 `json:"buckets"` // array of [limit, count]
+	Count   int64        `json:"count"`
+	Sum     float64      `json:"sum"`
+
+	// Non-aggregatable summary fields
+	Minimum float64 `json:"min"`
+	P50     float64 `json:"p50"`
+	P99     float64 `json:"p99"`
+	Maximum float64 `json:"max"`
 }
 
 // Payload is the payload of a stats update call.

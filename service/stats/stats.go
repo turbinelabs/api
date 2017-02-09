@@ -70,7 +70,7 @@ func (s *asStats) stat(name string, value float64) error {
 		Stats: []Stat{
 			{
 				Name:      name,
-				Value:     value,
+				Value:     &value,
 				Timestamp: tbntime.ToUnixMicro(time.Now()),
 			},
 		},
