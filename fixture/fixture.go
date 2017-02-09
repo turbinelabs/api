@@ -110,7 +110,8 @@ type DataFixturesT struct {
 	DomainPort1        int           // port of domain 1
 	DomainRedirects1   api.Redirects // part of domain 1
 	DomainGzipEnabled1 bool          // part of domain 1
-	DomainChecksum1    api.Checksum  // checks for domain 1
+	DomainCorsConfig1  *api.CorsConfig
+	DomainChecksum1    api.Checksum // checks for domain 1
 	DomainOrgKey1      api.OrgKey
 	DomainKey2         api.DomainKey // UUID of domain 2
 	DomainName2        string        // name of domain 2
@@ -118,6 +119,7 @@ type DataFixturesT struct {
 	DomainPort2        int           // port of domain 2
 	DomainRedirects2   api.Redirects // part of domain 2
 	DomainGzipEnabled2 bool          // part of domain 2
+	DomainCorsConfig2  *api.CorsConfig
 	DomainOrgKey2      api.OrgKey
 	DomainChecksum2    api.Checksum // checks for domain 2
 	Domain1            api.Domain   // domain 1
@@ -245,6 +247,14 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	DomainRedirects1: api.Redirects{
 		{"redirect1", ".*", "http://www.example.com", api.PermanentRedirect}},
 	DomainGzipEnabled1: true,
+	DomainCorsConfig1: &api.CorsConfig{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		ExposedHeaders:   []string{"x-expose-1", "x-expose-2"},
+		MaxAge:           600,
+		AllowedMethods:   []string{"GET", "POST"},
+		AllowedHeaders:   []string{"x-allowed-1", "x-allowed-2"},
+	},
 	DomainChecksum1:    api.Checksum{"ck1"},
 	DomainOrgKey1:      "1",
 	DomainKey2:         "sntaohesntahoesuntaohe",
@@ -253,6 +263,7 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	DomainPort2:        5050,
 	DomainRedirects2:   nil,
 	DomainGzipEnabled2: false,
+	DomainCorsConfig2:  nil,
 	DomainOrgKey2:      "1",
 	DomainChecksum2:    api.Checksum{"ck2"},
 
@@ -389,6 +400,7 @@ func init() {
 		DataFixtures.DomainPort1,
 		DataFixtures.DomainRedirects1,
 		DataFixtures.DomainGzipEnabled1,
+		DataFixtures.DomainCorsConfig1,
 		DataFixtures.DomainOrgKey1,
 		DataFixtures.DomainChecksum1,
 	}
@@ -400,6 +412,7 @@ func init() {
 		DataFixtures.DomainPort2,
 		DataFixtures.DomainRedirects2,
 		DataFixtures.DomainGzipEnabled2,
+		DataFixtures.DomainCorsConfig2,
 		DataFixtures.DomainOrgKey2,
 		DataFixtures.DomainChecksum2,
 	}

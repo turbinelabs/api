@@ -18,19 +18,23 @@ package api
 
 import (
 	"fmt"
+	"strings"
+
+	tbnstrings "github.com/turbinelabs/nonstdlib/strings"
 )
 
 type DomainKey string
 
 // A Domain represents the TLD or subdomain under which which a set of Routes is served.
 type Domain struct {
-	DomainKey   DomainKey `json:"domain_key"` // overwritten for create
-	ZoneKey     ZoneKey   `json:"zone_key"`
-	Name        string    `json:"name"`
-	Port        int       `json:"port"`
-	Redirects   Redirects `json:"redirects"`
-	GzipEnabled bool      `json:"gzip_enabled"`
-	OrgKey      OrgKey    `json:"-"`
+	DomainKey   DomainKey   `json:"domain_key"` // overwritten for create
+	ZoneKey     ZoneKey     `json:"zone_key"`
+	Name        string      `json:"name"`
+	Port        int         `json:"port"`
+	Redirects   Redirects   `json:"redirects"`
+	GzipEnabled bool        `json:"gzip_enabled"`
+	CorsConfig  *CorsConfig `json:"cors_config"`
+	OrgKey      OrgKey      `json:"-"`
 	Checksum
 }
 
@@ -73,10 +77,12 @@ func (d Domain) IsValid(precreation bool) *ValidationError {
 		errs.AddNew(ecase("port", "must be non-zero"))
 	}
 
-	errs.MergePrefixed(
-		d.Redirects.IsValid(),
-		fmt.Sprintf("domain[%v]", d.DomainKey),
-	)
+	parent := fmt.Sprintf("domain[%v]", d.DomainKey)
+	errs.MergePrefixed(d.Redirects.IsValid(), parent)
+
+	if d.CorsConfig != nil {
+		errs.MergePrefixed(d.CorsConfig.IsValid(), parent)
+	}
 
 	return errs.OrNil()
 }
@@ -84,6 +90,14 @@ func (d Domain) IsValid(precreation bool) *ValidationError {
 // Check if all fields of this domain are exactly equal to fields of another
 // domain.
 func (d Domain) Equals(o Domain) bool {
+	dCCNil := d.CorsConfig == nil
+	oCCNil := o.CorsConfig == nil
+
+	if dCCNil != oCCNil {
+		return false
+	}
+	ccEq := oCCNil || d.CorsConfig.Equals(*o.CorsConfig)
+
 	return d.DomainKey == o.DomainKey &&
 		d.ZoneKey == o.ZoneKey &&
 		d.Name == o.Name &&
@@ -91,7 +105,8 @@ func (d Domain) Equals(o Domain) bool {
 		d.Checksum.Equals(o.Checksum) &&
 		d.OrgKey == o.OrgKey &&
 		d.GzipEnabled == o.GzipEnabled &&
-		d.Redirects.Equals(o.Redirects)
+		d.Redirects.Equals(o.Redirects) &&
+		ccEq
 }
 
 // Check for semantic equality between this Domain an another. Domains must
@@ -143,6 +158,112 @@ func (ds Domains) IsValid(precreation bool) *ValidationError {
 
 		keySeen[d.DomainKey] = true
 		errs.MergePrefixed(d.IsValid(precreation), "")
+	}
+
+	return errs.OrNil()
+}
+
+// CorsConfig describes how the domain should respond to OPTIONS requests.
+// For a detailed discussion of what each attribute means see
+// https://developer.mozilla.org/docs/Web/HTTP/Access_control_CORS
+type CorsConfig struct {
+	AllowedOrigins   []string `json:"allowed_origins"`
+	AllowCredentials bool     `json:"allow_credentials"`
+	ExposedHeaders   []string `json:"exposed_headers"`
+	MaxAge           int      `json:"max_age"`
+	AllowedMethods   []string `json:"allowed_methods"`
+	AllowedHeaders   []string `json:"allowed_headers"`
+}
+
+// Equals compares two CorsConfig objects returning true if they are the same.
+// AllowedOrigins, ExposedHeaders, AllowedMethods, and AllowedHeaders are
+// compared without regard for ordering of their content.
+func (cc CorsConfig) Equals(o CorsConfig) bool {
+	cmp := func(ccs, os []string) bool {
+		s1 := tbnstrings.NewSet(ccs...)
+		s2 := tbnstrings.NewSet(os...)
+		return s1.Equals(s2)
+	}
+
+	return cc.MaxAge == o.MaxAge &&
+		cc.AllowCredentials == o.AllowCredentials &&
+		cmp(cc.AllowedOrigins, o.AllowedOrigins) &&
+		cmp(cc.ExposedHeaders, o.ExposedHeaders) &&
+		cmp(cc.AllowedMethods, o.AllowedMethods) &&
+		cmp(cc.AllowedHeaders, o.AllowedHeaders)
+}
+
+// MethodString produces a comma-separated string for the AllowedMethods slice.
+func (cc CorsConfig) MethodString() string {
+	m := make([]string, len(cc.AllowedMethods))
+	copy(m, cc.AllowedMethods)
+	for i, j := range m {
+		m[i] = strings.ToUpper(j)
+	}
+
+	return strings.Join(m, ", ")
+}
+
+// ExposedHeadersString produces a comma-separated string for the ExposedHeaders
+// slice.
+func (cc CorsConfig) ExposedHeadersString() string {
+	m := make([]string, len(cc.ExposedHeaders))
+	copy(m, cc.ExposedHeaders)
+	return strings.Join(m, ", ")
+}
+
+// AllowHeadersString produces a comma-separated string for the AllowedHeaders
+// slice.
+func (cc CorsConfig) AllowHeadersString() string {
+	m := make([]string, len(cc.AllowedHeaders))
+	copy(m, cc.AllowedHeaders)
+	return strings.Join(m, ", ")
+}
+
+var isAllowedMethod = map[string]bool{
+	"GET":    true,
+	"HEAD":   true,
+	"PUT":    true,
+	"POST":   true,
+	"DELETE": true,
+}
+
+// IsValid checks a CorsConfig object for validity.
+func (cc CorsConfig) IsValid() *ValidationError {
+	errs := &ValidationError{}
+	ec := func(f, m string) ErrorCase {
+		return ErrorCase{"cors_config." + f, m}
+	}
+
+	lao := len(cc.AllowedOrigins)
+	if lao == 0 {
+		errs.AddNew(ec("allowed_origins", "must have at least one element"))
+	}
+
+	if lao > 1 {
+		// temporary until we build a more powerful proxy plugin instead of relying
+		// on config-only solution
+		errs.AddNew(ec(
+			"allowed_origins",
+			"currently Allowed-Origins only supports wildcard or a single target"))
+
+		if tbnstrings.NewSet(cc.AllowedOrigins...).Contains("*") {
+			errs.AddNew(ec("allowed_origins", "may not mix wildcard (*) with specific origins"))
+		}
+	}
+
+	if len(cc.AllowedMethods) == 0 {
+		errs.AddNew(ec("allow_methods", "must have at least one element"))
+	}
+
+	for _, m := range cc.AllowedMethods {
+		if !isAllowedMethod[m] {
+			errs.AddNew(ec("allow_methods", fmt.Sprintf("%s is not a valid method", m)))
+		}
+	}
+
+	if cc.MaxAge < 0 {
+		errs.AddNew(ec("max_age", "must be greater than or equal to 0"))
 	}
 
 	return errs.OrNil()

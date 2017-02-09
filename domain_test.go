@@ -30,10 +30,13 @@ func getDomains() (Domain, Domain) {
 		1234,
 		Redirects{{"redir", ".*", "http://www.example.com", PermanentRedirect}},
 		true,
+		mkCC(),
 		"okey",
 		Checksum{"aoeusnth"},
 	}
-	return d, d
+	d2 := d
+	d2.CorsConfig = mkCC()
+	return d, d2
 }
 
 func TestDomainEqualsSuccess(t *testing.T) {
@@ -67,6 +70,31 @@ func TestDomainEqualsRedirctChanged(t *testing.T) {
 func TestDomainEqualsGzipChanged(t *testing.T) {
 	d1, d2 := getDomains()
 	d2.GzipEnabled = false
+	assert.False(t, d2.Equals(d1))
+	assert.False(t, d1.Equals(d2))
+}
+
+func TestDomainEqualsCorsConfigNilNil(t *testing.T) {
+	d1, d2 := getDomains()
+	d1.CorsConfig = nil
+	d2.CorsConfig = nil
+
+	assert.True(t, d2.Equals(d1))
+	assert.True(t, d1.Equals(d2))
+}
+
+func TestDomainEqualsCorsConfigSomeNil(t *testing.T) {
+	d1, d2 := getDomains()
+	d2.CorsConfig = nil
+
+	assert.False(t, d2.Equals(d1))
+	assert.False(t, d1.Equals(d2))
+}
+
+func TestDomainEqualsCorsConfigChanges(t *testing.T) {
+	d1, d2 := getDomains()
+	d2.CorsConfig.AllowCredentials = !d1.CorsConfig.AllowCredentials
+
 	assert.False(t, d2.Equals(d1))
 	assert.False(t, d1.Equals(d2))
 }
@@ -115,6 +143,8 @@ func TestDomainNotEqualsPortVaries(t *testing.T) {
 }
 
 func getDomain() Domain {
+	cc := mkCC()
+	cc.AllowedOrigins = []string{"*"}
 	return Domain{
 		"dkey",
 		"zk",
@@ -122,6 +152,7 @@ func getDomain() Domain {
 		1234,
 		Redirects{{"sample-redirect", ".*", "http://www.example.com", PermanentRedirect}},
 		true,
+		cc,
 		"okey",
 		Checksum{},
 	}
@@ -140,6 +171,22 @@ func TestDomainIsValidSuccess(t *testing.T) {
 
 	assert.Nil(t, d1.IsValid(true))
 	assert.Nil(t, d1.IsValid(false))
+}
+
+func TestDomainIsValidNoCorsConfig(t *testing.T) {
+	d1 := getDomain()
+	d1.CorsConfig = nil
+
+	assert.Nil(t, d1.IsValid(true))
+	assert.Nil(t, d1.IsValid(false))
+}
+
+func TestDomainIsValidFailsOnCorsConfig(t *testing.T) {
+	d1 := getDomain()
+	d1.CorsConfig.AllowedOrigins = nil
+
+	assert.NonNil(t, d1.IsValid(true))
+	assert.NonNil(t, d1.IsValid(false))
 }
 
 func TestDomainIsValidFailedDkey(t *testing.T) {
@@ -177,9 +224,9 @@ func TestDomainIsValidFailedRedirect(t *testing.T) {
 }
 
 func getThreeDomains() (Domain, Domain, Domain) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
 
 	return d1, d2, d3
 }
@@ -212,9 +259,9 @@ func TestDomainsEqualsFailure(t *testing.T) {
 }
 
 func TestDomainsIsValidSuccess(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.Nil(t, ds.IsValid(true))
@@ -222,9 +269,9 @@ func TestDomainsIsValidSuccess(t *testing.T) {
 }
 
 func TestDomainsIsValidFailureDupe(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1, d3}
 
 	assert.NonNil(t, ds.IsValid(true))
@@ -232,11 +279,100 @@ func TestDomainsIsValidFailureDupe(t *testing.T) {
 }
 
 func TestDomainsIsValidFailureBadDomain(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "", "name", 20, nil, true, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "", "name", 20, nil, true, nil, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.NonNil(t, ds.IsValid(true))
 	assert.NonNil(t, ds.IsValid(false))
+}
+
+func mkCC() *CorsConfig {
+	return &CorsConfig{
+		AllowedOrigins:   []string{"a", "b"},
+		AllowCredentials: true,
+		ExposedHeaders:   []string{"b", "c"},
+		MaxAge:           500,
+		AllowedMethods:   []string{"GET", "PUT"},
+		AllowedHeaders:   []string{"h1", "h2"},
+	}
+
+}
+
+func TestCorsConfigEqualsTrue(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+	assert.True(t, cc.Equals(cc2))
+	assert.True(t, cc2.Equals(cc))
+}
+
+func TestCorsConfigEqualsTrueOrderChanged(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+
+	swap := func(s1 []string) {
+		s1[0], s1[1] = s1[1], s1[0]
+	}
+	swap(cc2.AllowedOrigins)
+	swap(cc2.ExposedHeaders)
+	swap(cc2.AllowedMethods)
+	swap(cc2.AllowedHeaders)
+
+	assert.True(t, cc.Equals(cc2))
+	assert.True(t, cc2.Equals(cc))
+}
+
+func TestCorsConfigEqualsFalseAge(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+	cc2.MaxAge = cc.MaxAge + 1
+
+	assert.False(t, cc.Equals(cc2))
+	assert.False(t, cc2.Equals(cc))
+}
+
+func TestCorsConfigEqualsFalseAllowedOrigins(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+	cc2.AllowedOrigins = append(cc2.AllowedOrigins, "new-element")
+
+	assert.False(t, cc.Equals(cc2))
+	assert.False(t, cc2.Equals(cc))
+}
+
+func TestCorsConfigEqualsFalseAllowCredentials(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+	cc2.AllowCredentials = !cc2.AllowCredentials
+
+	assert.False(t, cc.Equals(cc2))
+	assert.False(t, cc2.Equals(cc))
+}
+
+func TestCorsConfigEqualsFalseExposedHeaders(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+	cc2.ExposedHeaders = append(cc2.ExposedHeaders, "new-element")
+
+	assert.False(t, cc.Equals(cc2))
+	assert.False(t, cc2.Equals(cc))
+}
+
+func TestCorsConfigEqualsFalseAllowedMethods(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+	cc2.AllowedMethods = append(cc2.AllowedMethods, "new-element")
+
+	assert.False(t, cc.Equals(cc2))
+	assert.False(t, cc2.Equals(cc))
+}
+
+func TestCorsConfigEqualsFalseAllowedHeaders(t *testing.T) {
+	cc := *mkCC()
+	cc2 := *mkCC()
+	cc2.AllowedHeaders = append(cc2.AllowedHeaders, "new-element")
+
+	assert.False(t, cc.Equals(cc2))
+	assert.False(t, cc2.Equals(cc))
 }
