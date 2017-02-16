@@ -70,7 +70,7 @@ func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		w.clientID = apiClientID
 	}
 
-	apiKey := rr.Underlying().Header.Get(apiheader.APIKey)
+	apiKey := rr.Underlying().Header.Get(apiheader.Authorization)
 	if apiKey != clientTestApiKey {
 		rw.WriteHeader(400)
 		rw.Write([]byte(
@@ -187,7 +187,7 @@ func TestNewAllCopiesEndpoint(t *testing.T) {
 	r, err = allEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, len(r.Header), 2)
-	assert.ArrayEqual(t, r.Header[apiheader.APIKey], []string{clientTestApiKey})
+	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestApiKey})
 	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{apiClientID})
 }
 
@@ -211,6 +211,6 @@ func TestNewAdminCopiesEndpoint(t *testing.T) {
 	r, err = adminEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, len(r.Header), 2)
-	assert.ArrayEqual(t, r.Header[apiheader.APIKey], []string{clientTestApiKey})
+	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestApiKey})
 	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{apiClientID})
 }

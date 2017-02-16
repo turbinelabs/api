@@ -196,7 +196,7 @@ type testHandler struct {
 }
 
 func (h *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	apiKey := req.Header.Get(apiheader.APIKey)
+	apiKey := req.Header.Get(apiheader.Authorization)
 	if apiKey != testApiKey {
 		resp.WriteHeader(400)
 		resp.Write([]byte(
@@ -368,7 +368,7 @@ func TestNewInternalStatsClientCopiesEndpoint(t *testing.T) {
 	r, err = statsEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, len(r.Header), 4)
-	assert.ArrayEqual(t, r.Header[apiheader.APIKey], []string{clientTestApiKey})
+	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestApiKey})
 	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{statsClientID})
 	assert.ArrayEqual(t, r.Header["Content-Type"], []string{"application/json"})
 	assert.ArrayEqual(t, r.Header["Content-Encoding"], []string{"gzip"})

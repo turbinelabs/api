@@ -76,7 +76,7 @@ func newInternalStatsClient(
 	// headers.
 	dest = dest.Copy()
 
-	dest.AddHeader(apiheader.APIKey, apiKey)
+	dest.AddHeader(apiheader.Authorization, apiKey)
 	dest.AddHeader(apiheader.ClientID, statsClientID)
 
 	// see encodePayload; payloads are sent as gzipped json

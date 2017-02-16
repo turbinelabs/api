@@ -129,7 +129,7 @@ func configureEndpoint(dest apihttp.Endpoint, apiKey string) apihttp.Endpoint {
 	// Copy the Endpoint to avoid polluting the original with our
 	// headers.
 	dest = dest.Copy()
-	dest.AddHeader(apiheader.APIKey, apiKey)
+	dest.AddHeader(apiheader.Authorization, apiKey)
 	dest.AddHeader(apiheader.ClientID, apiClientID)
 	return dest
 }
