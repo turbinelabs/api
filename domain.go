@@ -18,6 +18,7 @@ package api
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	tbnstrings "github.com/turbinelabs/nonstdlib/strings"
@@ -25,17 +26,94 @@ import (
 
 type DomainKey string
 
+const (
+	// DomainCharSet is a description of the format which must be used for the
+	// core (non wildcard portion) of a domain alais.
+	DomainOnlyPattern = "[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)*"
+
+	// AliasPatternFailure is the message returned if a domain alias does not
+	// meet DomainAliasPattern.
+	AliasPatternFailure = "aliases may start with '*.' or end with '.*'. They " +
+		"must be composed of characters matching [a-zA-Z_.-]"
+)
+
+// DomainAliasPattern is a regexp that will be used to match against proposed
+// domain aliases.
+var DomainAliasPattern = regexp.MustCompile(fmt.Sprintf(
+	"^("+ // start
+		`(\*\.%s)|`+ // begins with a wildcard preceding a DomainOnlyPattern
+		`(%s\.\*)|`+ // begins with a Domain but ends with a wildcard
+		"(%s)"+ // no wildcards
+		")$", // end
+	DomainOnlyPattern, DomainOnlyPattern, DomainOnlyPattern))
+
 // A Domain represents the TLD or subdomain under which which a set of Routes is served.
 type Domain struct {
-	DomainKey   DomainKey   `json:"domain_key"` // overwritten for create
-	ZoneKey     ZoneKey     `json:"zone_key"`
-	Name        string      `json:"name"`
-	Port        int         `json:"port"`
-	Redirects   Redirects   `json:"redirects"`
-	GzipEnabled bool        `json:"gzip_enabled"`
-	CorsConfig  *CorsConfig `json:"cors_config"`
-	OrgKey      OrgKey      `json:"-"`
+	DomainKey   DomainKey     `json:"domain_key"` // overwritten for create
+	ZoneKey     ZoneKey       `json:"zone_key"`
+	Name        string        `json:"name"`
+	Port        int           `json:"port"`
+	Redirects   Redirects     `json:"redirects"`
+	GzipEnabled bool          `json:"gzip_enabled"`
+	CorsConfig  *CorsConfig   `json:"cors_config"`
+	Aliases     DomainAliases `json:"aliases"`
+	OrgKey      OrgKey        `json:"-"`
 	Checksum
+}
+
+type DomainAliases []DomainAlias
+
+func (d DomainAliases) Strings() []string {
+	s := make([]string, len(d))
+	for i := range d {
+		s[i] = string(d[i])
+	}
+	return s
+}
+
+func (da DomainAliases) Equals(o DomainAliases) bool {
+	s1 := tbnstrings.NewSet(da.Strings()...)
+	s2 := tbnstrings.NewSet(o.Strings()...)
+	return s1.Equals(s2)
+}
+
+func (das DomainAliases) IsValid() *ValidationError {
+	errs := &ValidationError{}
+
+	seen := map[string]bool{}
+
+	scope := func(n string) string {
+		return fmt.Sprintf("domain_aliases[%v]", n)
+	}
+
+	ec := func(n, m string) ErrorCase {
+		return ErrorCase{scope(n), m}
+	}
+
+	for _, da := range das {
+		if seen[string(da)] {
+			errs.AddNew(ec(string(da), "must be unique"))
+		} else {
+			seen[string(da)] = true
+			errs.MergePrefixed(da.IsValid(), scope(string(da)))
+		}
+	}
+
+	return errs.OrNil()
+}
+
+type DomainAlias string
+
+func (da DomainAlias) Equals(o DomainAlias) bool {
+	return da == o
+}
+
+func (da DomainAlias) IsValid() *ValidationError {
+	if !DomainAliasPattern.MatchString(string(da)) {
+		return &ValidationError{[]ErrorCase{{"alias", AliasPatternFailure}}}
+	}
+
+	return nil
 }
 
 func (d Domain) IsNil() bool {

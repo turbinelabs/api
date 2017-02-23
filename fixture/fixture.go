@@ -111,6 +111,7 @@ type DataFixturesT struct {
 	DomainRedirects1   api.Redirects // part of domain 1
 	DomainGzipEnabled1 bool          // part of domain 1
 	DomainCorsConfig1  *api.CorsConfig
+	DomainAliases1     api.DomainAliases
 	DomainChecksum1    api.Checksum // checks for domain 1
 	DomainOrgKey1      api.OrgKey
 	DomainKey2         api.DomainKey // UUID of domain 2
@@ -120,6 +121,7 @@ type DataFixturesT struct {
 	DomainRedirects2   api.Redirects // part of domain 2
 	DomainGzipEnabled2 bool          // part of domain 2
 	DomainCorsConfig2  *api.CorsConfig
+	DomainAliases2     api.DomainAliases
 	DomainOrgKey2      api.OrgKey
 	DomainChecksum2    api.Checksum // checks for domain 2
 	Domain1            api.Domain   // domain 1
@@ -260,6 +262,7 @@ var DataFixtures DataFixturesT = DataFixturesT{
 		AllowedMethods:   []string{"GET", "POST"},
 		AllowedHeaders:   []string{"x-allowed-1", "x-allowed-2"},
 	},
+	DomainAliases1:     api.DomainAliases{"example.com", "*.example.com"},
 	DomainChecksum1:    api.Checksum{"ck1"},
 	DomainOrgKey1:      "1",
 	DomainKey2:         "sntaohesntahoesuntaohe",
@@ -269,6 +272,7 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	DomainRedirects2:   nil,
 	DomainGzipEnabled2: false,
 	DomainCorsConfig2:  nil,
+	DomainAliases2:     nil,
 	DomainOrgKey2:      "1",
 	DomainChecksum2:    api.Checksum{"ck2"},
 
@@ -406,6 +410,7 @@ func init() {
 		DataFixtures.DomainRedirects1,
 		DataFixtures.DomainGzipEnabled1,
 		DataFixtures.DomainCorsConfig1,
+		DataFixtures.DomainAliases1,
 		DataFixtures.DomainOrgKey1,
 		DataFixtures.DomainChecksum1,
 	}
@@ -418,6 +423,7 @@ func init() {
 		DataFixtures.DomainRedirects2,
 		DataFixtures.DomainGzipEnabled2,
 		DataFixtures.DomainCorsConfig2,
+		DataFixtures.DomainAliases2,
 		DataFixtures.DomainOrgKey2,
 		DataFixtures.DomainChecksum2,
 	}

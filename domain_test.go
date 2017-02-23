@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -37,6 +38,7 @@ func getDomains() (Domain, Domain) {
 		}},
 		true,
 		mkCC(),
+		DomainAliases{},
 		"okey",
 		Checksum{"aoeusnth"},
 	}
@@ -165,6 +167,7 @@ func getDomain() Domain {
 		}},
 		true,
 		cc,
+		DomainAliases{},
 		"okey",
 		Checksum{},
 	}
@@ -236,9 +239,9 @@ func TestDomainIsValidFailedRedirect(t *testing.T) {
 }
 
 func getThreeDomains() (Domain, Domain, Domain) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 
 	return d1, d2, d3
 }
@@ -271,9 +274,9 @@ func TestDomainsEqualsFailure(t *testing.T) {
 }
 
 func TestDomainsIsValidSuccess(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.Nil(t, ds.IsValid(true))
@@ -281,9 +284,9 @@ func TestDomainsIsValidSuccess(t *testing.T) {
 }
 
 func TestDomainsIsValidFailureDupe(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1, d3}
 
 	assert.NonNil(t, ds.IsValid(true))
@@ -291,9 +294,9 @@ func TestDomainsIsValidFailureDupe(t *testing.T) {
 }
 
 func TestDomainsIsValidFailureBadDomain(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "", "name", 20, nil, true, nil, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.NonNil(t, ds.IsValid(true))
@@ -387,4 +390,105 @@ func TestCorsConfigEqualsFalseAllowedHeaders(t *testing.T) {
 
 	assert.False(t, cc.Equals(cc2))
 	assert.False(t, cc2.Equals(cc))
+}
+
+func TestDomainAliasEquals(t *testing.T) {
+	da1 := DomainAlias("example.com")
+	da2 := DomainAlias("example.com")
+	assert.True(t, da1.Equals(da2))
+	assert.True(t, da2.Equals(da1))
+}
+
+func TestDomainAliasEqualsFails(t *testing.T) {
+	da1 := DomainAlias("www.google.com")
+	da2 := DomainAlias("www.bing.com")
+	assert.False(t, da1.Equals(da2))
+	assert.False(t, da2.Equals(da1))
+}
+
+func TestDomainAliasIsValidSuccess(t *testing.T) {
+	da := DomainAlias("example.com")
+	assert.Nil(t, da.IsValid())
+}
+
+func TestDomainAliasIsValidFails(t *testing.T) {
+	test := func(in string, fail bool) {
+		got := DomainAlias(in).IsValid()
+		var want *ValidationError
+
+		if fail {
+			want = &ValidationError{[]ErrorCase{{"alias", AliasPatternFailure}}}
+		}
+
+		if !assert.DeepEqual(t, got, want) {
+			t.Logf("failed validation test on domain alias: %v\n--------------------", in)
+		}
+	}
+
+	fail := func(in string) { test(in, true) }
+	pass := func(in string) { test(in, false) }
+
+	fail("*example.com")
+	fail("example.com*")
+	fail("*.test.*")
+	fail("test.*.com")
+	fail("test..com")
+	fail(".example.com")
+	fail("example.com.")
+	fail(".example.com")
+	fail("*.")
+	fail(".*")
+	fail("")
+	pass("*.example.com")
+	pass("test.*")
+	pass("test.test.example.com")
+}
+
+func TestDomainAliasesIsValid(t *testing.T) {
+	da := DomainAliases{
+		"example.com",
+		"*.example.com",
+		"test.*",
+		"bar.example.com",
+	}
+
+	assert.Nil(t, da.IsValid())
+}
+
+func TestDomainAliasesIsValidDupes(t *testing.T) {
+	da := DomainAliases{
+		"test.com",
+		"*.test.com",
+		"test.com",
+	}
+
+	assert.DeepEqual(t, da.IsValid(), &ValidationError{[]ErrorCase{
+		{"domain_aliases[test.com]", "must be unique"},
+	}})
+}
+
+func TestDomainAliasesIsValidFailure(t *testing.T) {
+	da := DomainAlias("*.*.*")
+	daerr := da.IsValid()
+
+	das := DomainAliases{da}
+	assert.DeepEqual(t, das.IsValid(), &ValidationError{[]ErrorCase{
+		{fmt.Sprintf("domain_aliases[%v].alias", da), daerr.Errors[0].Msg},
+	}})
+}
+
+func TestDomainAliasesEquals(t *testing.T) {
+	das1 := DomainAliases{"test.com", "example.com"}
+	das2 := DomainAliases{"example.com", "test.com"}
+
+	assert.True(t, das1.Equals(das2))
+	assert.True(t, das2.Equals(das1))
+}
+
+func TestDomainAliasesEqualsFailure(t *testing.T) {
+	das1 := DomainAliases{"test.com", "example.com", "foo.com"}
+	das2 := DomainAliases{"example.com", "test.com"}
+
+	assert.False(t, das1.Equals(das2))
+	assert.False(t, das2.Equals(das1))
 }
