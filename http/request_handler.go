@@ -45,7 +45,7 @@ func getBody(response *http.Response) ([]byte, *httperr.Error) {
 	return body, nil
 }
 
-func expectsNoPayload(response *http.Response) *httperr.Error {
+func expectsNoPayload(response *http.Response) error {
 	if response.StatusCode == http.StatusOK {
 		return nil
 	}
@@ -77,7 +77,7 @@ func expectsNoPayload(response *http.Response) *httperr.Error {
 	return env.Error
 }
 
-func expectsPayload(response *http.Response, payloadDest interface{}) *httperr.Error {
+func expectsPayload(response *http.Response, payloadDest interface{}) error {
 	if response.Body == nil {
 		return httperr.New500(
 			fmt.Sprintf(
@@ -117,11 +117,10 @@ func expectsPayload(response *http.Response, payloadDest interface{}) *httperr.E
 func (rh RequestHandler) Do(
 	mkReq func() (*http.Request, error),
 	response interface{},
-) *httperr.Error {
+) error {
 	req, err := mkReq()
 	if err != nil {
-		return httperr.New400(
-			"could not create request: "+err.Error(), httperr.UnknownTransportCode)
+		return fmt.Errorf("could not create request: %s", err.Error())
 	}
 
 	// make HTTP request
@@ -131,9 +130,7 @@ func (rh RequestHandler) Do(
 	// something was wrong with the server (this is, admittedly, a guess without
 	// further introspection but we'll let it stand for now).
 	if err != nil {
-		return httperr.New400(
-			"could not successfully make request: "+err.Error(),
-			httperr.UnknownTransportCode)
+		return fmt.Errorf("could not successfully make request: %s", err.Error())
 	}
 
 	if response == nil {

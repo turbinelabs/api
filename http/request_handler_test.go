@@ -193,7 +193,6 @@ func TestDoRequestFailure(t *testing.T) {
 	}
 
 	err := rh.Do(mkReq, nil)
-	assert.Equal(t, err.Status, 400)
 	assert.ErrorContains(t, err, "could not successfully make request")
 }
 
