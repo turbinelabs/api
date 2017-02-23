@@ -244,8 +244,13 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	DomainZone1: "zk1",
 	DomainName1: "domain-1",
 	DomainPort1: 8080,
-	DomainRedirects1: api.Redirects{
-		{"redirect1", ".*", "http://www.example.com", api.PermanentRedirect}},
+	DomainRedirects1: api.Redirects{{
+		"redirect1",
+		".*",
+		"http://www.example.com",
+		api.PermanentRedirect,
+		api.HeaderConstraints{{"x-random-header", "", false, true}},
+	}},
 	DomainGzipEnabled1: true,
 	DomainCorsConfig1: &api.CorsConfig{
 		AllowedOrigins:   []string{"*"},

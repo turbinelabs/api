@@ -19,6 +19,7 @@ package api
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 type RedirectType string
@@ -33,7 +34,16 @@ const (
 	TemporaryRedirect RedirectType = "temporary"
 )
 
-var NamePattern = regexp.MustCompile("^[0-9a-zA-Z_-]+$")
+var (
+	// NamePattern is applied to Redirect.Name to ensure redirect names all fall
+	// within a known space.
+	NamePattern = regexp.MustCompile("^[0-9a-zA-Z_-]+$")
+
+	// HeaderPattern limits the possible headers that can be matched as part of a
+	// redirect. This is a limited subset of what the actual spec allows because
+	// of constraints in the current proxying layer.
+	HeaderPattern = regexp.MustCompile("^[0-9A-Za-z-]+$")
+)
 
 // Redirects is a collection of Domain redirect definitions
 type Redirects []Redirect
@@ -106,20 +116,65 @@ func (rs Redirects) IsValid() *ValidationError {
 //
 //   Example:
 //     Redirect{
-//       Name:        "force-https",
-//       From:        "(.*)",
-//       To:          "https://www.example.com/$1",
-//       RedirectType: PermanentRedirect,
+//       Name:              "force-https",
+//       From:              "(.*)",
+//       To:                "https://$host/$1",
+//       RedirectType:      PermanentRedirect,
+//       HeaderConstraints: HeaderConstraints{
+//         HeaderConstraint{
+//           Name:  "X-ForwardedProto",
+//           Value: "https",
+//           Invert: true,
+//         },
+//       },
 //     }
 type Redirect struct {
-	Name         string       `json:"name"`
-	From         string       `json:"from"`
-	To           string       `json:"to"`
-	RedirectType RedirectType `json:"redirect_type"`
+	Name              string            `json:"name"`
+	From              string            `json:"from"`
+	To                string            `json:"to"`
+	RedirectType      RedirectType      `json:"redirect_type"`
+	HeaderConstraints HeaderConstraints `json:"header_constraints"`
+}
+
+type HeaderConstraints []HeaderConstraint
+
+// HeaderConstraint specifies requirements of request header for a redirect
+// directive. Name must match the HeaderPattern regex and Value must be a valid
+// regex.
+//
+// CaseSensitive means that the header's value will be compared to Value without
+// taking case into account; header name is always compared to Name without case
+// sensitivity.
+type HeaderConstraint struct {
+	Name          string `json:"name"`
+	Value         string `json:"value"`
+	CaseSensitive bool   `json:"case_sensitive"`
+	Invert        bool   `json:"invert"`
 }
 
 func (r Redirect) Equals(o Redirect) bool {
-	return r == o
+	return r.Name == o.Name &&
+		r.From == o.From &&
+		r.To == o.To &&
+		r.RedirectType == o.RedirectType &&
+		r.HeaderConstraints.Equals(o.HeaderConstraints)
+}
+
+func (hcs HeaderConstraints) Equals(o HeaderConstraints) bool {
+	if len(hcs) != len(o) {
+		return false
+	}
+	for i := range hcs {
+		if !hcs[i].Equals(o[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (hc HeaderConstraint) Equals(o HeaderConstraint) bool {
+	return hc == o
 }
 
 // IsValid checks the validity of a Redirect; we currently verify that a
@@ -143,7 +198,7 @@ func (r Redirect) IsValid() *ValidationError {
 	if r.Name == "" {
 		errs.AddNew(ecase("name", "must not be empty"))
 	} else {
-		if !NamePattern.Match([]byte(r.Name)) {
+		if !NamePattern.MatchString(r.Name) {
 			errs.AddNew(ecase(
 				"name",
 				fmt.Sprintf("must match %s", NamePattern.String()),
@@ -167,6 +222,59 @@ func (r Redirect) IsValid() *ValidationError {
 	case PermanentRedirect, TemporaryRedirect:
 	default:
 		errs.AddNew(ecase("type", fmt.Sprintf("'%s' is an invalid redirect type", r.RedirectType)))
+	}
+
+	return errs.OrNil()
+}
+
+func (hcs HeaderConstraints) IsValid() *ValidationError {
+	errs := &ValidationError{}
+	ec := func(f, m string) ErrorCase {
+		return ErrorCase{f, m}
+	}
+
+	if len(hcs) > 1 {
+		// temporary until moved away from config-only driven matching system
+		errs.AddNew(ec(
+			"header_constraints",
+			"may only specify 0 or 1 header constraints"))
+	}
+
+	seen := map[string]bool{}
+	for _, hc := range hcs {
+		scope := fmt.Sprintf("header_constraints[%s]", hc.Name)
+		if seen[hc.Name] {
+			errs.AddNew(ec(scope, "a header may only have a single constraint"))
+			continue
+		}
+		seen[hc.Name] = true
+		errs.MergePrefixed(hc.IsValid(), scope)
+	}
+
+	return errs.OrNil()
+}
+
+func (hc HeaderConstraint) IsValid() *ValidationError {
+	errs := &ValidationError{}
+	ec := func(f, m string) ErrorCase {
+		return ErrorCase{f, m}
+	}
+
+	if strings.TrimSpace(hc.Name) == "" {
+		errs.AddNew(ec("name", "may not be empty"))
+	} else {
+		if !HeaderPattern.MatchString(hc.Name) {
+			errs.AddNew(ec(
+				"name",
+				fmt.Sprintf("must match %s", HeaderPattern.String())))
+		}
+	}
+
+	_, err := regexp.Compile(hc.Value)
+	if err != nil {
+		errs.AddNew(ec(
+			"value",
+			fmt.Sprintf("must be a valid regexp: %v", err.Error())))
 	}
 
 	return errs.OrNil()

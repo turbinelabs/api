@@ -29,6 +29,7 @@ func getRedir() Redirect {
 		"(.*)",
 		"http://www.example.com?original=$1",
 		PermanentRedirect,
+		HeaderConstraints{{"x-tbn-api-key", "", false, false}},
 	}
 }
 
@@ -205,4 +206,136 @@ func TestRedirectsKeys(t *testing.T) {
 func TestRedirectsKeysNil(t *testing.T) {
 	var rs Redirects
 	assert.HasSameElements(t, rs.Keys(), []string{})
+}
+
+func doTestHeaderConstraintEquals(t *testing.T, hc1, hc2 HeaderConstraint, eq bool) {
+	if eq {
+		assert.True(t, hc1.Equals(hc2))
+		assert.True(t, hc2.Equals(hc1))
+	} else {
+		assert.False(t, hc1.Equals(hc2))
+		assert.False(t, hc2.Equals(hc1))
+	}
+}
+
+func getHC() HeaderConstraint {
+	return HeaderConstraint{"name", "value", false, false}
+}
+
+func TestHeaderConstraintEquals(t *testing.T) {
+	hc1 := getHC()
+	hc2 := hc1
+	doTestHeaderConstraintEquals(t, hc1, hc2, true)
+}
+
+func TestHeaderConstraintEqualsFalseCaseSensitivity(t *testing.T) {
+	hc1 := getHC()
+	hc2 := hc1
+	hc2.CaseSensitive = !hc1.CaseSensitive
+	doTestHeaderConstraintEquals(t, hc1, hc2, false)
+}
+
+func TestHeaderConstraintEqualsFalseName(t *testing.T) {
+	hc1 := getHC()
+	hc2 := hc1
+	hc2.Name = "aoeu"
+	doTestHeaderConstraintEquals(t, hc1, hc2, false)
+}
+
+func TestHeaderConstraintEqualsFalseValue(t *testing.T) {
+	hc1 := getHC()
+	hc2 := hc1
+	hc2.Value = "aoeu"
+	doTestHeaderConstraintEquals(t, hc1, hc2, false)
+}
+
+func TestHeaderConstraintEqualsFalseInvert(t *testing.T) {
+	hc1 := getHC()
+	hc2 := hc1
+	hc2.Invert = !hc1.Invert
+	doTestHeaderConstraintEquals(t, hc1, hc2, false)
+}
+
+func TestHeaderConstraintIsValid(t *testing.T) {
+	hc1 := getHC()
+	hc1.Name = "x-header-name"
+	err := hc1.IsValid()
+	assert.Nil(t, err)
+}
+
+func doTestHeaderConstraintIsValidFails(t *testing.T, hc HeaderConstraint, f, m string) {
+	err := hc.IsValid()
+	assert.DeepEqual(t, err, &ValidationError{[]ErrorCase{{f, m}}})
+}
+
+func TestHeaderConstraintIsValidFalseNamePattern1(t *testing.T) {
+	hc1 := getHC()
+	hc1.Name = "na me"
+	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderPattern.String()))
+}
+
+func TestHeaderConstraintIsValidFalseNamePattern2(t *testing.T) {
+	hc1 := getHC()
+	hc1.Name = "na;me"
+	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderPattern.String()))
+}
+
+func TestHeaderConstraintIsValidFalseNamePattern3(t *testing.T) {
+	hc1 := getHC()
+	hc1.Name = "na_me"
+	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderPattern.String()))
+}
+
+func TestHeaderConstraintIsValidFalseNameEmpty(t *testing.T) {
+	hc1 := getHC()
+	hc1.Name = ""
+	doTestHeaderConstraintIsValidFails(t, hc1, "name", "may not be empty")
+}
+
+func TestHeaderConstraintsIsValidBadValueRegexp(t *testing.T) {
+	hc1 := getHC()
+	hc1.Value = "aoeu\\onth"
+	doTestHeaderConstraintIsValidFails(
+		t,
+		hc1,
+		"value",
+		"must be a valid regexp: error parsing regexp: invalid escape sequence: `\\o`")
+}
+
+func TestHeaderConstraintsIsValid(t *testing.T) {
+	hc1 := getHC()
+	hcs := HeaderConstraints{hc1}
+	assert.Nil(t, hcs.IsValid())
+}
+
+func TestHeaderConstraintsIsValidFalseNumber(t *testing.T) {
+	hc1 := getHC()
+	hc2 := getHC()
+	hc2.Name = "name2"
+	hcs := HeaderConstraints{hc1, hc2}
+
+	assert.DeepEqual(t, hcs.IsValid(), &ValidationError{[]ErrorCase{
+		{"header_constraints", "may only specify 0 or 1 header constraints"},
+	}})
+}
+
+func TestHeaderConstraintsIsValidFalseDupe(t *testing.T) {
+	hc1 := getHC()
+	hc2 := getHC()
+	hcs := HeaderConstraints{hc1, hc2}
+
+	assert.DeepEqual(t, hcs.IsValid(), &ValidationError{[]ErrorCase{
+		{"header_constraints", "may only specify 0 or 1 header constraints"},
+		{"header_constraints[name]", "a header may only have a single constraint"},
+	}})
+}
+
+func TestHeaderConstraintsIsValidFalseNested(t *testing.T) {
+	hc1 := getHC()
+	hc1.Name = "na;me"
+	hcs := HeaderConstraints{hc1}
+
+	assert.DeepEqual(t, hcs.IsValid(), &ValidationError{[]ErrorCase{
+		{"header_constraints[na;me].name", fmt.Sprintf("must match %s", HeaderPattern.String())},
+	}})
 }
