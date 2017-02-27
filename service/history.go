@@ -47,7 +47,7 @@ type History interface {
 	//  2. the set of proxies which route to the domain (note: doesn't include
 	//     changes to the proxies themselves only the routing set)
 	//  3. the routes that were a part of the domain during any part of the
-	//     window (including routes which were initally added then removed
+	//     window (including routes which were initially added then removed
 	//     during the window)
 	//  4. any cluster referenced by any rules that was a part of the domain
 	//     during the window.

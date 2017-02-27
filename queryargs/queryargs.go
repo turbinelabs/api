@@ -38,7 +38,7 @@ const (
 	// WindowStart indicates a start of some bounded time frame.
 	WindowStart = "start"
 
-	// WindowStop specifices the end of a bounded time frame.
+	// WindowStop specifies the end of a bounded time frame.
 	WindowStop = "end"
 
 	// Should the lookup include deleted objects?

@@ -113,7 +113,7 @@ func ConstraintPropertiesValid(m Metadata) *ValidationError {
         The Dark and Tap ClusterConstraint slices may be empty. The Light
         ClusterConstraint slice must always contain at least one entry.
 
-	TODO: do we need to idenfity/declare which requests are idempotent?
+	TODO: do we need to identify/declare which requests are idempotent?
 	If Routes are structured properly, this isn't necessary, since you can only
 	add Dark/Tap ClusterConstraints for Routes that are safe to call more than
 	once for the same input.

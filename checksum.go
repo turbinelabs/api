@@ -16,7 +16,7 @@ limitations under the License.
 
 package api
 
-// A type commonly embeded in other domain objects to ensure modifications
+// A type commonly embedded in other domain objects to ensure modifications
 // are being on an underlying object in the expected state.
 type Checksum struct {
 	Checksum string `json:"checksum"` // may be overwritten

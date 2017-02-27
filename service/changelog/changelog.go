@@ -103,7 +103,7 @@ func (tr TimeRange) EndTime() *time.Time {
 }
 
 // FieldFilter describes a specific attribute change on a tracked object. The
-// AttributePath is construced as a dot-separated collection of field names
+// AttributePath is constructed as a dot-separated collection of field names
 // rooted with the type of the object being updated. All containers are
 // key-indexed and changes within a container are specified using index
 // operators [].  For example: a cluster that has an instance running on

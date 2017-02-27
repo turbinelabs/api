@@ -52,7 +52,7 @@ func AllNames() []string {
 }
 
 // ObjectType is representation of an object that can have the changes made
-// made to it tracked in a persistant changelog.
+// made to it tracked in a persistent changelog.
 type ObjectType struct {
 	Name string `json:"object_type"`
 	id   int64
