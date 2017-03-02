@@ -45,7 +45,10 @@ type FilterExpr interface {
 
 // TimeRange describes an inclusive window during which we sholud be looking
 // for changes. If a Start or End time is not set then we assume the TimeRange
-// provides only one bound. Start marks the earlier of the two times.
+// provides only one bound and the other is computed to be an hour before or
+// after, as apporpriate. Start marks the earlier of the two times and is
+// inclusive, end marks the latest of the times and is exclusive. In other
+// words queries with a TimeRange will be interpreted as [Start, End).
 //
 // Start and End represent the start and end of a time range, specified in
 // microseconds since the Unix epoch, UTC.
