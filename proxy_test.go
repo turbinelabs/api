@@ -90,26 +90,64 @@ func TestProxyEqualsDiffDomainOrder(t *testing.T) {
 	assert.True(t, p2.Equals(p1))
 }
 
-func TestIsValid(t *testing.T) {
-	p := Proxy{ProxyKey: "pkey1", Name: "name1", ZoneKey: "zkey1"}
-	assert.Nil(t, p.IsValid(true))
-	assert.Nil(t, p.IsValid(false))
+func mkTestP() Proxy {
+	return Proxy{
+		ProxyKey:   "pk-1",
+		ZoneKey:    "zk-1",
+		Name:       "my neat proxy!",
+		DomainKeys: []DomainKey{"dk-1", "dk-2"},
+		OrgKey:     "ok-1",
+	}
 }
 
-func TestIsValidNoProxyKey(t *testing.T) {
-	p := Proxy{Name: "name1", ZoneKey: "zkey1"}
-	assert.Nil(t, p.IsValid(true))
-	assert.NonNil(t, p.IsValid(false))
+func TestProxyIsValid(t *testing.T) {
+	p := mkTestP()
+	assert.Nil(t, p.IsValid())
 }
 
-func TestIsValidNoName(t *testing.T) {
-	p := Proxy{ProxyKey: "pkey1", ZoneKey: "zkey1"}
-	assert.NonNil(t, p.IsValid(true))
-	assert.NonNil(t, p.IsValid(false))
+func TestProxyIsValidNoProxyKey(t *testing.T) {
+	p := mkTestP()
+	p.ProxyKey = ""
+	assert.NonNil(t, p.IsValid())
 }
 
-func TestIsValidNoZoneKey(t *testing.T) {
-	p := Proxy{ProxyKey: "pkey1", Name: "name1"}
-	assert.NonNil(t, p.IsValid(true))
-	assert.NonNil(t, p.IsValid(false))
+func TestProxyIsValidNoName(t *testing.T) {
+	p := mkTestP()
+	p.Name = ""
+	assert.NonNil(t, p.IsValid())
+}
+
+func TestProxyIsValidNoZoneKey(t *testing.T) {
+	p := mkTestP()
+	p.ZoneKey = ""
+	assert.NonNil(t, p.IsValid())
+}
+
+func TestProxyIsValidBadKey(t *testing.T) {
+	p := mkTestP()
+	p.ProxyKey = "aosnetuh-!!!"
+	assert.NonNil(t, p.IsValid())
+}
+func TestProxyIsValidBadName(t *testing.T) {
+	p := mkTestP()
+	p.Name = "some weird name["
+	assert.NonNil(t, p.IsValid())
+}
+
+func TestProxyIsValidBadZoneKey(t *testing.T) {
+	p := mkTestP()
+	p.ZoneKey = "111-222-##"
+	assert.NonNil(t, p.IsValid())
+}
+
+func TestProxyIsValidDupeDomainKeys(t *testing.T) {
+	p := mkTestP()
+	p.DomainKeys = append(p.DomainKeys, p.DomainKeys[0])
+	assert.NonNil(t, p.IsValid())
+}
+
+func TestProxyIsValidBadOrgKey(t *testing.T) {
+	p := mkTestP()
+	p.OrgKey = "---"
+	assert.NonNil(t, p.IsValid())
 }

@@ -72,29 +72,45 @@ func getZone() Zone {
 
 func TestZoneIsValid(t *testing.T) {
 	z := getZone()
-	assert.Nil(t, z.IsValid(true))
-	assert.Nil(t, z.IsValid(false))
+	assert.Nil(t, z.IsValid())
 }
 
 func TestZoneIsValidNoZoneKey(t *testing.T) {
 	z := getZone()
 	z.ZoneKey = ""
-	assert.Nil(t, z.IsValid(true))
-	assert.NonNil(t, z.IsValid(false))
+	assert.NonNil(t, z.IsValid())
+}
+
+func TestZoneIsValidBadZoneKey(t *testing.T) {
+	z := getZone()
+	z.ZoneKey = "-!"
+	assert.NonNil(t, z.IsValid())
 }
 
 func TestZoneIsValidNoName(t *testing.T) {
 	z := getZone()
 	z.Name = ""
 
-	assert.NonNil(t, z.IsValid(true))
-	assert.NonNil(t, z.IsValid(false))
+	assert.NonNil(t, z.IsValid())
+}
+
+func TestZoneIsValidBadName(t *testing.T) {
+	z := getZone()
+	z.Name = "[]"
+
+	assert.NonNil(t, z.IsValid())
+}
+
+func TestZoneIsValidBadOrg(t *testing.T) {
+	z := getZone()
+	z.OrgKey = "org#"
+
+	assert.NonNil(t, z.IsValid())
 }
 
 func TestZoneIsValidNoOrg(t *testing.T) {
 	z := getZone()
 	z.OrgKey = ""
 
-	assert.NonNil(t, z.IsValid(true))
-	assert.NonNil(t, z.IsValid(false))
+	assert.NonNil(t, z.IsValid())
 }

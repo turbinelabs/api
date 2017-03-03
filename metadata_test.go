@@ -126,3 +126,51 @@ func TestMetadataFromMap(t *testing.T) {
 	meta := MetadataFromMap(m)
 	assert.HasSameElements(t, meta, Metadata{{"foo", "bar"}, {"baz", "quix"}})
 }
+
+func getTestMD() Metadata {
+	return Metadata{
+		{"key1", "value1"},
+		{"key2", "value2"},
+	}
+}
+
+func mdPass(md Metadatum) *ValidationError { return nil }
+
+func TestMetadataIsValid(t *testing.T) {
+	md := getTestMD()
+	assert.Nil(t, MetadataValid("meta", md, mdPass))
+}
+
+func TestMetadataIsValidNil(t *testing.T) {
+	var md Metadata = nil
+	assert.Nil(t, MetadataValid("meta", md, mdPass))
+}
+
+func TestMetadataIsValidEmpty(t *testing.T) {
+	md := Metadata{}
+	assert.Nil(t, MetadataValid("meta", md, mdPass))
+}
+
+func TestMetadataIsValidDupes(t *testing.T) {
+	md := getTestMD()
+	md = append(md, md[0])
+	assert.DeepEqual(t, MetadataValid("meta", md, mdPass), &ValidationError{[]ErrorCase{
+		{"meta", "duplicate meta key 'key1'"},
+	}})
+}
+
+func TestMetadataIsValidFailCheck(t *testing.T) {
+	md := getTestMD()
+	assert.DeepEqual(
+		t,
+		MetadataValid("meta", md, func(d Metadatum) *ValidationError {
+			if d.Key == "key2" {
+				return &ValidationError{[]ErrorCase{{"whee", "whoo"}}}
+			}
+			return nil
+		}),
+		&ValidationError{[]ErrorCase{
+			{"meta[key2].whee", "whoo"},
+		}},
+	)
+}

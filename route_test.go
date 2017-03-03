@@ -165,48 +165,42 @@ func TestRouteEqualsChecksumVaries(t *testing.T) {
 func TestRouteIsValidSuccess(t *testing.T) {
 	r, _ := getRouteDefaults()
 
-	assert.Nil(t, r.IsValid(true))
-	assert.Nil(t, r.IsValid(false))
+	assert.Nil(t, r.IsValid())
 }
 
-func TestRouteIsValidPrecreationOnlySuccess(t *testing.T) {
+func TestRouteIsValidNoDomainKey(t *testing.T) {
 	r, _ := getRouteDefaults()
-	r.RouteKey = ""
+	r.DomainKey = ""
 
-	assert.Nil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRouteIsValidBadDomainKey(t *testing.T) {
 	r, _ := getRouteDefaults()
-	r.DomainKey = ""
+	r.DomainKey = "key $"
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRouteIsValidBadZoneKey(t *testing.T) {
 	r, _ := getRouteDefaults()
 	r.ZoneKey = ""
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRouteIsValidBadPath(t *testing.T) {
 	r, _ := getRouteDefaults()
 	r.Path = ""
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRouteIsValidBadSharedRulesKeyRef(t *testing.T) {
 	r, _ := getRouteDefaults()
 	r.SharedRulesKey = ""
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRouteIsValidBadRules(t *testing.T) {
@@ -216,6 +210,16 @@ func TestRouteIsValidBadRules(t *testing.T) {
 	rule1.Methods = []string{}
 	r.Rules[0] = rule1
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
+}
+
+func TestRouteIsValidDupeRules(t *testing.T) {
+	r, _ := getRouteDefaults()
+	rule1, _ := getRulesDefaults()
+	r.Rules = Rules{rule1, rule1}
+
+	errs := r.IsValid()
+	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
+		{"route.rules", "multiple instances of key " + string(rule1.RuleKey)},
+	}})
 }

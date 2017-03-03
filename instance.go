@@ -18,8 +18,21 @@ package api
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 )
+
+const (
+	// HostPatternString represents the pattern that an Instance hostanme must
+	// match.
+	HostPatternString = "^[a-zA-Z0-9_.-]+$"
+
+	// HostPatternMatchFailure is the error message returned when in invalid name
+	// is provided.
+	HostPatternMatchFailure = "host must match " + HostPatternString
+)
+
+var hostPattern = regexp.MustCompile(HostPatternString)
 
 // Instances is a slice of Instance
 type Instances []Instance
@@ -63,11 +76,16 @@ func (i Instances) Equivalent(o Instances) bool {
 }
 
 // Checks a collection of instances to ensure all are valid
-func (i Instances) IsValid(precreation bool) *ValidationError {
+func (i Instances) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
+	seen := map[string]bool{}
 	for _, e := range i {
-		errs.MergePrefixed(e.IsValid(precreation), "")
+		if seen[e.Key()] {
+			errs.AddNew(ErrorCase{"instances", fmt.Sprintf("multiple instances of key %v", e.Key())})
+		}
+		seen[e.Key()] = true
+		errs.MergePrefixed(e.IsValid(), fmt.Sprintf("instances[%v]", e.Key()))
 	}
 
 	return errs.OrNil()
@@ -106,25 +124,40 @@ func (i Instance) Equivalent(o Instance) bool {
 
 // checks for host and port data as both are required for an instance to be
 // well defined
-func (i Instance) IsValid(precreation bool) *ValidationError {
+func (i Instance) IsValid() *ValidationError {
+	iscope := fmt.Sprintf("instances[%s]", i.Key())
+
 	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("instance[%s].%s", i.Key(), f), m}
+		return ErrorCase{iscope + "." + f, m}
 	}
 
 	errs := &ValidationError{}
 
-	validHost := i.Host != ""
-	validPort := i.Port != 0
-
-	if !validHost {
+	if i.Host == "" {
 		errs.AddNew(ecase("host", "must not be empty"))
+	} else if !hostPattern.MatchString(i.Host) {
+		errs.AddNew(ecase("host", HostPatternMatchFailure))
 	}
 
-	if !validPort {
+	if i.Port == 0 {
 		errs.AddNew(ecase("port", "must be non-zero"))
 	}
 
+	errs.MergePrefixed(InstanceMetadataIsValid(i.Metadata), iscope)
+
 	return errs.OrNil()
+}
+
+func InstanceMetadataIsValid(md Metadata) *ValidationError {
+	return MetadataValid("metadata", md, func(kv Metadatum) *ValidationError {
+		if !AllowedIndexPattern.MatchString(kv.Key) {
+			return &ValidationError{
+				[]ErrorCase{{"key", AllowedIndexPatternMatchFailure}},
+			}
+		}
+
+		return nil
+	})
 }
 
 // Sort a Instancds by Host and Port.

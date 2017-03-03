@@ -19,7 +19,36 @@ package api
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
+)
+
+const (
+	// AllowedIndexPatternStr is a regexp pattern describing the acceptable
+	// contents of something that may be used as an index in a changelog
+	// path.
+	AllowedIndexPatternStr = `^[^\[\]]+$`
+
+	// KeyPatternStr is the regexp pattern one of our keys is expected to meet
+	KeyPatternStr = `^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$`
+
+	// AllowedIndexPatternMatchFailure is a message describing failure to match
+	// the pattern for what may be used as an index entry.
+	AllowedIndexPatternMatchFailure = "may not contain [ or ] characters"
+
+	// KeyPatternMatchFailure is a message returned when some key did not match
+	// the pattern required.
+	KeyPatternMatchFailure = "must match pattern: " + KeyPatternStr
+)
+
+var (
+	// AllowedIndexPattern is the set of characters which are allowed in a
+	// value that will be used as an index component of a changelog path.
+	AllowedIndexPattern = regexp.MustCompile(AllowedIndexPatternStr)
+
+	// KeyPattern is the pattern that a key must match. This is a more strict
+	// form of AllowedIndexPattern.
+	KeyPattern = regexp.MustCompile(KeyPatternStr)
 )
 
 // ErrorCase represents an error in an API object. It contains both the
@@ -98,6 +127,22 @@ func (ve *ValidationError) MergePrefixed(children *ValidationError, under string
 	}
 
 	ve.Merge(c2)
+}
+
+func errCheckKey(key string, with *ValidationError, named string) {
+	if key == "" {
+		with.AddNew(ErrorCase{named, "may not be empty"})
+	} else if !KeyPattern.MatchString(key) {
+		with.AddNew(ErrorCase{named, KeyPatternMatchFailure})
+	}
+}
+
+func errCheckIndex(v string, with *ValidationError, named string) {
+	if v == "" {
+		with.AddNew(ErrorCase{named, "may not be empty"})
+	} else if !AllowedIndexPattern.MatchString(v) {
+		with.AddNew(ErrorCase{named, AllowedIndexPatternMatchFailure})
+	}
 }
 
 // ValidationErrorsByAttribute implements sort.Interface

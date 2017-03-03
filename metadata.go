@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -76,11 +77,24 @@ type Metadatum struct {
 // MetadataValid provides a way to check for validity of all Metadatum contained
 // within a Metadata. It returns an aggregated list of errors, or nil if none
 // were found
-func MetadataValid(md Metadata, check func(Metadatum) *ValidationError) *ValidationError {
+func MetadataValid(
+	container string,
+	md Metadata,
+	check func(Metadatum) *ValidationError,
+) *ValidationError {
 	errs := &ValidationError{}
 
+	seenKey := map[string]bool{}
 	for _, e := range md {
-		errs.Merge(check(e))
+		if seenKey[e.Key] {
+			errs.AddNew(ErrorCase{
+				container,
+				fmt.Sprintf("duplicate %v key '%v'", container, e.Key),
+			})
+		}
+
+		errs.MergePrefixed(check(e), fmt.Sprintf("%s[%v]", container, e.Key))
+		seenKey[e.Key] = true
 	}
 
 	return errs.OrNil()

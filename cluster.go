@@ -17,7 +17,6 @@ limitations under the License.
 package api
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -78,35 +77,16 @@ func (c Cluster) Equals(o Cluster) bool {
 
 // Checks the data set on a Cluster and returns whether or not sufficient
 // information is available.
-//
-// If this is being checked before cluster creation (as indicated by the
-// precreation param) then a cluster key is not required.
-func (c *Cluster) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("cluster[%s].%s", string(c.ClusterKey), f), m}
-	}
+func (c *Cluster) IsValid() *ValidationError {
+	scope := func(i string) string { return "cluster." + i }
 
 	errs := &ValidationError{}
 
-	validClusterKey := c.ClusterKey != "" || precreation
-	validZoneKey := c.ZoneKey != ""
-	validName := c.Name != ""
+	errCheckKey(string(c.ClusterKey), errs, scope("cluster_key"))
+	errCheckKey(string(c.ZoneKey), errs, scope("zone_key"))
+	errCheckIndex(c.Name, errs, scope("name"))
 
-	if !validClusterKey {
-		errs.AddNew(ecase("cluster_key", "must not be empty"))
-	}
-
-	if !validZoneKey {
-		errs.AddNew(ecase("zone_key", "must not be empty"))
-	}
-
-	if !validName {
-		errs.AddNew(ecase("name", "must not be empty"))
-	}
-
-	errs.MergePrefixed(
-		c.Instances.IsValid(precreation),
-		fmt.Sprintf("cluster[%s].instances", string(c.ClusterKey)))
+	errs.MergePrefixed(c.Instances.IsValid(), "cluster")
 
 	return errs.OrNil()
 }

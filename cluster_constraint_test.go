@@ -122,40 +122,35 @@ func getValidClusterConstraint() ClusterConstraint {
 func TestClusterConstraintIsValidSuccess(t *testing.T) {
 	cc := getValidClusterConstraint()
 
-	assert.Nil(t, cc.IsValid(true))
-	assert.Nil(t, cc.IsValid(false))
+	assert.Nil(t, cc.IsValid())
 }
 
 func TestClusterConstraintIsValidWithoutConstraintKeyFailure(t *testing.T) {
 	cc := getValidClusterConstraint()
 	cc.ConstraintKey = ""
 
-	assert.NonNil(t, cc.IsValid(true))
-	assert.NonNil(t, cc.IsValid(false))
+	assert.NonNil(t, cc.IsValid())
 }
 
 func TestClusterConstraintIsValidCkeyfailure(t *testing.T) {
 	cc := getValidClusterConstraint()
 	cc.ClusterKey = ""
 
-	assert.NonNil(t, cc.IsValid(true))
-	assert.NonNil(t, cc.IsValid(false))
+	assert.NonNil(t, cc.IsValid())
 }
 
 func TestClusterConstraintIsValidMetadataFailure(t *testing.T) {
 	cc := getValidClusterConstraint()
 	cc.Metadata = Metadata{{"key", "value"}, {"", ""}}
 
-	assert.NonNil(t, cc.IsValid(true))
-	assert.NonNil(t, cc.IsValid(false))
+	assert.NonNil(t, cc.IsValid())
 }
 
 func TestClusterConstraintIsValidWeightFailure(t *testing.T) {
 	cc := getValidClusterConstraint()
 	cc.Weight = 0
 
-	assert.NonNil(t, cc.IsValid(true))
-	assert.NonNil(t, cc.IsValid(false))
+	assert.NonNil(t, cc.IsValid())
 }
 
 // ClusterConstarintSlice.IsValid
@@ -164,8 +159,7 @@ func TestClusterConstraintsIsValidSuccess(t *testing.T) {
 	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
 	ccs := ClusterConstraints{cc1, cc2}
 
-	assert.Nil(t, ccs.IsValid(true))
-	assert.Nil(t, ccs.IsValid(false))
+	assert.Nil(t, ccs.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidFailureOnDuplicateConstraintKeys(t *testing.T) {
@@ -174,8 +168,7 @@ func TestClusterConstraintsIsValidFailureOnDuplicateConstraintKeys(t *testing.T)
 	cc2.ConstraintKey = "cckey1"
 	ccs := ClusterConstraints{cc1, cc2}
 
-	assert.NonNil(t, ccs.IsValid(true))
-	assert.NonNil(t, ccs.IsValid(false))
+	assert.NonNil(t, ccs.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidInvalidContents(t *testing.T) {
@@ -183,15 +176,13 @@ func TestClusterConstraintsIsValidInvalidContents(t *testing.T) {
 	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 0}
 	ccs := ClusterConstraints{cc1, cc2}
 
-	assert.NonNil(t, ccs.IsValid(true))
-	assert.NonNil(t, ccs.IsValid(false))
+	assert.NonNil(t, ccs.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidEmpty(t *testing.T) {
 	ccs := ClusterConstraints{}
 
-	assert.Nil(t, ccs.IsValid(true))
-	assert.Nil(t, ccs.IsValid(false))
+	assert.Nil(t, ccs.IsValid("test"))
 }
 
 // ClusterConstraints.IsValid
@@ -202,8 +193,7 @@ func TestClusterConstraintsIsValidSucces(t *testing.T) {
 
 	set := AllConstraints{ccs, ccs, ccs}
 
-	assert.Nil(t, set.IsValid(true))
-	assert.Nil(t, set.IsValid(false))
+	assert.Nil(t, set.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidFailsWithBadLight(t *testing.T) {
@@ -217,8 +207,7 @@ func TestClusterConstraintsIsValidFailsWithBadLight(t *testing.T) {
 	set := AllConstraints{ccs, ccs, ccs}
 	set.Light = ccsBad
 
-	assert.NonNil(t, set.IsValid(true))
-	assert.NonNil(t, set.IsValid(false))
+	assert.NonNil(t, set.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidFailsWithBadDark(t *testing.T) {
@@ -232,8 +221,7 @@ func TestClusterConstraintsIsValidFailsWithBadDark(t *testing.T) {
 	set := AllConstraints{ccs, ccs, ccs}
 	set.Dark = ccsBad
 
-	assert.NonNil(t, set.IsValid(true))
-	assert.NonNil(t, set.IsValid(false))
+	assert.NonNil(t, set.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidFailsWithBadTap(t *testing.T) {
@@ -247,8 +235,7 @@ func TestClusterConstraintsIsValidFailsWithBadTap(t *testing.T) {
 	set := AllConstraints{ccs, ccs, ccs}
 	set.Tap = ccsBad
 
-	assert.NonNil(t, set.IsValid(true))
-	assert.NonNil(t, set.IsValid(false))
+	assert.NonNil(t, set.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidFailsWithZeroLight(t *testing.T) {
@@ -259,32 +246,42 @@ func TestClusterConstraintsIsValidFailsWithZeroLight(t *testing.T) {
 	set := AllConstraints{ccs, ccs, ccs}
 	set.Light = ClusterConstraints{}
 
-	assert.NonNil(t, set.IsValid(true))
-	assert.NonNil(t, set.IsValid(false))
+	assert.NonNil(t, set.IsValid("test"))
 }
 
 func TestConstraintMetadataValid(t *testing.T) {
+	m := Metadata{
+		Metadatum{"key", "value"},
+		Metadatum{"key2", "value"},
+	}
+	assert.Nil(t, ConstraintMetadataValid(m))
+}
+
+func TestConstraintMetadataValidFailedDupes(t *testing.T) {
 	mgood := Metadatum{"key", "value"}
 	m := Metadata{mgood, mgood, mgood}
-	assert.Nil(t, ConstraintMetadataValid(m))
+	assert.DeepEqual(t, ConstraintMetadataValid(m), &ValidationError{[]ErrorCase{
+		{"metadata", "duplicate metadata key 'key'"},
+		{"metadata", "duplicate metadata key 'key'"},
+	}})
 }
 
 func TestConstraintMetadataValidFailed(t *testing.T) {
 	mgood := Metadatum{"key", "value"}
 	mbad1 := Metadatum{"key-2", ""}
 	mbad2 := Metadatum{"", "value-2"}
-	m := Metadata{mgood, mbad1, mbad2, mgood}
+	m := Metadata{mgood, mbad1, mbad2}
 	errs := ConstraintMetadataValid(m)
 	sort.Sort(ValidationErrorsByAttribute{errs})
 	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
-		{"metadatum[].key", "key must not be empty"},
-		{"metadatum[key-2].value", "value must not be empty"},
+		{"metadata[].key", "must not be empty"},
+		{"metadata[key-2].value", "must not be empty"},
 	}})
 }
 
 func TestConstraintPropertiesValid(t *testing.T) {
 	mgood := Metadatum{"key", "value"}
-	mgood2 := Metadatum{"key", ""}
+	mgood2 := Metadatum{"key2", ""}
 	m := Metadata{mgood, mgood2}
 	assert.Nil(t, ConstraintPropertiesValid(m))
 }
@@ -295,6 +292,139 @@ func TestConstraintPropertiesValidFailed(t *testing.T) {
 	m := Metadata{mbad, mgood}
 	errs := ConstraintPropertiesValid(m)
 	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
-		{"property[].key", "key must not be empty"},
+		{"properties[].key", "must not be empty"},
+	}})
+}
+
+func TestConstraintPropertiesValidFailedDupes(t *testing.T) {
+	mgood := Metadatum{"key", "value"}
+	m := Metadata{mgood, mgood}
+	errs := ConstraintPropertiesValid(m)
+	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
+		{"properties", "duplicate properties key 'key'"},
+	}})
+}
+
+func getTestCC() ClusterConstraint {
+	md := Metadata{{"md-key", "value"}}
+	props := Metadata{{"p-key", "p-value"}}
+
+	return ClusterConstraint{
+		"cck-1",
+		"ck-1",
+		md,
+		props,
+		100,
+	}
+}
+
+func TestClusterConstraintIsValid(t *testing.T) {
+	cc := getTestCC()
+	assert.Nil(t, cc.IsValid())
+}
+
+func TestClusterConstraintIsValidBadKey(t *testing.T) {
+	cc := getTestCC()
+	cc.ConstraintKey = "bad-key!"
+	assert.NonNil(t, cc.IsValid())
+}
+
+func TestClusterConstraintIsValidNoKey(t *testing.T) {
+	cc := getTestCC()
+	cc.ConstraintKey = ""
+	assert.NonNil(t, cc.IsValid())
+}
+
+func TestClusterConstraintIsValidBadClusterKey(t *testing.T) {
+	cc := getTestCC()
+	cc.ClusterKey = "1234-@-test"
+	assert.NonNil(t, cc.IsValid())
+}
+
+func TestClusterConstraintIsValidNoClusterKey(t *testing.T) {
+	cc := getTestCC()
+	cc.ClusterKey = ""
+	assert.NonNil(t, cc.IsValid())
+}
+
+func TestClusterConstraintIsValidBadWeight(t *testing.T) {
+	cc := getTestCC()
+	cc.Weight = 0
+	assert.NonNil(t, cc.IsValid())
+}
+
+func TestClusterConstraintIsValidBadMetadata(t *testing.T) {
+	cc := getTestCC()
+	cc.Metadata[0].Key = ""
+	assert.DeepEqual(t, cc.IsValid(), &ValidationError{[]ErrorCase{
+		{"metadata[].key", "must not be empty"},
+	}})
+}
+
+func TestClusterConstraintIsValidBadProperty(t *testing.T) {
+	cc := getTestCC()
+	cc.Properties[0].Key = ""
+	assert.DeepEqual(t, cc.IsValid(), &ValidationError{[]ErrorCase{
+		{"properties[].key", "must not be empty"},
+	}})
+}
+
+func TestClusterConstraintIsValidNoMetadataNoProperty(t *testing.T) {
+	cc := getTestCC()
+	cc.Metadata = nil
+	cc.Properties = nil
+	assert.Nil(t, cc.IsValid())
+}
+
+func getTestCCS() ClusterConstraints {
+	cc1 := getTestCC()
+	cc2 := getTestCC()
+	cc2.ConstraintKey = "cck-2"
+	return ClusterConstraints{cc1, cc2}
+}
+
+func TestClusterConstraintsIsValid(t *testing.T) {
+	ccs := getTestCCS()
+	assert.Nil(t, ccs.IsValid("ccs"))
+}
+
+func TestClusterConstraintsIsValidDupes(t *testing.T) {
+	ccs := getTestCCS()
+	ccs = append(ccs, ccs[0])
+	assert.DeepEqual(t, ccs.IsValid("ccs"), &ValidationError{[]ErrorCase{
+		{"ccs", "multiple instances of key cck-1"},
+	}})
+}
+
+func TestClusterConstraintsIsValidBadConstraint(t *testing.T) {
+	ccs := getTestCCS()
+	ccs[0].Weight = 0
+	assert.DeepEqual(t, ccs.IsValid("ccs"), &ValidationError{[]ErrorCase{
+		{"ccs[cck-1].weight", "must be greater than 0"},
+	}})
+}
+
+func getTestAC() AllConstraints {
+	return AllConstraints{
+		getTestCCS(),
+		getTestCCS(),
+		getTestCCS(),
+	}
+}
+
+func TestAllConstraintsIsValid(t *testing.T) {
+	acs := getTestAC()
+	assert.Nil(t, acs.IsValid("ac"))
+}
+
+func TestAllConstraintsIsValidBad(t *testing.T) {
+	acs := getTestAC()
+	acs.Light[0].Weight = 0
+	acs.Dark[0].Weight = 0
+	acs.Tap[0].Weight = 0
+	assert.DeepEqual(t, acs.IsValid("ac"), &ValidationError{[]ErrorCase{
+		{"ac.light[cck-1].weight", "must be greater than 0"},
+		{"ac.dark[cck-1].weight", "must be greater than 0"},
+		{"ac.tap[cck-1].weight", "must be greater than 0"},
 	}})
 }

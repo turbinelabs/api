@@ -16,10 +16,6 @@ limitations under the License.
 
 package api
 
-import (
-	"fmt"
-)
-
 type OrgKey string
 type Orgs []Org
 
@@ -36,27 +32,16 @@ func (o Org) IsNil() bool {
 	return o.Equals(Org{})
 }
 
-func (o Org) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("org.%s", f), m}
-	}
+func (o Org) IsValid() *ValidationError {
+	scope := func(i string) string { return "org." + i }
 
 	errs := &ValidationError{}
 
-	validOrgKey := (precreation || o.OrgKey != "")
-	validName := o.Name != ""
-	validEmail := o.ContactEmail != ""
+	errCheckKey(string(o.OrgKey), errs, scope("org_key"))
+	errCheckIndex(o.Name, errs, scope("name"))
 
-	if !validOrgKey {
-		errs.AddNew(ecase("org_key", "must not be empty"))
-	}
-
-	if !validName {
-		errs.AddNew(ecase("name", "must not be empty"))
-	}
-
-	if !validEmail {
-		errs.AddNew(ecase("login_email", "must not be empty"))
+	if o.ContactEmail == "" {
+		errs.AddNew(ErrorCase{scope("login_email"), "must not be empty"})
 	}
 
 	return errs.OrNil()

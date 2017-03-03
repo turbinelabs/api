@@ -86,13 +86,9 @@ func (das DomainAliases) IsValid() *ValidationError {
 		return fmt.Sprintf("domain_aliases[%v]", n)
 	}
 
-	ec := func(n, m string) ErrorCase {
-		return ErrorCase{scope(n), m}
-	}
-
 	for _, da := range das {
 		if seen[string(da)] {
-			errs.AddNew(ec(string(da), "must be unique"))
+			errs.AddNew(ErrorCase{"domain_aliases", fmt.Sprintf("duplicate alias found %v", da)})
 		} else {
 			seen[string(da)] = true
 			errs.MergePrefixed(da.IsValid(), scope(string(da)))
@@ -110,7 +106,7 @@ func (da DomainAlias) Equals(o DomainAlias) bool {
 
 func (da DomainAlias) IsValid() *ValidationError {
 	if !DomainAliasPattern.MatchString(string(da)) {
-		return &ValidationError{[]ErrorCase{{"alias", AliasPatternFailure}}}
+		return &ValidationError{[]ErrorCase{{"", AliasPatternFailure}}}
 	}
 
 	return nil
@@ -127,40 +123,31 @@ type Domains []Domain
 //  2. non empty ZoneKey
 //  3. non empty Name
 //  4. non zero Port
-func (d Domain) IsValid(precreation bool) *ValidationError {
+func (d Domain) IsValid() *ValidationError {
+	scope := func(n string) string { return "domain." + n }
 	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("domain[%s].%s", string(d.DomainKey), f), m}
+		return ErrorCase{scope(f), m}
 	}
 
 	errs := &ValidationError{}
 
-	validDomainKey := precreation || d.DomainKey != ""
-	validZoneKey := d.ZoneKey != ""
-	validName := d.Name != ""
-	validPort := d.Port != 0
+	errCheckKey(string(d.DomainKey), errs, scope("domain_key"))
+	errCheckKey(string(d.ZoneKey), errs, scope("zone_key"))
+	errCheckIndex(d.Name, errs, scope("name"))
+	errCheckKey(string(d.OrgKey), errs, scope("org_key"))
 
-	if !validDomainKey {
-		errs.AddNew(ecase("domain_key", "must not be empty"))
-	}
-
-	if !validZoneKey {
-		errs.AddNew(ecase("zone_key", "must not be empty"))
-	}
-
-	if !validName {
-		errs.AddNew(ecase("name", "must not be empty"))
-	}
-
-	if !validPort {
+	if d.Port == 0 {
 		errs.AddNew(ecase("port", "must be non-zero"))
 	}
 
-	parent := fmt.Sprintf("domain[%v]", d.DomainKey)
+	parent := "domain"
 	errs.MergePrefixed(d.Redirects.IsValid(), parent)
 
 	if d.CorsConfig != nil {
 		errs.MergePrefixed(d.CorsConfig.IsValid(), parent)
 	}
+
+	errs.MergePrefixed(d.Aliases.IsValid(), "")
 
 	return errs.OrNil()
 }
@@ -221,7 +208,7 @@ func (ds Domains) Equals(o Domains) bool {
 
 // Checks validity of a domain slice. Requise that each domain is valid and
 // that there are no domains with duplicate keys.
-func (ds Domains) IsValid(precreation bool) *ValidationError {
+func (ds Domains) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
 	keySeen := make(map[DomainKey]bool)
@@ -229,13 +216,13 @@ func (ds Domains) IsValid(precreation bool) *ValidationError {
 	for _, d := range ds {
 		if keySeen[d.DomainKey] {
 			errs.AddNew(ErrorCase{
-				"domain_key",
+				"",
 				fmt.Sprintf("multiple instances of key %s", string(d.DomainKey)),
 			})
 		}
 
 		keySeen[d.DomainKey] = true
-		errs.MergePrefixed(d.IsValid(precreation), "")
+		errs.MergePrefixed(d.IsValid(), "")
 	}
 
 	return errs.OrNil()
@@ -331,12 +318,12 @@ func (cc CorsConfig) IsValid() *ValidationError {
 	}
 
 	if len(cc.AllowedMethods) == 0 {
-		errs.AddNew(ec("allow_methods", "must have at least one element"))
+		errs.AddNew(ec("allowed_methods", "must have at least one element"))
 	}
 
 	for _, m := range cc.AllowedMethods {
 		if !isAllowedMethod[m] {
-			errs.AddNew(ec("allow_methods", fmt.Sprintf("%s is not a valid method", m)))
+			errs.AddNew(ec("allowed_methods", fmt.Sprintf("%s is not a valid method", m)))
 		}
 	}
 

@@ -73,30 +73,38 @@ func getOrg() Org {
 func TestOrgIsValid(t *testing.T) {
 	org := getOrg()
 
-	assert.Nil(t, org.IsValid(true))
-	assert.Nil(t, org.IsValid(false))
+	assert.Nil(t, org.IsValid())
+}
+
+func TestOrgIsValidBadOrgKey(t *testing.T) {
+	org := getOrg()
+	org.OrgKey = "aoeu-%-1234"
+	assert.NonNil(t, org.IsValid())
 }
 
 func TestOrgIsValidNoOrgKey(t *testing.T) {
 	org := getOrg()
 	org.OrgKey = ""
 
-	assert.Nil(t, org.IsValid(true))
-	assert.NonNil(t, org.IsValid(false))
+	assert.NonNil(t, org.IsValid())
+}
+
+func TestOrgIsValidBadName(t *testing.T) {
+	org := getOrg()
+	org.Name = "bad [name]"
+	assert.NonNil(t, org.IsValid())
 }
 
 func TestOrgIsValidNoName(t *testing.T) {
 	org := getOrg()
 	org.Name = ""
 
-	assert.NonNil(t, org.IsValid(true))
-	assert.NonNil(t, org.IsValid(false))
+	assert.NonNil(t, org.IsValid())
 }
 
 func TestOrgIsValidNoEmail(t *testing.T) {
 	org := getOrg()
 	org.ContactEmail = ""
 
-	assert.NonNil(t, org.IsValid(true))
-	assert.NonNil(t, org.IsValid(false))
+	assert.NonNil(t, org.IsValid())
 }

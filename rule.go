@@ -69,19 +69,19 @@ func (r Rules) Equals(o Rules) bool {
 
 // Check for validity of a slice of Rule objects. A valid rule is one that is
 // composed only of valid Rule structs.
-func (r Rules) IsValid(precreation bool) *ValidationError {
+func (r Rules) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
 	seenKey := map[RuleKey]bool{}
 	for _, r := range r {
 		if seenKey[r.RuleKey] {
 			errs.AddNew(ErrorCase{
-				"rule_key", fmt.Sprintf("multiple instances of key %s", string(r.RuleKey)),
+				"rules", fmt.Sprintf("multiple instances of key %s", string(r.RuleKey)),
 			})
 		}
 		seenKey[r.RuleKey] = true
 
-		errs.MergePrefixed(r.IsValid(precreation), "")
+		errs.MergePrefixed(r.IsValid(), fmt.Sprintf("rules[%v]", r.RuleKey))
 	}
 
 	return errs.OrNil()
@@ -137,24 +137,21 @@ var validMethod map[string]bool = map[string]bool{
 // Checks this rule for validity. A rule is considered valid if it has a RuleKey,
 // at least one valid HTTP method (GET, PUT, POST, DELETE), the defined
 // matches are valid, and the Constraints are valid.
-func (r Rule) IsValid(precreation bool) *ValidationError {
+func (r Rule) IsValid() *ValidationError {
 	ecase := func(f, m string) ErrorCase {
-		var field string
-		if f != "" {
-			field = "." + f
-		}
-		return ErrorCase{fmt.Sprintf("rule[%s]%s", string(r.RuleKey), field), m}
+		return ErrorCase{f, m}
 	}
 
 	errs := &ValidationError{}
 
-	if r.RuleKey == "" {
-		errs.AddNew(ecase("rule_key", "must not be empty"))
-	}
+	errCheckKey(string(r.RuleKey), errs, "rule_key")
 
 	for _, m := range r.Methods {
 		if !validMethod[m] {
-			errs.AddNew(ecase("methods", fmt.Sprintf("%s is not a valid method", m)))
+			errs.AddNew(ecase(
+				"methods",
+				fmt.Sprintf("%s is not a valid method", m),
+			))
 		}
 	}
 
@@ -162,12 +159,8 @@ func (r Rule) IsValid(precreation bool) *ValidationError {
 		errs.AddNew(ecase("", "at least one method or match must be present"))
 	}
 
-	errs.MergePrefixed(
-		r.Matches.IsValid(precreation),
-		fmt.Sprintf("rule[%s].matches", string(r.RuleKey)))
-	errs.MergePrefixed(
-		r.Constraints.IsValid(precreation),
-		fmt.Sprintf("rule[%s].constraints", string(r.RuleKey)))
+	errs.MergePrefixed(r.Matches.IsValid(), "")
+	errs.MergePrefixed(r.Constraints.IsValid("constraints"), "")
 
 	return errs.OrNil()
 }

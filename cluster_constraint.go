@@ -40,49 +40,35 @@ type ClusterConstraint struct {
 // Checks a ClusterConstraint for validity. A valid constraint will have a non
 // empty ConstraintKey and ClusterKey (always), a Weight greater than 0, and
 // valid metadata.
-func (cc ClusterConstraint) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("constraint[%s].%s", string(cc.ConstraintKey), f), m}
-	}
-
+func (cc ClusterConstraint) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
-	if cc.ConstraintKey == "" {
-		errs.AddNew(ecase("constraint_key", "must not be empty"))
-	}
-
-	if cc.ClusterKey == "" {
-		errs.AddNew(ecase("cluster_key", "must not be empty"))
-	}
+	errCheckKey(string(cc.ConstraintKey), errs, "constraint_key")
+	errCheckKey(string(cc.ClusterKey), errs, "cluster_key")
 
 	if cc.Weight <= 0 {
-		errs.AddNew(ecase("weight", "must be greater than 0"))
+		errs.AddNew(ErrorCase{"weight", "must be greater than 0"})
 	}
 
-	errs.MergePrefixed(
-		ConstraintMetadataValid(cc.Metadata),
-		fmt.Sprintf("constraint[%s].metadata", string(cc.ConstraintKey)))
-
-	errs.MergePrefixed(
-		ConstraintPropertiesValid(cc.Properties),
-		fmt.Sprintf("constraint[%s].properties", string(cc.ConstraintKey)))
+	errs.MergePrefixed(ConstraintMetadataValid(cc.Metadata), "")
+	errs.MergePrefixed(ConstraintPropertiesValid(cc.Properties), "")
 
 	return errs.OrNil()
 }
 
 func ConstraintMetadataValid(m Metadata) *ValidationError {
-	return MetadataValid(m, func(kv Metadatum) *ValidationError {
+	return MetadataValid("metadata", m, func(kv Metadatum) *ValidationError {
 		ecase := func(f, msg string) ErrorCase {
-			return ErrorCase{fmt.Sprintf("metadatum[%s].%s", kv.Key, f), msg}
+			return ErrorCase{f, msg}
 		}
 
 		errs := &ValidationError{}
 
 		if kv.Key == "" {
-			errs.AddNew(ecase("key", "key must not be empty"))
+			errs.AddNew(ecase("key", "must not be empty"))
 		}
 		if kv.Value == "" {
-			errs.AddNew(ecase("value", "value must not be empty"))
+			errs.AddNew(ecase("value", "must not be empty"))
 		}
 
 		return errs.OrNil()
@@ -90,13 +76,13 @@ func ConstraintMetadataValid(m Metadata) *ValidationError {
 }
 
 func ConstraintPropertiesValid(m Metadata) *ValidationError {
-	return MetadataValid(m, func(kv Metadatum) *ValidationError {
+	return MetadataValid("properties", m, func(kv Metadatum) *ValidationError {
 		if kv.Key != "" {
 			return nil
 		}
 
 		err := &ValidationError{}
-		err.AddNew(ErrorCase{"property[].key", "key must not be empty"})
+		err.AddNew(ErrorCase{"key", "must not be empty"})
 		return err
 	})
 }
@@ -110,8 +96,8 @@ func ConstraintPropertiesValid(m Metadata) *ValidationError {
 	ClusterConstraint slice is used to determine an Instance to send a copy of
 	the request to, comparing the response to the Light response.
 
-        The Dark and Tap ClusterConstraint slices may be empty. The Light
-        ClusterConstraint slice must always contain at least one entry.
+	The Dark and Tap ClusterConstraint slices may be empty. The Light
+	ClusterConstraint slice must always contain at least one entry.
 
 	TODO: do we need to identify/declare which requests are idempotent?
 	If Routes are structured properly, this isn't necessary, since you can only
@@ -147,20 +133,20 @@ func (ccs ClusterConstraints) Equals(o ClusterConstraints) bool {
 
 // Checks validity of a slice of cluster constraints. This means that each item
 // in the slice must be valid and no constraint key may be duplicated.
-func (ccs ClusterConstraints) IsValid(precreation bool) *ValidationError {
+func (ccs ClusterConstraints) IsValid(container string) *ValidationError {
 	errs := &ValidationError{}
 
 	seenKey := map[ConstraintKey]bool{}
 	for _, c := range ccs {
 		if seenKey[c.ConstraintKey] {
 			errs.AddNew(ErrorCase{
-				"constraint_key",
+				container,
 				fmt.Sprintf("multiple instances of key %s", string(c.ConstraintKey)),
 			})
 		}
 		seenKey[c.ConstraintKey] = true
 
-		errs.MergePrefixed(c.IsValid(precreation), "")
+		errs.MergePrefixed(c.IsValid(), fmt.Sprintf("%s[%v]", container, c.ConstraintKey))
 	}
 
 	return errs.OrNil()
@@ -191,15 +177,15 @@ func (cc AllConstraints) Equals(o AllConstraints) bool {
 
 // Check validity of an AllConstraints struct. A valid AllConstraints must have
 // at lesat one Light constraint and valid Light, Dark, and Tap constraints.
-func (cc AllConstraints) IsValid(precreation bool) *ValidationError {
+func (cc AllConstraints) IsValid(container string) *ValidationError {
 	errs := &ValidationError{}
 	if len(cc.Light) < 1 {
-		errs.AddNew(ErrorCase{"light", "must have at least one constraint"})
+		errs.AddNew(ErrorCase{"", "must have at least one light constraint"})
 	}
 
-	errs.MergePrefixed(cc.Light.IsValid(precreation), "light")
-	errs.MergePrefixed(cc.Dark.IsValid(precreation), "dark")
-	errs.MergePrefixed(cc.Tap.IsValid(precreation), "tap")
+	errs.MergePrefixed(cc.Light.IsValid("light"), container)
+	errs.MergePrefixed(cc.Dark.IsValid("dark"), container)
+	errs.MergePrefixed(cc.Tap.IsValid("tap"), container)
 
 	return errs.OrNil()
 }

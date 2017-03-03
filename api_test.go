@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -24,6 +25,52 @@ import (
 
 func getVe() ValidationError {
 	return ValidationError{[]ErrorCase{{"a", "b"}}}
+}
+
+func pf(b bool) string {
+	if b {
+		return "passed"
+	} else {
+		return "failed"
+	}
+}
+
+func TestKeyPattern(t *testing.T) {
+	test := func(in string, shouldMatch bool) {
+		fmt.Printf(
+			"%v - '%v'\n",
+			pf(assert.Equal(t, KeyPattern.MatchString(in), shouldMatch)),
+			in)
+	}
+
+	pass := func(in string) { test(in, true) }
+	fail := func(in string) { test(in, false) }
+
+	pass("1234")
+	fail(" 1234")
+	fail("aoeu-snth-102938-...")
+	fail("aoeu-[9982829")
+	pass("25db52ba-6f12-4964-6a3f-40f2e9ad47bb")
+}
+
+func TestIndexPattern(t *testing.T) {
+	test := func(in string, shouldMatch bool) {
+		fmt.Printf(
+			"%v - '%v'\n",
+			pf(assert.Equal(t, AllowedIndexPattern.MatchString(in), shouldMatch)),
+			in)
+	}
+
+	pass := func(in string) { test(in, true) }
+	fail := func(in string) { test(in, false) }
+
+	pass("12341234")
+	pass("a/b/c/d")
+	pass("a\\b\\c\\d")
+	pass("a-b-3--")
+	pass("a b 3  ")
+	fail("aoeu-[-snth")
+	fail("aoeu-]-snth")
 }
 
 func TestValidationErrorAddNew(t *testing.T) {

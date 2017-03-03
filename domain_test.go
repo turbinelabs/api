@@ -173,68 +173,112 @@ func getDomain() Domain {
 	}
 }
 
-func TestDomainIsValidSuccessPreCreation(t *testing.T) {
-	d1 := getDomain()
-	d1.DomainKey = ""
-
-	assert.Nil(t, d1.IsValid(true))
-	assert.NonNil(t, d1.IsValid(false))
-}
-
 func TestDomainIsValidSuccess(t *testing.T) {
 	d1 := getDomain()
 
-	assert.Nil(t, d1.IsValid(true))
-	assert.Nil(t, d1.IsValid(false))
+	assert.Nil(t, d1.IsValid())
+}
+
+func TestDomainIsValidNoKey(t *testing.T) {
+	d := getDomain()
+	d.DomainKey = ""
+	assert.NonNil(t, d.IsValid())
+}
+
+func TestDomainIsValidBadKey(t *testing.T) {
+	d := getDomain()
+	d.DomainKey = "-aoeu"
+	assert.NonNil(t, d.IsValid())
+}
+
+func TestDomainIsValidNoName(t *testing.T) {
+	d := getDomain()
+	d.Name = ""
+	assert.NonNil(t, d.IsValid())
+}
+
+func TestDomainIsValidBadName(t *testing.T) {
+	d := getDomain()
+	d.Name = "bad[name]"
+	assert.NonNil(t, d.IsValid())
+}
+
+func TestDomainIsValidBadPort(t *testing.T) {
+	d := getDomain()
+	d.Port = 0
+	assert.NonNil(t, d.IsValid())
+}
+
+func TestDomainIsValidNoOrg(t *testing.T) {
+	d := getDomain()
+	d.OrgKey = ""
+	assert.NonNil(t, d.IsValid())
+}
+
+func TestDomainIsValidBadOrg(t *testing.T) {
+	d := getDomain()
+	d.OrgKey = "aoeu*snth"
+	assert.NonNil(t, d.IsValid())
 }
 
 func TestDomainIsValidNoCorsConfig(t *testing.T) {
 	d1 := getDomain()
 	d1.CorsConfig = nil
 
-	assert.Nil(t, d1.IsValid(true))
-	assert.Nil(t, d1.IsValid(false))
+	assert.Nil(t, d1.IsValid())
 }
 
 func TestDomainIsValidFailsOnCorsConfig(t *testing.T) {
 	d1 := getDomain()
 	d1.CorsConfig.AllowedOrigins = nil
 
-	assert.NonNil(t, d1.IsValid(true))
-	assert.NonNil(t, d1.IsValid(false))
+	assert.NonNil(t, d1.IsValid())
 }
 
 func TestDomainIsValidFailedDkey(t *testing.T) {
 	d1 := getDomain()
 	d1.DomainKey = ""
 
-	assert.Nil(t, d1.IsValid(true))
-	assert.NonNil(t, d1.IsValid(false))
+	assert.NonNil(t, d1.IsValid())
 }
 
 func TestDomainIsValidFailedName(t *testing.T) {
 	d1 := getDomain()
 	d1.Name = ""
 
-	assert.NonNil(t, d1.IsValid(true))
-	assert.NonNil(t, d1.IsValid(false))
+	assert.NonNil(t, d1.IsValid())
 }
 
 func TestDomainIsValidFailedPort(t *testing.T) {
 	d1 := getDomain()
 	d1.Port = 0
 
-	assert.NonNil(t, d1.IsValid(true))
-	assert.NonNil(t, d1.IsValid(false))
+	assert.NonNil(t, d1.IsValid())
+}
+
+func TestDomainIsValidFailedDuplicateRedirect(t *testing.T) {
+	d1 := getDomain()
+	d1.Redirects = append(d1.Redirects, d1.Redirects[0])
+	err := d1.IsValid()
+	assert.NonNil(t, err)
+	assert.HasSameElements(t, err.Errors, []ErrorCase{
+		{
+			"domain.redirects",
+			fmt.Sprintf(
+				"name must be unique, multiple redirects found called '%v'",
+				d1.Redirects[0].Name,
+			),
+		},
+	})
 }
 
 func TestDomainIsValidFailedRedirect(t *testing.T) {
 	d1 := getDomain()
 	d1.Redirects[0].To = ""
-	err := d1.IsValid(true)
+	err := d1.IsValid()
 	assert.NonNil(t, err)
 	assert.HasSameElements(t, err.Errors, []ErrorCase{
-		{"domain[dkey].redirects[sample-redirect].to", "must not be empty"},
+		{"domain.redirects[sample-redirect].to", "must not be empty"},
 	})
 }
 
@@ -279,8 +323,7 @@ func TestDomainsIsValidSuccess(t *testing.T) {
 	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
-	assert.Nil(t, ds.IsValid(true))
-	assert.Nil(t, ds.IsValid(false))
+	assert.Nil(t, ds.IsValid())
 }
 
 func TestDomainsIsValidFailureDupe(t *testing.T) {
@@ -289,8 +332,7 @@ func TestDomainsIsValidFailureDupe(t *testing.T) {
 	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1, d3}
 
-	assert.NonNil(t, ds.IsValid(true))
-	assert.NonNil(t, ds.IsValid(false))
+	assert.NonNil(t, ds.IsValid())
 }
 
 func TestDomainsIsValidFailureBadDomain(t *testing.T) {
@@ -299,8 +341,7 @@ func TestDomainsIsValidFailureBadDomain(t *testing.T) {
 	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
-	assert.NonNil(t, ds.IsValid(true))
-	assert.NonNil(t, ds.IsValid(false))
+	assert.NonNil(t, ds.IsValid())
 }
 
 func mkCC() *CorsConfig {
@@ -417,7 +458,7 @@ func TestDomainAliasIsValidFails(t *testing.T) {
 		var want *ValidationError
 
 		if fail {
-			want = &ValidationError{[]ErrorCase{{"alias", AliasPatternFailure}}}
+			want = &ValidationError{[]ErrorCase{{"", AliasPatternFailure}}}
 		}
 
 		if !assert.DeepEqual(t, got, want) {
@@ -463,7 +504,7 @@ func TestDomainAliasesIsValidDupes(t *testing.T) {
 	}
 
 	assert.DeepEqual(t, da.IsValid(), &ValidationError{[]ErrorCase{
-		{"domain_aliases[test.com]", "must be unique"},
+		{"domain_aliases", "duplicate alias found test.com"},
 	}})
 }
 
@@ -473,7 +514,7 @@ func TestDomainAliasesIsValidFailure(t *testing.T) {
 
 	das := DomainAliases{da}
 	assert.DeepEqual(t, das.IsValid(), &ValidationError{[]ErrorCase{
-		{fmt.Sprintf("domain_aliases[%v].alias", da), daerr.Errors[0].Msg},
+		{fmt.Sprintf("domain_aliases[%v]", da), daerr.Errors[0].Msg},
 	}})
 }
 

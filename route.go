@@ -73,41 +73,20 @@ func (r Route) Equals(o Route) bool {
 // Checks validity of a Route. For a route to be valid it must have a non-empty
 // RouteKey (or be precreation), have a DomainKey, a ZoneKey, a Path, and valid
 // Default + Rules.
-func (r Route) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{"route." + f, m}
-	}
+func (r Route) IsValid() *ValidationError {
+	scope := func(s string) string { return "route." + s }
 
 	errs := &ValidationError{}
-	var (
-		validKey            = precreation || r.RouteKey != ""
-		validDomainKey      = r.DomainKey != ""
-		validSharedRulesKey = r.SharedRulesKey != ""
-		validZoneKey        = r.ZoneKey != ""
-		validPath           = r.Path != ""
-	)
+	errCheckKey(string(r.RouteKey), errs, scope("route_key"))
+	errCheckKey(string(r.SharedRulesKey), errs, scope("shared_rules_key"))
+	errCheckKey(string(r.DomainKey), errs, scope("domain_key"))
+	errCheckKey(string(r.ZoneKey), errs, scope("zone_key"))
 
-	if !validSharedRulesKey {
-		errs.AddNew(ecase("shared_rules_key", "must not be empty"))
+	if r.Path == "" {
+		errs.AddNew(ErrorCase{scope("path"), "must not be empty"})
 	}
 
-	if !validKey {
-		errs.AddNew(ecase("route_key", "must not be empty"))
-	}
-
-	if !validDomainKey {
-		errs.AddNew(ecase("domain_key", "must not be empty"))
-	}
-
-	if !validZoneKey {
-		errs.AddNew(ecase("zone_key", "must not be empty"))
-	}
-
-	if !validPath {
-		errs.AddNew(ecase("path", "must not be empty"))
-	}
-
-	errs.MergePrefixed(r.Rules.IsValid(precreation), "route.rules")
+	errs.MergePrefixed(r.Rules.IsValid(), "route")
 
 	return errs.OrNil()
 }

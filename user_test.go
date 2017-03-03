@@ -121,46 +121,66 @@ func getUser() User {
 func TestUserIsValid(t *testing.T) {
 	u := getUser()
 
-	assert.Nil(t, u.IsValid(true))
-	assert.Nil(t, u.IsValid(false))
+	assert.Nil(t, u.IsValid())
 }
 
 func TestUserIsValidNoDeletedAt(t *testing.T) {
 	u := getUser()
 	u.DeletedAt = nil
 
-	assert.Nil(t, u.IsValid(true))
-	assert.Nil(t, u.IsValid(false))
+	assert.Nil(t, u.IsValid())
 }
 
 func TestUserIsValidNoUserKey(t *testing.T) {
 	u := getUser()
 	u.UserKey = ""
 
-	assert.Nil(t, u.IsValid(true))
-	assert.NonNil(t, u.IsValid(false))
+	assert.NonNil(t, u.IsValid())
+}
+
+func TestUserIsValidBadUserKey(t *testing.T) {
+	u := getUser()
+	u.UserKey = "bad-user-@"
+	assert.NonNil(t, u.IsValid())
 }
 
 func TestUserIsValidNoEmail(t *testing.T) {
 	u := getUser()
 	u.LoginEmail = ""
 
-	assert.NonNil(t, u.IsValid(true))
-	assert.NonNil(t, u.IsValid(false))
+	assert.NonNil(t, u.IsValid())
 }
 
 func TestUserIsValidNoAuthKey(t *testing.T) {
 	u := getUser()
 	u.APIAuthKey = ""
 
-	assert.NonNil(t, u.IsValid(true))
-	assert.NonNil(t, u.IsValid(false))
+	assert.NonNil(t, u.IsValid())
+}
+
+func TestUserIsValidDelegatedAuthKey(t *testing.T) {
+	u := getUser()
+	u.APIAuthKey = "Bearer " +
+		"https://login.turbinelabs.io/auth/realms/turbine-labs " +
+		"12341234-1234-1234-1234-123412341234"
+	assert.Nil(t, u.IsValid())
+}
+
+func TestUserIsValidBadAuthKey(t *testing.T) {
+	u := getUser()
+	u.APIAuthKey = "Bearer [turbine-labs] snth-snth-snth"
+	assert.NonNil(t, u.IsValid())
 }
 
 func TestUserIsValidNoOrgKey(t *testing.T) {
 	u := getUser()
 	u.OrgKey = ""
 
-	assert.NonNil(t, u.IsValid(true))
-	assert.NonNil(t, u.IsValid(false))
+	assert.NonNil(t, u.IsValid())
+}
+
+func TestUserIsValidBadOrgKey(t *testing.T) {
+	u := getUser()
+	u.OrgKey = "bad-(-key"
+	assert.NonNil(t, u.IsValid())
 }

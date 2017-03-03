@@ -36,28 +36,25 @@ type Proxy struct {
 
 // Check validity of a new or existing proxy. A Valid proxy requires a
 // ProxyKey (unless new), a ZoneKey, and valid sub objects (Instance & Domains).
-func (p Proxy) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("proxy.%s", f), m}
-	}
-
+func (p Proxy) IsValid() *ValidationError {
+	scope := func(n string) string { return "proxy." + n }
 	errs := &ValidationError{}
 
-	keyValid := precreation || p.ProxyKey != ""
-	zoneValid := p.ZoneKey != ""
-	nameValid := p.Name != ""
+	errCheckKey(string(p.ProxyKey), errs, scope("proxy_key"))
+	errCheckKey(string(p.ZoneKey), errs, scope("zone_key"))
+	errCheckIndex(string(p.Name), errs, scope("name"))
 
-	if !keyValid {
-		errs.AddNew(ecase("proxy_key", "must not be empty"))
+	seenDomain := map[string]bool{}
+	for _, dk := range p.DomainKeys {
+		sdk := string(dk)
+		if seenDomain[sdk] {
+			errs.AddNew(ErrorCase{scope("domains"), fmt.Sprintf("duplicate domain key '%v'", sdk)})
+		}
+		seenDomain[sdk] = true
+		errCheckKey(sdk, errs, fmt.Sprintf("proxy.domains[%v]", sdk))
 	}
 
-	if !zoneValid {
-		errs.AddNew(ecase("zone_key", "must not be empty"))
-	}
-
-	if !nameValid {
-		errs.AddNew(ecase("name", "must not be empty"))
-	}
+	errCheckKey(string(p.OrgKey), errs, scope("org_key"))
 
 	return errs.OrNil()
 }

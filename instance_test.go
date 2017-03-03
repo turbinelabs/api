@@ -122,3 +122,66 @@ func TestInstancesExtraElement(t *testing.T) {
 	assert.False(t, i1.Equivalent(i2))
 	assert.False(t, i2.Equivalent(i1))
 }
+
+func mkTestI() Instance {
+	return Instance{
+		Host: "host-name",
+		Port: 30080,
+		Metadata: MetadataFromMap(map[string]string{
+			"key":  "value",
+			"key2": "value",
+		}),
+	}
+}
+
+func TestInstanceIsValid(t *testing.T) {
+	assert.Nil(t, mkTestI().IsValid())
+}
+
+func TestInstanceIsValidBadHost(t *testing.T) {
+	i := mkTestI()
+	i.Host = "some-bad-!"
+	assert.NonNil(t, i.IsValid())
+}
+
+func TestInstanceIsValidNoHost(t *testing.T) {
+	i := mkTestI()
+	i.Host = ""
+	assert.NonNil(t, i.IsValid())
+}
+
+func TestInstanceIsValidBadPort(t *testing.T) {
+	i := mkTestI()
+	i.Port = 0
+	assert.NonNil(t, i.IsValid())
+}
+
+func TestInstanceIsValidBadMetadata(t *testing.T) {
+	i := mkTestI()
+	i.Metadata = append(i.Metadata, i.Metadata[0])
+	assert.NonNil(t, i.IsValid())
+}
+
+func mkTestIMD() Metadata {
+	return Metadata{
+		{"key", "value"},
+		{"key2", "value"},
+	}
+}
+
+func TestInstanceMetadataIsValid(t *testing.T) {
+	im := mkTestIMD()
+	assert.Nil(t, InstanceMetadataIsValid(im))
+}
+
+func TestInstanceMetadataIsValidBadKey(t *testing.T) {
+	im := mkTestIMD()
+	im[0].Key = "aoeu]"
+	assert.NonNil(t, InstanceMetadataIsValid(im))
+}
+
+func TestInstanceMetadataIsValidDupes(t *testing.T) {
+	im := mkTestIMD()
+	im = append(im, im[0])
+	assert.NonNil(t, InstanceMetadataIsValid(im))
+}

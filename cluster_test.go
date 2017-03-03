@@ -134,3 +134,51 @@ func TestClustersGroupByCollection(t *testing.T) {
 
 	assert.DeepEqual(t, c.GroupBy(func(c Cluster) string { return "a" }), want)
 }
+
+func mkTestC() *Cluster {
+	return &Cluster{
+		ClusterKey: "ck-1",
+		Name:       "a cluster name",
+		ZoneKey:    "zk-1",
+		Instances: Instances{
+			{"foo", 9090, MetadataFromMap(map[string]string{"key1": "value1"})},
+			{"bar", 9090, MetadataFromMap(map[string]string{"key1": "value1", "key2": "value2"})},
+		},
+		OrgKey:   "ok-1",
+		Checksum: Checksum{"ck-1"},
+	}
+}
+
+func TestClusterIsValid(t *testing.T) {
+	assert.Nil(t, mkTestC().IsValid())
+}
+
+func TestClusterIsValidNoKey(t *testing.T) {
+	c := mkTestC()
+	c.ClusterKey = ""
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterKeyIsValidBadKey(t *testing.T) {
+	c := mkTestC()
+	c.ClusterKey = "a-bad-key!"
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterKeyIsValidBadZoneKey(t *testing.T) {
+	c := mkTestC()
+	c.ZoneKey = "a-bad-key!"
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterKeyIsValidBadName(t *testing.T) {
+	c := mkTestC()
+	c.Name = "aoeu[]',.p"
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterKeyIsValidBadInstances(t *testing.T) {
+	c := mkTestC()
+	c.Instances = append(c.Instances, c.Instances[0])
+	assert.NonNil(t, c.IsValid())
+}

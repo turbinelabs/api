@@ -122,32 +122,35 @@ func getRuleValid() Rule {
 func TestRuleIsValidSucces(t *testing.T) {
 	r := getRuleValid()
 
-	assert.Nil(t, r.IsValid(true))
-	assert.Nil(t, r.IsValid(false))
+	assert.Nil(t, r.IsValid())
+}
+
+func TestRuleIsValidNoRuleKey(t *testing.T) {
+	r := getRuleValid()
+	r.RuleKey = ""
+
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRuleIsValidBadRuleKey(t *testing.T) {
 	r := getRuleValid()
-	r.RuleKey = ""
+	r.RuleKey = "rule-key-%-1234"
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRuleIsValidNoMethodOrMatches(t *testing.T) {
 	r := getRuleValid()
 	r.Matches = Matches{}
 	r.Methods = []string{}
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRuleIsValidBadMethod(t *testing.T) {
 	r := getRuleValid()
-	r.Methods = []string{"POST", "PUT", "GRAB_THAT_RESOURCE"}
+	r.Methods = []string{"POST", "PUT", "GET_THAT_RESOURCE"}
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRuleIsValidBadMatches(t *testing.T) {
@@ -157,8 +160,7 @@ func TestRuleIsValidBadMatches(t *testing.T) {
 		Match{HeaderMatchKind, Metadatum{"x-random", "value"}, Metadatum{"", "aoeu"}},
 	}
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRuleIsValidBadConstraints(t *testing.T) {
@@ -166,8 +168,7 @@ func TestRuleIsValidBadConstraints(t *testing.T) {
 	r.Constraints = AllConstraints{
 		Dark: ClusterConstraints{{"cckey0", "ckey2", Metadata{{"key-2", "value-2"}}, Metadata{{"aoeu", "snth"}}, 1234}}}
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func getRulesValidTestRules() (Rule, Rule) {
@@ -200,8 +201,7 @@ func TestRulesIsValidSucces(t *testing.T) {
 	r1, r2 := getRulesValidTestRules()
 	r := Rules{r1, r2}
 
-	assert.Nil(t, r.IsValid(true))
-	assert.Nil(t, r.IsValid(false))
+	assert.Nil(t, r.IsValid())
 }
 
 func TestRulesIsValidFailureOnDupeKey(t *testing.T) {
@@ -209,15 +209,13 @@ func TestRulesIsValidFailureOnDupeKey(t *testing.T) {
 	r2.RuleKey = r1.RuleKey
 	r := Rules{r1, r2}
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestRulesIsValidEmptySuccess(t *testing.T) {
 	r := Rules{}
 
-	assert.Nil(t, r.IsValid(true))
-	assert.Nil(t, r.IsValid(false))
+	assert.Nil(t, r.IsValid())
 }
 
 func TestRulesIsValidFailureBadMatches(t *testing.T) {
@@ -226,19 +224,19 @@ func TestRulesIsValidFailureBadMatches(t *testing.T) {
 	r2.Matches[1] = badMatch
 	r := Rules{r1, r2}
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
-func TestRulesIsValidFailureBadConstraints(t *testing.T) {
+func TestRulesIsValidFailureBadNesting(t *testing.T) {
 	r1, r2 := getRulesValidTestRules()
 	badc := r2.Constraints
-	badc.Dark = badc.Light
-	badc.Light = ClusterConstraints{}
+	badc.Light[0].Metadata = Metadata{Metadatum{"new-key", ""}}
 	r2.Constraints = badc
-
+	r2.Matches[0].Kind = "foo"
 	r := Rules{r1, r2}
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"rules[rkey1].matches[foo:other].kind", "foo is not a valid match kind"},
+		{"rules[rkey1].constraints.light[ck1].metadata[new-key].value", "must not be empty"},
+	}})
 }

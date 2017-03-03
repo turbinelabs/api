@@ -34,16 +34,10 @@ const (
 	TemporaryRedirect RedirectType = "temporary"
 )
 
-var (
-	// NamePattern is applied to Redirect.Name to ensure redirect names all fall
-	// within a known space.
-	NamePattern = regexp.MustCompile("^[0-9a-zA-Z_-]+$")
-
-	// HeaderPattern limits the possible headers that can be matched as part of a
-	// redirect. This is a limited subset of what the actual spec allows because
-	// of constraints in the current proxying layer.
-	HeaderPattern = regexp.MustCompile("^[0-9A-Za-z-]+$")
-)
+// HeaderPattern limits the possible headers that can be matched as part of a
+// redirect. This is a limited subset of what the actual spec allows because
+// of constraints in the current proxying layer.
+var HeaderPattern = regexp.MustCompile("^[0-9A-Za-z-]+$")
 
 // Redirects is a collection of Domain redirect definitions
 type Redirects []Redirect
@@ -94,14 +88,14 @@ func (rs Redirects) IsValid() *ValidationError {
 	for _, r := range rs {
 		if keySeen[r.Name] {
 			errs.AddNew(ErrorCase{
-				"",
+				"redirects",
 				fmt.Sprintf(
 					"name must be unique, multiple redirects found called '%v'", r.Name),
 			})
 		}
 
 		keySeen[r.Name] = true
-		errs.MergePrefixed(r.IsValid(), "")
+		errs.MergePrefixed(r.IsValid(), fmt.Sprintf("redirects[%v]", r.Name))
 	}
 
 	return errs.OrNil()
@@ -180,7 +174,7 @@ func (hc HeaderConstraint) Equals(o HeaderConstraint) bool {
 // IsValid checks the validity of a Redirect; we currently verify that a
 // redirect:
 //
-//   * has a non-empty name matching NamePattern
+//   * has a non-empty name matching HeaderPattern
 //   * contains a valid regex in From
 //   * contains a non-empty to
 //   * has a valid redirect type
@@ -191,17 +185,16 @@ func (hc HeaderConstraint) Equals(o HeaderConstraint) bool {
 func (r Redirect) IsValid() *ValidationError {
 	errs := &ValidationError{}
 	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{
-			fmt.Sprintf("redirects[%s].%s", r.Name, f), m}
+		return ErrorCase{f, m}
 	}
 
 	if r.Name == "" {
 		errs.AddNew(ecase("name", "must not be empty"))
 	} else {
-		if !NamePattern.MatchString(r.Name) {
+		if !HeaderPattern.MatchString(r.Name) {
 			errs.AddNew(ecase(
 				"name",
-				fmt.Sprintf("must match %s", NamePattern.String()),
+				fmt.Sprintf("must match %s", HeaderPattern.String()),
 			))
 		}
 	}

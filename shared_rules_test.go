@@ -133,49 +133,67 @@ func TestSharedRulesEqualsChecksumVaries(t *testing.T) {
 func TestSharedRulesIsValidSuccess(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 
-	assert.Nil(t, r.IsValid(true))
-	assert.Nil(t, r.IsValid(false))
+	assert.Nil(t, r.IsValid())
 }
 
-func TestSharedRulesIsValidPrecreationOnlySuccess(t *testing.T) {
+func TestSharedRulesIsValidBadKey(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.SharedRulesKey = "aoeu&snth"
+
+	assert.NonNil(t, r.IsValid())
+}
+
+func TestSharedRulesIsValidNoKey(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 	r.SharedRulesKey = ""
 
-	assert.Nil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestSharedRulesIsValidBadName(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
+	r.Name = "name[name]"
+
+	assert.NonNil(t, r.IsValid())
+}
+
+func TestSharedRulesIsValidNoName(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
 	r.Name = ""
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestSharedRulesIsValidBadZoneKey(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
+	r.ZoneKey = "1234(5678"
+
+	assert.NonNil(t, r.IsValid())
+}
+
+func TestSharedRulesIsValidNoZoneKey(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
 	r.ZoneKey = ""
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestSharedRulesIsValidBadDefault(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 	r.Default = AllConstraints{}
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.NonNil(t, r.IsValid())
 }
 
 func TestSharedRulesIsValidBadRules(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 	rule1, _ := getRulesDefaults()
-	rule1.Matches = Matches{}
-	rule1.Methods = []string{}
+	rule1.Methods = []string{"WHEE"}
 	r.Rules[0] = rule1
+	r.Default.Light[0].Weight = 0
 
-	assert.NonNil(t, r.IsValid(true))
-	assert.NonNil(t, r.IsValid(false))
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.default.light[cckey1].weight", "must be greater than 0"},
+		{"shared_rules.rules[rk0].methods", "WHEE is not a valid method"},
+	}})
 }

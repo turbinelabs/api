@@ -91,35 +91,36 @@ func TestMatchesEqualsContentDiffers(t *testing.T) {
 func TestMatchIsValidSucces(t *testing.T) {
 	m := Match{CookieMatchKind, Metadatum{"aoeu", ""}, Metadatum{"snth", "1234"}}
 
-	assert.Nil(t, m.IsValid(true))
-	assert.Nil(t, m.IsValid(false))
+	assert.Nil(t, m.IsValid())
 }
 
-func TestMatchIsValidFailedFrom(t *testing.T) {
+func TestMatchIsValidFailedFromBadKey(t *testing.T) {
+	m := Match{CookieMatchKind, Metadatum{"from]", ""}, Metadatum{"snth", "1234"}}
+
+	assert.NonNil(t, m.IsValid())
+}
+
+func TestMatchIsValidFailedFromEmpty(t *testing.T) {
 	m := Match{CookieMatchKind, Metadatum{}, Metadatum{"snth", "1234"}}
 
-	assert.NonNil(t, m.IsValid(true))
-	assert.NonNil(t, m.IsValid(false))
+	assert.NonNil(t, m.IsValid())
 }
 
 func TestMatchIsValidSuccessEmptyTo(t *testing.T) {
 	m := Match{CookieMatchKind, Metadatum{"aoeu", ""}, Metadatum{"", ""}}
 
-	assert.Nil(t, m.IsValid(true))
-	assert.Nil(t, m.IsValid(false))
+	assert.Nil(t, m.IsValid())
 }
 
 func TestMatchIsValidFailedKind(t *testing.T) {
 	m := Match{"snth", Metadatum{"aoeu", ""}, Metadatum{"snth", "1234"}}
 
-	assert.NonNil(t, m.IsValid(true))
-	assert.NonNil(t, m.IsValid(false))
+	assert.NonNil(t, m.IsValid())
 }
 
 func TestMatchIsValidFailedToNoKey(t *testing.T) {
 	m := Match{"aoeu", Metadatum{"snth", ""}, Metadatum{"", "snth"}}
-	assert.NonNil(t, m.IsValid(true))
-	assert.NonNil(t, m.IsValid(false))
+	assert.NonNil(t, m.IsValid())
 }
 
 func TestMatchesIsValidSuccess(t *testing.T) {
@@ -128,15 +129,18 @@ func TestMatchesIsValidSuccess(t *testing.T) {
 	m3 := Match{QueryMatchKind, Metadatum{"aoeu", ""}, Metadatum{"snth", "1234"}}
 	m := Matches{m1, m2, m3}
 
-	assert.Nil(t, m.IsValid(true))
-	assert.Nil(t, m.IsValid(false))
+	assert.Nil(t, m.IsValid())
 }
 
 func TestMatchesIsValidEmpty(t *testing.T) {
 	m := Matches{}
 
-	assert.Nil(t, m.IsValid(true))
-	assert.Nil(t, m.IsValid(false))
+	assert.Nil(t, m.IsValid())
+}
+
+func TestMatchesIsValidNil(t *testing.T) {
+	var m Matches
+	assert.Nil(t, m.IsValid())
 }
 
 func TestMatchesIsValidFailure(t *testing.T) {
@@ -145,6 +149,15 @@ func TestMatchesIsValidFailure(t *testing.T) {
 	m3 := Match{QueryMatchKind, Metadatum{"aoeu", ""}, Metadatum{"snth", "1234"}}
 	m := Matches{m1, m2, m3}
 
-	assert.NonNil(t, m.IsValid(true))
-	assert.NonNil(t, m.IsValid(false))
+	assert.NonNil(t, m.IsValid())
+}
+
+func TestMatchesIsValidDupeMatch(t *testing.T) {
+	m1 := Match{CookieMatchKind, Metadatum{"type", "chocolate chip"}, Metadatum{"texture", "dense"}}
+	m2 := Match{CookieMatchKind, Metadatum{"type", "amaretti"}, Metadatum{"texture", "chewy"}}
+
+	m := Matches{m1, m2}
+	assert.DeepEqual(t, m.IsValid(), &ValidationError{[]ErrorCase{
+		{"", "duplicate match found cookie:type"},
+	}})
 }

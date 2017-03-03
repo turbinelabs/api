@@ -17,7 +17,6 @@ limitations under the License.
 package api
 
 import (
-	"fmt"
 	"time"
 
 	tbntime "github.com/turbinelabs/nonstdlib/time"
@@ -42,29 +41,21 @@ func (u User) IsNil() bool {
 	return u.Equals(User{})
 }
 
-func (u User) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("user.%s", f), m}
-	}
+func (u User) IsValid() *ValidationError {
+	scope := func(in string) string { return "user." + in }
 
 	errs := &ValidationError{}
 
-	keyValid := precreation || u.UserKey != ""
-	if !keyValid {
-		errs.AddNew(ecase("user_key", "must not be empty"))
-	}
+	errCheckKey(string(u.UserKey), errs, scope("user_key"))
 
 	if u.LoginEmail == "" {
-		errs.AddNew(ecase("login_email", "must not be empty"))
+		errs.AddNew(ErrorCase{scope("login_email"), "may not be empty"})
 	}
 
-	if u.APIAuthKey == "" {
-		errs.AddNew(ecase("api_auth_key", "must not be empty"))
-	}
-
-	if u.OrgKey == "" {
-		errs.AddNew(ecase("org_key", "must not be empty"))
-	}
+	// can't check for key because alternative auth systems may have a different
+	// approach to auth key generation than a simple UUID
+	errCheckIndex(string(u.APIAuthKey), errs, scope("api_auth_key"))
+	errCheckKey(string(u.OrgKey), errs, scope("org_key"))
 
 	return errs.OrNil()
 }

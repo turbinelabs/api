@@ -77,9 +77,9 @@ type Match struct {
 // Check this Match for validity. A valid match requires a valid matchkind,
 // a From datum with Key set, and either an empty To datum or one with both
 // Key and Value set.
-func (m Match) IsValid(precreation bool) *ValidationError {
+func (m Match) IsValid() *ValidationError {
 	ecase := func(f, msg string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("match[%s].%s", m.Key(), f), msg}
+		return ErrorCase{f, msg}
 	}
 
 	errs := &ValidationError{}
@@ -94,9 +94,7 @@ func (m Match) IsValid(precreation bool) *ValidationError {
 			fmt.Sprintf("%s is not a valid match kind", string(m.Kind))))
 	}
 
-	if m.From.Key == "" {
-		errs.AddNew(ecase("from.key", "must not be empty"))
-	}
+	errCheckIndex(m.From.Key, errs, "from.key")
 
 	if m.To.Value != "" && m.To.Key == "" {
 		errs.AddNew(ecase("to.key", "must not be empty if value is set"))
@@ -113,11 +111,16 @@ type Matches []Match
 
 // Checks validity of a slice of Match objects. For the slice to be valid each
 // entry must be valid.
-func (m Matches) IsValid(precreation bool) *ValidationError {
+func (m Matches) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
+	seenMatch := map[string]bool{}
 	for _, e := range m {
-		errs.MergePrefixed(e.IsValid(precreation), "")
+		if seenMatch[e.Key()] {
+			errs.AddNew(ErrorCase{"", "duplicate match found " + e.Key()})
+		}
+		errs.MergePrefixed(e.IsValid(), fmt.Sprintf("matches[%v]", e.Key()))
+		seenMatch[e.Key()] = true
 	}
 
 	return errs.OrNil()

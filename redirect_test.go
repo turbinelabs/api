@@ -119,8 +119,8 @@ func TestRedirectIsValidFailsNameBadChar(t *testing.T) {
 	assert.DeepEqual(t,
 		r.IsValid(),
 		&ValidationError{[]ErrorCase{{
-			"redirects[aoeu snth].name",
-			fmt.Sprintf("must match %s", NamePattern.String()),
+			"name",
+			fmt.Sprintf("must match %s", HeaderPattern.String()),
 		}}},
 	)
 }
@@ -130,7 +130,7 @@ func TestRedirectIsValidFailsNoName(t *testing.T) {
 	r.Name = ""
 	assert.DeepEqual(t,
 		r.IsValid(),
-		&ValidationError{[]ErrorCase{{"redirects[].name", "must not be empty"}}},
+		&ValidationError{[]ErrorCase{{"name", "must not be empty"}}},
 	)
 }
 
@@ -139,7 +139,7 @@ func TestRedirectIsValidFailsNoFrom(t *testing.T) {
 	r.From = ""
 	assert.DeepEqual(t,
 		r.IsValid(),
-		&ValidationError{[]ErrorCase{{"redirects[0-Name].from", "must not be empty"}}},
+		&ValidationError{[]ErrorCase{{"from", "must not be empty"}}},
 	)
 }
 
@@ -148,7 +148,7 @@ func TestRedirectIsValidFailsNoTo(t *testing.T) {
 	r.To = ""
 	assert.DeepEqual(t,
 		r.IsValid(),
-		&ValidationError{[]ErrorCase{{"redirects[0-Name].to", "must not be empty"}}},
+		&ValidationError{[]ErrorCase{{"to", "must not be empty"}}},
 	)
 }
 
@@ -160,7 +160,7 @@ func TestRedirectIsValidFailsBadRegex(t *testing.T) {
 		t,
 		err,
 		&ValidationError{[]ErrorCase{{
-			"redirects[0-Name].from",
+			"from",
 			"invalid url match expression 'error parsing regexp: missing closing ): `asonetu(asontehu`'",
 		}}},
 	)
@@ -176,6 +176,19 @@ func TestRedirectsIsValid(t *testing.T) {
 	err := rs.IsValid()
 
 	assert.Nil(t, err)
+}
+
+func TestRedirectsIsValidDupes(t *testing.T) {
+	r1 := getRedir()
+	r1.Name = "r-name"
+	r2 := r1
+
+	rs := Redirects{r1, r2}
+	err := rs.IsValid()
+
+	assert.DeepEqual(t, err, &ValidationError{[]ErrorCase{
+		{"redirects", "name must be unique, multiple redirects found called 'r-name'"},
+	}})
 }
 
 func TestRedirectsAsMap(t *testing.T) {

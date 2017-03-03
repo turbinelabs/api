@@ -70,32 +70,15 @@ func (r SharedRules) Equals(o SharedRules) bool {
 // Checks validity of a SharedRules. For a route to be valid it must have a non-empty
 // SharedRulesKey (or be precreation), have a ZoneKey, a Path, and valid Default +
 // Rules.
-func (r SharedRules) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{"shared_rules." + f, m}
-	}
-
+func (r SharedRules) IsValid() *ValidationError {
 	errs := &ValidationError{}
-	var (
-		validName    = r.Name != ""
-		validKey     = precreation || r.SharedRulesKey != ""
-		validZoneKey = r.ZoneKey != ""
-	)
 
-	if !validKey {
-		errs.AddNew(ecase("shared_rules_key", "must not be empty"))
-	}
+	errCheckKey(string(r.SharedRulesKey), errs, "shared_rules_key")
+	errCheckIndex(r.Name, errs, "name")
+	errCheckKey(string(r.ZoneKey), errs, "zone_key")
 
-	if !validName {
-		errs.AddNew(ecase("name", "must not be empty"))
-	}
-
-	if !validZoneKey {
-		errs.AddNew(ecase("zone_key", "must not be empty"))
-	}
-
-	errs.MergePrefixed(r.Default.IsValid(precreation), "shared_rules.default")
-	errs.MergePrefixed(r.Rules.IsValid(precreation), "shared_rules.rules")
+	errs.MergePrefixed(r.Default.IsValid("default"), "shared_rules")
+	errs.MergePrefixed(r.Rules.IsValid(), "shared_rules")
 
 	return errs.OrNil()
 }

@@ -16,10 +16,6 @@ limitations under the License.
 
 package api
 
-import (
-	"fmt"
-)
-
 type ZoneKey string
 
 type Zones []Zone
@@ -45,25 +41,14 @@ func (z Zone) Equals(o Zone) bool {
 		z.OrgKey == o.OrgKey
 }
 
-func (z Zone) IsValid(precreation bool) *ValidationError {
-	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{fmt.Sprintf("zone.%s", f), m}
-	}
+func (z Zone) IsValid() *ValidationError {
+	scope := func(s string) string { return "zone." + s }
 
 	errs := &ValidationError{}
 
-	keyValid := precreation || z.ZoneKey != ""
-	if !keyValid {
-		errs.AddNew(ecase("zone_key", "must not be empty"))
-	}
-
-	if z.OrgKey == "" {
-		errs.AddNew(ecase("org_key", "must not be empty"))
-	}
-
-	if z.Name == "" {
-		errs.AddNew(ecase("name", "must not be empty"))
-	}
+	errCheckKey(string(z.ZoneKey), errs, scope("zone_key"))
+	errCheckKey(string(z.OrgKey), errs, scope("org_key"))
+	errCheckIndex(z.Name, errs, scope("name"))
 
 	return errs.OrNil()
 }
