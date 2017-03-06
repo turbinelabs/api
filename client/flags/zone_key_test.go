@@ -18,23 +18,23 @@ package flags
 
 import (
 	"errors"
-	"flag"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 
 	"github.com/turbinelabs/api"
 	"github.com/turbinelabs/api/service"
+	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 	"github.com/turbinelabs/test/assert"
 )
 
 func TestNewZoneKeyFromFlags(t *testing.T) {
-	flagset := flag.NewFlagSet("NewZoneKeyFromFlags options", flag.PanicOnError)
+	flagset := tbnflag.NewTestFlagSet()
 
 	ff := NewZoneKeyFromFlags(flagset)
 	ffImpl := ff.(*zoneKeyFromFlags)
 
-	flagset.Parse([]string{"-api.zone-name=red-sector-a"})
+	flagset.Parse([]string{"-zone-name=red-sector-a"})
 
 	assert.Equal(t, ffImpl.zoneName, "red-sector-a")
 }

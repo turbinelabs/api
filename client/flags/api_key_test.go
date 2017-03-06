@@ -17,7 +17,6 @@ limitations under the License.
 package flags
 
 import (
-	"flag"
 	"testing"
 
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
@@ -25,32 +24,31 @@ import (
 )
 
 func TestNewAPIAuthKeyFromFlags(t *testing.T) {
-	flagset := flag.NewFlagSet("NewAPIAuthFromFlags options", flag.PanicOnError)
+	flagset := tbnflag.NewTestFlagSet()
 
 	ff := NewAPIAuthKeyFromFlags(flagset)
 	ffImpl := ff.(*apiAuthKeyFromFlags)
 
-	flagset.Parse([]string{"-api.key=schlage"})
+	flagset.Parse([]string{"-key=schlage"})
 
 	assert.Equal(t, ffImpl.apiKey, "schlage")
 
-	theFlag := flagset.Lookup("api.key")
+	theFlag := flagset.Unwrap().Lookup("key")
 	assert.NonNil(t, theFlag)
 	assert.True(t, tbnflag.IsRequired(theFlag))
 }
 
-func TestNewPrefixedAPIAuthKeyFromFlags(t *testing.T) {
-	flagset := flag.NewFlagSet("NewAPIAuthFromFlags options", flag.PanicOnError)
-	prefixedFlagset := tbnflag.NewPrefixedFlagSet(flagset, "test", "test")
+func TestNewAPIAuthKeyFromFlagsOptionalWithPrefix(t *testing.T) {
+	flagset := tbnflag.NewTestFlagSet()
 
-	ff := NewPrefixedAPIAuthKeyFromFlags(prefixedFlagset, false)
+	ff := NewAPIAuthKeyFromFlags(flagset.Scope("test", "test"), APIAuthKeyFlagsOptional())
 	ffImpl := ff.(*apiAuthKeyFromFlags)
 
 	flagset.Parse([]string{"-test.key=schlage"})
 
 	assert.Equal(t, ffImpl.apiKey, "schlage")
 
-	theFlag := flagset.Lookup("test.key")
+	theFlag := flagset.Unwrap().Lookup("test.key")
 	assert.NonNil(t, theFlag)
 	assert.False(t, tbnflag.IsRequired(theFlag))
 }

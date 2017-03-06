@@ -19,8 +19,6 @@ package flags
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
 import (
-	"flag"
-
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 )
 
@@ -31,22 +29,29 @@ type APIAuthKeyFromFlags interface {
 	Make() string
 }
 
-// NewAPIAuthKeyFromFlags configures the necessary command line flags
-// and returns an APIAuthKeyFromFlags.
-func NewAPIAuthKeyFromFlags(flagset *flag.FlagSet) APIAuthKeyFromFlags {
-	return NewPrefixedAPIAuthKeyFromFlags(prefixedFlagSet(flagset), true)
+// APIAuthKeyOption represents an option passed to
+// NewAPIAuthKeyFromFlags.
+type APIAuthKeyOption func(*apiAuthKeyFromFlags)
+
+// APIAuthKeyFlagsOptional allows the caller to specify that the flags
+// created by APIAuthKeyFromFlags are optional.
+func APIAuthKeyFlagsOptional() APIAuthKeyOption {
+	return func(ff *apiAuthKeyFromFlags) {
+		ff.optional = true
+	}
 }
 
-// NewPrefixedAPIAuthKeyFromFlags configures the necessary command
-// line flags with a custom prefix and returns an APIAuthKeyFromFlags.
-func NewPrefixedAPIAuthKeyFromFlags(
-	flagset *tbnflag.PrefixedFlagSet,
-	requiredFlag bool,
-) APIAuthKeyFromFlags {
+// NewAPIAuthKeyFromFlags configures the necessary command line flags
+// and returns an APIAuthKeyFromFlags.
+func NewAPIAuthKeyFromFlags(flagset tbnflag.FlagSet, opts ...APIAuthKeyOption) APIAuthKeyFromFlags {
 	ff := &apiAuthKeyFromFlags{}
 
+	for _, apply := range opts {
+		apply(ff)
+	}
+
 	usage := "The auth key for {{NAME}} requests"
-	if requiredFlag {
+	if !ff.optional {
 		usage = tbnflag.Required(usage)
 	}
 
@@ -56,7 +61,8 @@ func NewPrefixedAPIAuthKeyFromFlags(
 }
 
 type apiAuthKeyFromFlags struct {
-	apiKey string
+	optional bool
+	apiKey   string
 }
 
 func (ff *apiAuthKeyFromFlags) Make() string {

@@ -19,10 +19,9 @@ package flags
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
 import (
-	"flag"
-
 	"github.com/turbinelabs/api/client"
 	"github.com/turbinelabs/api/service"
+	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 )
 
 // ClientFromFlags represents command-line flags specifying
@@ -41,7 +40,7 @@ type ClientFromFlags interface {
 
 // NewClientFromFlags creates a ServiceFromFlags, which configures the
 // necessary flags to construct a service.All instance.
-func NewClientFromFlags(flagset *flag.FlagSet) ClientFromFlags {
+func NewClientFromFlags(flagset tbnflag.FlagSet) ClientFromFlags {
 	return NewClientFromFlagsWithSharedAPIConfig(flagset, nil)
 }
 
@@ -50,7 +49,7 @@ func NewClientFromFlags(flagset *flag.FlagSet) ClientFromFlags {
 // instance. The given APIConfigFromFlags is used to obtain the API
 // auth key.
 func NewClientFromFlagsWithSharedAPIConfig(
-	flagset *flag.FlagSet,
+	flagset tbnflag.FlagSet,
 	apiConfigFromFlags APIConfigFromFlags,
 ) ClientFromFlags {
 	ff := &clientFromFlags{}

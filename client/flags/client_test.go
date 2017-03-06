@@ -18,13 +18,13 @@ package flags
 
 import (
 	"errors"
-	"flag"
 	"net/http"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 
 	apihttp "github.com/turbinelabs/api/http"
+	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 	"github.com/turbinelabs/test/assert"
 )
 
@@ -34,20 +34,20 @@ var (
 )
 
 func TestNewClientFromFlags(t *testing.T) {
-	flagset := flag.NewFlagSet("NewClientFromFlags options", flag.PanicOnError)
+	flagset := tbnflag.NewTestFlagSet()
 
 	ff := NewClientFromFlags(flagset)
 	ffImpl := ff.(*clientFromFlags)
 	assert.NonNil(t, ffImpl.apiConfigFromFlags)
 
-	assert.NonNil(t, flagset.Lookup("api.key"))
+	assert.NonNil(t, flagset.Unwrap().Lookup("key"))
 }
 
 func TestNewClientFromFlagsWithSharedAPIKey(t *testing.T) {
-	flagset := flag.NewFlagSet("NewClientFromFlags options", flag.PanicOnError)
+	flagset := tbnflag.NewTestFlagSet()
 
 	apiConfigFromFlags := NewAPIConfigFromFlags(flagset)
-	assert.NonNil(t, flagset.Lookup("api.key"))
+	assert.NonNil(t, flagset.Unwrap().Lookup("key"))
 
 	ff := NewClientFromFlagsWithSharedAPIConfig(flagset, apiConfigFromFlags)
 	ffImpl := ff.(*clientFromFlags)

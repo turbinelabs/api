@@ -19,7 +19,6 @@ package flags
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/turbinelabs/api"
@@ -40,14 +39,7 @@ type ZoneKeyFromFlags interface {
 
 // NewZoneKeyFromFlags configures the necessary command line flags to
 // retrieve a zone key by zone name.
-func NewZoneKeyFromFlags(flagset *flag.FlagSet) ZoneKeyFromFlags {
-	return NewZoneKeyFromFlagsWithPrefix(prefixedFlagSet(flagset))
-}
-
-// NewZoneKeyFromFlagsWithPrefix configures the necessary command line
-// flags to retrieve a zone key by zone name with a custom command
-// line flag prefix.
-func NewZoneKeyFromFlagsWithPrefix(flagset *tbnflag.PrefixedFlagSet) ZoneKeyFromFlags {
+func NewZoneKeyFromFlags(flagset tbnflag.FlagSet) ZoneKeyFromFlags {
 	ff := &zoneKeyFromFlags{}
 
 	flagset.StringVar(

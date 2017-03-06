@@ -17,7 +17,6 @@ limitations under the License.
 package flags
 
 import (
-	"flag"
 	"testing"
 
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
@@ -25,37 +24,38 @@ import (
 )
 
 func TestNewAPIConfigFromFlags(t *testing.T) {
-	flagset := flag.NewFlagSet("NewAPIAuthFromFlags options", flag.PanicOnError)
+	flagset := tbnflag.NewTestFlagSet()
 
 	ff := NewAPIConfigFromFlags(flagset)
 	ffImpl := ff.(*apiConfigFromFlags)
 
-	flagset.Parse([]string{"-api.key=schlage"})
+	flagset.Parse([]string{"-key=schlage"})
 
 	assert.Equal(t, ffImpl.apiKeyConfig.Make(), "schlage")
 
-	theFlag := flagset.Lookup("api.key")
+	theFlag := flagset.Unwrap().Lookup("key")
 	assert.NonNil(t, theFlag)
 	assert.True(t, tbnflag.IsRequired(theFlag))
 
 	assert.NonNil(t, ffImpl.FromFlags)
 }
 
-func TestNewPrefixedAPIConfigFromFlags(t *testing.T) {
-	flagset := flag.NewFlagSet("NewAPIAuthFromFlags options", flag.PanicOnError)
-	prefixedFlagset := tbnflag.NewPrefixedFlagSet(flagset, "test", "test")
-
-	ff := NewPrefixedAPIConfigFromFlags(
-		prefixedFlagset,
-		APIConfigSetAPIAuthKeyFromFlags(NewPrefixedAPIAuthKeyFromFlags(prefixedFlagset, false)),
+func TestNewAPIConfigFromFlagsWithPrefix(t *testing.T) {
+	flagset := tbnflag.NewTestFlagSet()
+	apiScopedFlagSet := flagset.Scope("api", "test")
+	ff := NewAPIConfigFromFlags(
+		apiScopedFlagSet,
+		APIConfigSetAPIAuthKeyFromFlags(
+			NewAPIAuthKeyFromFlags(apiScopedFlagSet, APIAuthKeyFlagsOptional()),
+		),
 	)
 	ffImpl := ff.(*apiConfigFromFlags)
 
-	flagset.Parse([]string{"-test.key=schlage"})
+	flagset.Parse([]string{"-api.key=schlage"})
 
 	assert.Equal(t, ffImpl.apiKeyConfig.Make(), "schlage")
 
-	theFlag := flagset.Lookup("test.key")
+	theFlag := flagset.Unwrap().Lookup("api.key")
 	assert.NonNil(t, theFlag)
 	assert.False(t, tbnflag.IsRequired(theFlag))
 
@@ -63,6 +63,8 @@ func TestNewPrefixedAPIConfigFromFlags(t *testing.T) {
 }
 
 func TestAPIConfigFromFlagsGet(t *testing.T) {
-	ff := &apiConfigFromFlags{apiKeyConfig: &apiAuthKeyFromFlags{"schlage"}}
+	ff := &apiConfigFromFlags{
+		apiKeyConfig: &apiAuthKeyFromFlags{optional: false, apiKey: "schlage"},
+	}
 	assert.Equal(t, ff.APIKey(), "schlage")
 }

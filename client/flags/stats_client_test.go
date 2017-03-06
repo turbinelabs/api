@@ -18,7 +18,6 @@ package flags
 
 import (
 	"errors"
-	"flag"
 	"testing"
 	"time"
 
@@ -35,12 +34,14 @@ func TestStatsClientFromFlagsValidatesNormalClient(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
-	fs := flag.NewFlagSet("stats-client", flag.PanicOnError)
-	pfs := tbnflag.NewPrefixedFlagSet(fs, "pfix", "")
+	fs := tbnflag.NewTestFlagSet()
 
 	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
 
-	ff := NewStatsClientFromFlags(pfs, StatsClientWithAPIConfigFromFlags(apiConfigFromFlags))
+	ff := NewStatsClientFromFlags(
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
 	assert.NonNil(t, ff)
 	assert.SameInstance(t, apiConfigFromFlags, ff.(*statsClientFromFlags).apiConfigFromFlags)
 
@@ -56,8 +57,7 @@ func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
-	fs := flag.NewFlagSet("stats-client", flag.PanicOnError)
-	pfs := tbnflag.NewPrefixedFlagSet(fs, "pfix", "")
+	fs := tbnflag.NewTestFlagSet()
 
 	mockExec := executor.NewMockExecutor(ctrl)
 
@@ -69,7 +69,10 @@ func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
 	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
 	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
 
-	ff := NewStatsClientFromFlags(pfs, StatsClientWithAPIConfigFromFlags(apiConfigFromFlags))
+	ff := NewStatsClientFromFlags(
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
 	assert.NonNil(t, ff)
 
 	fs.Parse([]string{
@@ -90,9 +93,11 @@ func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
 		MakeEndpoint().
 		Return(apihttp.Endpoint{}, expectedErr)
 
-	fs = flag.NewFlagSet("stats-client", flag.PanicOnError)
-	pfs = tbnflag.NewPrefixedFlagSet(fs, "pfix", "")
-	ff = NewStatsClientFromFlags(pfs, StatsClientWithAPIConfigFromFlags(apiConfigFromFlags))
+	fs = tbnflag.NewTestFlagSet()
+	ff = NewStatsClientFromFlags(
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
 	assert.NonNil(t, ff)
 
 	statsClient, err = ff.Make(mockExec, log.NewNoopLogger())
@@ -104,8 +109,7 @@ func TestStatsClientFromFlagsCachesClient(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
-	fs := flag.NewFlagSet("stats-client", flag.PanicOnError)
-	pfs := tbnflag.NewPrefixedFlagSet(fs, "pfix", "")
+	pfs := tbnflag.NewTestFlagSet().Scope("pfix", "")
 
 	mockExec := executor.NewMockExecutor(ctrl)
 	otherMockExec := executor.NewMockExecutor(ctrl)
@@ -136,8 +140,7 @@ func TestStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
-	fs := flag.NewFlagSet("stats-client", flag.PanicOnError)
-	pfs := tbnflag.NewPrefixedFlagSet(fs, "pfix", "")
+	fs := tbnflag.NewTestFlagSet()
 
 	mockExec := executor.NewMockExecutor(ctrl)
 
@@ -149,7 +152,10 @@ func TestStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
 	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
 	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
 
-	ff := NewStatsClientFromFlags(pfs, StatsClientWithAPIConfigFromFlags(apiConfigFromFlags))
+	ff := NewStatsClientFromFlags(
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
 	assert.NonNil(t, ff)
 
 	fs.Parse([]string{
@@ -171,12 +177,14 @@ func TestStatsClientFromFlagsValidatesBatchingClient(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
-	fs := flag.NewFlagSet("stats-client", flag.PanicOnError)
-	pfs := tbnflag.NewPrefixedFlagSet(fs, "pfix", "")
+	fs := tbnflag.NewTestFlagSet()
 
 	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
 
-	ff := NewStatsClientFromFlags(pfs, StatsClientWithAPIConfigFromFlags(apiConfigFromFlags))
+	ff := NewStatsClientFromFlags(
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
 	assert.NonNil(t, ff)
 
 	fs.Parse([]string{

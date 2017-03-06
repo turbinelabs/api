@@ -24,7 +24,7 @@ import (
 	"github.com/turbinelabs/api/client"
 	statsapi "github.com/turbinelabs/api/service/stats"
 	"github.com/turbinelabs/nonstdlib/executor"
-	"github.com/turbinelabs/nonstdlib/flag"
+	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 )
 
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
@@ -46,15 +46,19 @@ type StatsClientFromFlags interface {
 	APIKey() string
 }
 
+// StatsClientOption represents an option passed to NewStatsClientFromFlags.
 type StatsClientOption func(*statsClientFromFlags)
 
+// StatsClientWithAPIConfigFromFlags configures
+// NewStatsClientFromFlags to use a shared APIConfigFromFlags rather
+// than creating its own.
 func StatsClientWithAPIConfigFromFlags(apiConfigFromFlags APIConfigFromFlags) StatsClientOption {
 	return func(ff *statsClientFromFlags) {
 		ff.apiConfigFromFlags = apiConfigFromFlags
 	}
 }
 
-func NewStatsClientFromFlags(pfs *flag.PrefixedFlagSet, options ...StatsClientOption) StatsClientFromFlags {
+func NewStatsClientFromFlags(pfs tbnflag.FlagSet, options ...StatsClientOption) StatsClientFromFlags {
 	ff := &statsClientFromFlags{}
 
 	for _, option := range options {
@@ -62,7 +66,7 @@ func NewStatsClientFromFlags(pfs *flag.PrefixedFlagSet, options ...StatsClientOp
 	}
 
 	if ff.apiConfigFromFlags == nil {
-		ff.apiConfigFromFlags = NewPrefixedAPIConfigFromFlags(pfs)
+		ff.apiConfigFromFlags = NewAPIConfigFromFlags(pfs)
 	}
 
 	pfs.BoolVar(

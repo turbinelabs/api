@@ -17,7 +17,6 @@ limitations under the License.
 package http
 
 import (
-	"flag"
 	"net/http"
 	"testing"
 
@@ -26,13 +25,9 @@ import (
 )
 
 func TestNewFromFlags(t *testing.T) {
-	flagset := tbnflag.NewPrefixedFlagSet(
-		flag.NewFlagSet("api/http options", flag.PanicOnError),
-		"api",
-		"API",
-	)
+	flagset := tbnflag.NewTestFlagSet()
 
-	ff := NewFromFlags("api.turbinelabs.io", flagset)
+	ff := NewFromFlags("api.turbinelabs.io", flagset.Scope("api", "API"))
 	ffImpl := ff.(*fromFlags)
 
 	assert.Equal(t, ffImpl.host, "api.turbinelabs.io")

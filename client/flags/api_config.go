@@ -19,8 +19,6 @@ package flags
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=../../http/fromflags.go"
 
 import (
-	"flag"
-
 	apihttp "github.com/turbinelabs/api/http"
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 )
@@ -41,12 +39,8 @@ type APIConfigFromFlags interface {
 	APIAuthKeyFromFlags() APIAuthKeyFromFlags
 }
 
-// NewAPIConfigFromFlags configures the necessary command line flags
-// and returns an APIConfigFromFlags.
-func NewAPIConfigFromFlags(flagset *flag.FlagSet) APIConfigFromFlags {
-	return NewPrefixedAPIConfigFromFlags(prefixedFlagSet(flagset))
-}
-
+// APIConfigOption represents an option passed to
+// NewAPIConfigFromFlags.
 type APIConfigOption func(*apiConfigFromFlags)
 
 // APIConfigSetAPIAuthKeyFromFlags allows the caller to specify a shared
@@ -58,20 +52,20 @@ func APIConfigSetAPIAuthKeyFromFlags(akff APIAuthKeyFromFlags) APIConfigOption {
 	}
 }
 
-// NewPrefixedAPIConfigFromFlags configures the necessary command
-// line flags with a custom prefix and returns an APIConfigFromFlags.
-func NewPrefixedAPIConfigFromFlags(
-	flagset *tbnflag.PrefixedFlagSet,
+// NewAPIConfigFromFlags configures the necessary command line flags
+// and returns an APIConfigFromFlags.
+func NewAPIConfigFromFlags(
+	flagset tbnflag.FlagSet,
 	opts ...APIConfigOption,
 ) APIConfigFromFlags {
-	ff := &apiConfigFromFlags{requiredFlag: true}
+	ff := &apiConfigFromFlags{}
 
 	for _, applyOpt := range opts {
 		applyOpt(ff)
 	}
 
 	if ff.apiKeyConfig == nil {
-		ff.apiKeyConfig = NewPrefixedAPIAuthKeyFromFlags(flagset, ff.requiredFlag)
+		ff.apiKeyConfig = NewAPIAuthKeyFromFlags(flagset)
 	}
 
 	ff.FromFlags = apihttp.NewFromFlags("api.turbinelabs.io", flagset)

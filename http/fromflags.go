@@ -36,7 +36,7 @@ type FromFlags interface {
 	MakeEndpoint() (Endpoint, error)
 }
 
-func NewFromFlags(defaultHost string, flagset *tbnflag.PrefixedFlagSet) FromFlags {
+func NewFromFlags(defaultHost string, flagset tbnflag.FlagSet) FromFlags {
 	ff := &fromFlags{
 		headers: tbnflag.NewStrings(),
 	}
