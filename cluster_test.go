@@ -27,7 +27,7 @@ func getClusters() (Cluster, Cluster) {
 	ib := Instance{"Host2", 1234, nil}
 	ic := Instance{"Host3", 1234, nil}
 	i := Instances{ia, ib, ic}
-	c := Cluster{"ckey", "zkey", "name", i, "okey1", Checksum{}}
+	c := Cluster{"ckey", "zkey", "name", true, i, "okey1", Checksum{}}
 	return c, c
 }
 
@@ -44,6 +44,15 @@ func TestClusterEqualsSuccess(t *testing.T) {
 
 	assert.True(t, c2.Equals(c1))
 	assert.True(t, c1.Equals(c2))
+}
+
+func TestClusterEqualsTLSTrueFalse(t *testing.T) {
+	c1, c2 := getClusters()
+	c1.RequireTLS = true
+	c2.RequireTLS = false
+
+	assert.False(t, c1.Equals(c2))
+	assert.False(t, c2.Equals(c1))
 }
 
 func TestClusterKeyVaries(t *testing.T) {

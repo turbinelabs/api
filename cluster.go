@@ -44,6 +44,7 @@ type Cluster struct {
 	ClusterKey ClusterKey `json:"cluster_key"` // overwritten on create
 	ZoneKey    ZoneKey    `json:"zone_key"`
 	Name       string     `json:"name"`
+	RequireTLS bool       `json:"require_tls,omitempty"`
 	Instances  Instances  `json:"instances"`
 	OrgKey     OrgKey     `json:"-"`
 	Checksum
@@ -57,7 +58,8 @@ func (c Cluster) Equals(o Cluster) bool {
 	coreResp := c.ClusterKey == o.ClusterKey &&
 		c.ZoneKey == o.ZoneKey &&
 		c.Name == o.Name &&
-		c.OrgKey == o.OrgKey
+		c.OrgKey == o.OrgKey &&
+		c.RequireTLS == o.RequireTLS
 
 	if !coreResp {
 		return false

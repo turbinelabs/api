@@ -90,11 +90,13 @@ type DataFixturesT struct {
 	ClusterKey1        api.ClusterKey // UUID of cluster 1
 	ClusterZone1       api.ZoneKey    // zone key for cluster 1
 	ClusterName1       string         // name of cluster 1
+	ClusterRequireTLS1 bool           // should cluster 1 require TLS communications
 	ClusterChecksum1   api.Checksum   // the checksum for cluster 1
 	ClusterOrgKey1     api.OrgKey
 	ClusterKey2        api.ClusterKey // UUId of cluster 2
 	ClusterZone2       api.ZoneKey    // zone key for cluster 2
 	ClusterName2       string         // name of cluster 2
+	ClusterRequireTLS2 bool           // should cluster 2 require TLS communications
 	ClusterChecksum2   api.Checksum   // the checksum for cluster 2
 	ClusterOrgKey2     api.OrgKey
 	Cluster1           api.Cluster  // instance of cluster 1
@@ -233,16 +235,18 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	UserDeletedAt2:  nil,
 	UserChecksum2:   api.Checksum{"user-cs-2"},
 
-	ClusterKey1:      "98a13568-a599-4c8d-4ae8-657f3917e2cf",
-	ClusterZone1:     "zk1",
-	ClusterName1:     "cluster1",
-	ClusterChecksum1: api.Checksum{"cluster-checksum-1"},
-	ClusterOrgKey1:   "1",
-	ClusterKey2:      "2794c958-d44c-418c-5cac-4d1af020df99",
-	ClusterZone2:     "zk2",
-	ClusterName2:     "cluster2",
-	ClusterOrgKey2:   "1",
-	ClusterChecksum2: api.Checksum{"cluster-checksum-2"},
+	ClusterKey1:        "98a13568-a599-4c8d-4ae8-657f3917e2cf",
+	ClusterZone1:       "zk1",
+	ClusterName1:       "cluster1",
+	ClusterRequireTLS1: false,
+	ClusterChecksum1:   api.Checksum{"cluster-checksum-1"},
+	ClusterOrgKey1:     "1",
+	ClusterKey2:        "2794c958-d44c-418c-5cac-4d1af020df99",
+	ClusterZone2:       "zk2",
+	ClusterName2:       "cluster2",
+	ClusterRequireTLS2: true,
+	ClusterOrgKey2:     "1",
+	ClusterChecksum2:   api.Checksum{"cluster-checksum-2"},
 
 	DomainKey1:       "asonetuhasonetuh",
 	DomainZone1:      "zk1",
@@ -380,6 +384,7 @@ func init() {
 		ClusterKey: DataFixtures.ClusterKey1,
 		ZoneKey:    DataFixtures.ClusterZone1,
 		Name:       DataFixtures.ClusterName1,
+		RequireTLS: DataFixtures.ClusterRequireTLS1,
 		OrgKey:     DataFixtures.ClusterOrgKey1,
 		Checksum:   DataFixtures.ClusterChecksum1,
 	}
@@ -393,6 +398,7 @@ func init() {
 		ClusterKey: DataFixtures.ClusterKey2,
 		ZoneKey:    DataFixtures.ClusterZone2,
 		Name:       DataFixtures.ClusterName2,
+		RequireTLS: DataFixtures.ClusterRequireTLS2,
 		Instances:  api.Instances{DataFixtures.Instance21, DataFixtures.Instance22},
 		OrgKey:     DataFixtures.ClusterOrgKey2,
 		Checksum:   DataFixtures.ClusterChecksum2,
