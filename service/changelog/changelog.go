@@ -54,7 +54,7 @@ type FilterExpr interface {
 // microseconds since the Unix epoch, UTC.
 type TimeRange struct {
 	Start *int64 `json:"start,omitempty" form:"start"`
-	End   *int64 `json:"end,omitempty" form:"end"`
+	End   *int64 `json:"end,omitempty"   form:"end"`
 }
 
 // StartNano returns the range start time, if set, in nanoseconds.
@@ -119,11 +119,11 @@ func (tr TimeRange) EndTime() *time.Time {
 // Before, if set, limits results to changes that moved from this value
 // After, if set, limits results to changes that set this value
 type FieldFilter struct {
-	AbsoluteMatchOnly  bool       `json:"absolute_match_only"`
-	AttributePath      string     `json:"attribute_path"`
-	ChangeType         ChangeType `json:"change_type"`
-	AttributeValue     *string    `json:"attribute_value"`
-	ExcludeEmptyValues bool       `json:"exclude_empty_values"`
+	AbsoluteMatchOnly  bool       `json:"absolute_match_only"  form:"absolute_match_only"`
+	AttributePath      string     `json:"attribute_path"       form:"attribute_path"`
+	ChangeType         ChangeType `json:"change_type"          form:"change_type"`
+	AttributeValue     *string    `json:"attribute_value"      form:"attribute_value"`
+	ExcludeEmptyValues bool       `json:"exclude_empty_values" form:"exclude_empty_values"`
 }
 
 type ChangeType string
@@ -137,15 +137,15 @@ var (
 // Additionally the field NegativeMatch may be set to indicate that this filter
 // should used to exlude matching change entries.
 type Filter struct {
-	NegativeMatch bool        `json:"negative_match"`
-	TimeRange     TimeRange   `json:"time_range"`
-	ObjectType    string      `json:"object_type"`
-	ObjectKey     string      `json:"object_key"`
-	ChangeTxn     string      `json:"change_txn"`
-	ZoneKey       api.ZoneKey `json:"zone_key"`
-	OrgKey        api.OrgKey  `json:"org_key"`
-	Actor         api.UserKey `json:"actor_key"`
-	FieldFilter
+	NegativeMatch bool        `json:"negative_match" form:"negative_match"`
+	TimeRange     TimeRange   `json:"time_range"     form:"time_range"`
+	ObjectType    string      `json:"object_type"    form:"object_type"`
+	ObjectKey     string      `json:"object_key"     form:"object_key"`
+	ChangeTxn     string      `json:"change_txn"     form:"change_txn"`
+	ZoneKey       api.ZoneKey `json:"zone_key"       form:"zone_key"`
+	OrgKey        api.OrgKey  `json:"org_key"        form:"org_key"`
+	Actor         api.UserKey `json:"actor_key"      form:"actor_key"`
+	FieldFilter   `form:"field"`
 }
 
 func (f Filter) AsExpr() FilterOrs {
@@ -163,7 +163,7 @@ func (f Filter) ApplyAll(fn func(Filter) (Filter, error)) (FilterExpr, error) {
 // FilterOrs represents a collection of logical intersections that will be
 // evaluated as a union.
 type FilterOrs struct {
-	FilterAnds []FilterAnds `json:"or"`
+	FilterAnds []FilterAnds `json:"or" form:"or"`
 }
 
 func (fs FilterOrs) AsExpr() FilterOrs {
@@ -187,7 +187,7 @@ func (fs FilterOrs) ApplyAll(fn func(Filter) (Filter, error)) (FilterExpr, error
 // FilterAnds represents a collection of filters that will be evaluated by
 // ANDing the contents together.
 type FilterAnds struct {
-	Filters []Filter `json:"and"`
+	Filters []Filter `json:"and" form:"and"`
 }
 
 func (fs FilterAnds) AsExpr() FilterOrs {
