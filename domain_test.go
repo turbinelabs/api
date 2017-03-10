@@ -29,6 +29,7 @@ func getDomains() (Domain, Domain) {
 		"zkey",
 		"name",
 		1234,
+		nil,
 		Redirects{{
 			"redir",
 			".*",
@@ -158,6 +159,7 @@ func getDomain() Domain {
 		"zk",
 		"name",
 		1234,
+		nil,
 		Redirects{{
 			"sample-redirect",
 			".*",
@@ -235,6 +237,12 @@ func TestDomainIsValidFailsOnCorsConfig(t *testing.T) {
 	assert.NonNil(t, d1.IsValid())
 }
 
+func TestDomainIsValidFailsOnSSLConfig(t *testing.T) {
+	d1 := getDomain()
+	d1.SSLConfig = &SSLConfig{}
+	assert.NonNil(t, d1.IsValid())
+}
+
 func TestDomainIsValidFailedDkey(t *testing.T) {
 	d1 := getDomain()
 	d1.DomainKey = ""
@@ -282,10 +290,19 @@ func TestDomainIsValidFailedRedirect(t *testing.T) {
 	})
 }
 
+func TestDomainIsValidAlias(t *testing.T) {
+	d1 := getDomain()
+	d1.Aliases = DomainAliases{"test.com", "test.com", "whee!"}
+	assert.DeepEqual(t, d1.IsValid(), &ValidationError{[]ErrorCase{
+		{"domain.aliases", "duplicate alias found test.com"},
+		{"domain.aliases[whee!]", AliasPatternFailure},
+	}})
+}
+
 func getThreeDomains() (Domain, Domain, Domain) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 
 	return d1, d2, d3
 }
@@ -318,27 +335,27 @@ func TestDomainsEqualsFailure(t *testing.T) {
 }
 
 func TestDomainsIsValidSuccess(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.Nil(t, ds.IsValid())
 }
 
 func TestDomainsIsValidFailureDupe(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1, d3}
 
 	assert.NonNil(t, ds.IsValid())
 }
 
 func TestDomainsIsValidFailureBadDomain(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "", "name", 20, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d2 := Domain{"dkey-2", "", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.NonNil(t, ds.IsValid())
@@ -504,7 +521,7 @@ func TestDomainAliasesIsValidDupes(t *testing.T) {
 	}
 
 	assert.DeepEqual(t, da.IsValid(), &ValidationError{[]ErrorCase{
-		{"domain_aliases", "duplicate alias found test.com"},
+		{"aliases", "duplicate alias found test.com"},
 	}})
 }
 
@@ -514,7 +531,7 @@ func TestDomainAliasesIsValidFailure(t *testing.T) {
 
 	das := DomainAliases{da}
 	assert.DeepEqual(t, das.IsValid(), &ValidationError{[]ErrorCase{
-		{fmt.Sprintf("domain_aliases[%v]", da), daerr.Errors[0].Msg},
+		{fmt.Sprintf("aliases[%v]", da), daerr.Errors[0].Msg},
 	}})
 }
 

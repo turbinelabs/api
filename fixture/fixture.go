@@ -108,6 +108,7 @@ type DataFixturesT struct {
 	DomainZone1        api.ZoneKey   // zone of domain 1
 	DomainName1        string        // name of domain 1
 	DomainPort1        int           // port of domain 1
+	DomainSSLConfig1   *api.SSLConfig
 	DomainRedirects1   api.Redirects // part of domain 1
 	DomainGzipEnabled1 bool          // part of domain 1
 	DomainCorsConfig1  *api.CorsConfig
@@ -118,6 +119,7 @@ type DataFixturesT struct {
 	DomainName2        string        // name of domain 2
 	DomainZone2        api.ZoneKey   // zone of domain 2
 	DomainPort2        int           // port of domain 2
+	DomainSSLConfig2   *api.SSLConfig
 	DomainRedirects2   api.Redirects // part of domain 2
 	DomainGzipEnabled2 bool          // part of domain 2
 	DomainCorsConfig2  *api.CorsConfig
@@ -242,10 +244,11 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	ClusterOrgKey2:   "1",
 	ClusterChecksum2: api.Checksum{"cluster-checksum-2"},
 
-	DomainKey1:  "asonetuhasonetuh",
-	DomainZone1: "zk1",
-	DomainName1: "domain-1",
-	DomainPort1: 8080,
+	DomainKey1:       "asonetuhasonetuh",
+	DomainZone1:      "zk1",
+	DomainName1:      "domain-1",
+	DomainPort1:      8080,
+	DomainSSLConfig1: nil,
 	DomainRedirects1: api.Redirects{{
 		"redirect1",
 		".*",
@@ -269,6 +272,7 @@ var DataFixtures DataFixturesT = DataFixturesT{
 	DomainZone2:        "zk2",
 	DomainName2:        "domain-2",
 	DomainPort2:        5050,
+	DomainSSLConfig2:   nil,
 	DomainRedirects2:   nil,
 	DomainGzipEnabled2: false,
 	DomainCorsConfig2:  nil,
@@ -407,6 +411,7 @@ func init() {
 		DataFixtures.DomainZone1,
 		DataFixtures.DomainName1,
 		DataFixtures.DomainPort1,
+		DataFixtures.DomainSSLConfig1,
 		DataFixtures.DomainRedirects1,
 		DataFixtures.DomainGzipEnabled1,
 		DataFixtures.DomainCorsConfig1,
@@ -420,6 +425,7 @@ func init() {
 		DataFixtures.DomainZone2,
 		DataFixtures.DomainName2,
 		DataFixtures.DomainPort2,
+		DataFixtures.DomainSSLConfig2,
 		DataFixtures.DomainRedirects2,
 		DataFixtures.DomainGzipEnabled2,
 		DataFixtures.DomainCorsConfig2,

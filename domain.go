@@ -53,6 +53,7 @@ type Domain struct {
 	ZoneKey     ZoneKey       `json:"zone_key"`
 	Name        string        `json:"name"`
 	Port        int           `json:"port"`
+	SSLConfig   *SSLConfig    `json:"ssl_config,omitempty"`
 	Redirects   Redirects     `json:"redirects"`
 	GzipEnabled bool          `json:"gzip_enabled"`
 	CorsConfig  *CorsConfig   `json:"cors_config"`
@@ -83,12 +84,12 @@ func (das DomainAliases) IsValid() *ValidationError {
 	seen := map[string]bool{}
 
 	scope := func(n string) string {
-		return fmt.Sprintf("domain_aliases[%v]", n)
+		return fmt.Sprintf("aliases[%v]", n)
 	}
 
 	for _, da := range das {
 		if seen[string(da)] {
-			errs.AddNew(ErrorCase{"domain_aliases", fmt.Sprintf("duplicate alias found %v", da)})
+			errs.AddNew(ErrorCase{"aliases", fmt.Sprintf("duplicate alias found %v", da)})
 		} else {
 			seen[string(da)] = true
 			errs.MergePrefixed(da.IsValid(), scope(string(da)))
@@ -142,12 +143,15 @@ func (d Domain) IsValid() *ValidationError {
 
 	parent := "domain"
 	errs.MergePrefixed(d.Redirects.IsValid(), parent)
+	errs.MergePrefixed(d.Aliases.IsValid(), parent)
 
 	if d.CorsConfig != nil {
 		errs.MergePrefixed(d.CorsConfig.IsValid(), parent)
 	}
 
-	errs.MergePrefixed(d.Aliases.IsValid(), "")
+	if d.SSLConfig != nil {
+		errs.MergePrefixed(d.SSLConfig.IsValid(), parent)
+	}
 
 	return errs.OrNil()
 }

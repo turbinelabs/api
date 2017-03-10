@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strings"
 )
 
 const (
@@ -130,7 +131,7 @@ func (ve *ValidationError) MergePrefixed(children *ValidationError, under string
 }
 
 func errCheckKey(key string, with *ValidationError, named string) {
-	if key == "" {
+	if strings.TrimSpace(key) == "" {
 		with.AddNew(ErrorCase{named, "may not be empty"})
 	} else if !KeyPattern.MatchString(key) {
 		with.AddNew(ErrorCase{named, KeyPatternMatchFailure})
@@ -138,7 +139,7 @@ func errCheckKey(key string, with *ValidationError, named string) {
 }
 
 func errCheckIndex(v string, with *ValidationError, named string) {
-	if v == "" {
+	if strings.TrimSpace(v) == "" {
 		with.AddNew(ErrorCase{named, "may not be empty"})
 	} else if !AllowedIndexPattern.MatchString(v) {
 		with.AddNew(ErrorCase{named, AllowedIndexPatternMatchFailure})
