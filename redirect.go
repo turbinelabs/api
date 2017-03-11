@@ -112,11 +112,11 @@ func (rs Redirects) IsValid() *ValidationError {
 //     Redirect{
 //       Name:              "force-https",
 //       From:              "(.*)",
-//       To:                "https://$host/$1",
+//       To:                "https://$host$1",
 //       RedirectType:      PermanentRedirect,
 //       HeaderConstraints: HeaderConstraints{
 //         HeaderConstraint{
-//           Name:  "X-ForwardedProto",
+//           Name:  "X-Forwarded-Proto",
 //           Value: "https",
 //           Invert: true,
 //         },
