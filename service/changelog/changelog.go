@@ -135,10 +135,11 @@ var (
 
 // Filter collects all the attributes we have available for searching audit logs.
 // Additionally the field NegativeMatch may be set to indicate that this filter
-// should used to exlude matching change entries.
+// should used to exlude matching change entries. Note that NegativeMatch does
+// not apply to TimeRange.
 type Filter struct {
-	NegativeMatch bool        `json:"negative_match" form:"negative_match"`
 	TimeRange     TimeRange   `json:"time_range"     form:"time_range"`
+	NegativeMatch bool        `json:"negative_match" form:"negative_match"`
 	ObjectType    string      `json:"object_type"    form:"object_type"`
 	ObjectKey     string      `json:"object_key"     form:"object_key"`
 	ChangeTxn     string      `json:"change_txn"     form:"change_txn"`
