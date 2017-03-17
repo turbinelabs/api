@@ -18,6 +18,8 @@ package stats
 
 import (
 	"fmt"
+
+	"github.com/turbinelabs/nonstdlib/ptr"
 )
 
 // A Stat is a named, timestamped, and tagged data point or histogram
@@ -27,6 +29,10 @@ type Stat struct {
 	// Only one of Value and Histogram may be set.
 	Value     *float64   `json:"value,omitempty"`
 	Histogram *Histogram `json:"histogram,omitempty"`
+
+	// If Value is non-nil, IsGauge indicates whether the value is
+	// a gauge. If absent, a Counter is assumed.
+	IsGauge *bool `json:"gauge,omitempty"`
 
 	Timestamp int64             `json:"timestamp"` // microseconds since the Unix epoch, UTC
 	Tags      map[string]string `json:"tags,omitempty"`
@@ -38,10 +44,11 @@ func (s Stat) String() string {
 		v = fmt.Sprintf("%g (%p)", *s.Value, s.Value)
 	}
 	return fmt.Sprintf(
-		"{Name:%s, Value:%s Histogram:%v, Timestamp:%d, Tags:%s}",
+		"{Name:%s, Value:%s Histogram:%v, IsGauge:%t, Timestamp:%d, Tags:%s}",
 		s.Name,
 		v,
 		s.Histogram,
+		ptr.BoolValue(s.IsGauge),
 		s.Timestamp,
 		s.Tags,
 	)
