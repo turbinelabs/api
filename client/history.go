@@ -77,6 +77,8 @@ func (hh *httpHistoryV1) get(path string, params apihttp.Params) (*http.Request,
 
 func (hh *httpHistoryV1) Index(
 	filters changelog.FilterExpr,
+	start,
+	end time.Time,
 ) ([]api.ChangeDescription, error) {
 	b, err := json.Marshal(filters)
 	if err != nil {
@@ -87,6 +89,13 @@ func (hh *httpHistoryV1) Index(
 
 	params := apihttp.Params{
 		queryargs.IndexFilters: string(b),
+	}
+
+	if !start.IsZero() {
+		params[queryargs.WindowStart] = fmt.Sprintf("%v", tbntime.ToUnixMicro(start))
+	}
+	if !end.IsZero() {
+		params[queryargs.WindowStop] = fmt.Sprintf("%v", tbntime.ToUnixMicro(end))
 	}
 
 	var response []api.ChangeDescription

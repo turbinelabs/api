@@ -26,19 +26,28 @@ import (
 )
 
 type History interface {
-	// GET /v1.0/changelog/adhoc[?filter=<json>]
+	// GET /v1.0/changelog/adhoc[?filter=<json>&start=time_utc_usec>&stop=<time_utc_usec>]
 	//
 	// Index provides a generalized search interface for changes that the API has
 	// recorded. The filter to be applied should be a FilterOrs as described in
 	// changelog docs. It may be URL encoded JSON and set as the value to the
 	// 'filter' query param. Humane encoding is also available; if used the query
-	// param names and values are derived from the encoded struct FilterOrs.
+	// param names and values are derived from the encoded struct FilterOrs and
+	// are based on the `form` struct tag.
 	//
 	// If no filters are specified when making the HTTP call all changes in the
-	// org of the requesting user over the past three hours will be returned.
-	Index(filters changelog.FilterExpr) ([]api.ChangeDescription, error)
+	// org of the requesting user will be returned within the time window.
+	//
+	// If neither start nor end time is specified the default will be treated as
+	// the previous three hours to current time. If only one endpoint is provided
+	// the other will be inferred such that a three hour window is examined.
+	Index(
+		filters changelog.FilterExpr,
+		start,
+		end time.Time,
+	) ([]api.ChangeDescription, error)
 
-	// GET /v1.0/changelog/domain-graph/<key>[?start=<time string>&stop=<time string>]
+	// GET /v1.0/changelog/domain-graph/<key>[?start=<time_utc_usec>&stop=<time_utc_usec>]
 	//
 	// DomainGraph returns any changes within the object graph of the domain
 	// specified by domainKey. Specifically this includes changes to:
@@ -69,7 +78,7 @@ type History interface {
 		stop time.Time,
 	) ([]api.ChangeDescription, error)
 
-	// GET /v1.0/changelog/route-graph/<key>[?start=<time string>&stop=<time string>]
+	// GET /v1.0/changelog/route-graph/<key>[?start=<time_utc_usec>&stop=<time_utc_usec>]
 	//
 	// RouteGraph returns any changes within a set window on a route or the clusters
 	// within that route.
@@ -84,7 +93,7 @@ type History interface {
 		stop time.Time,
 	) ([]api.ChangeDescription, error)
 
-	// GET /v1.0/changelog/shared-rules-graph/<key>[?start=<time string>&stop=<time string>]
+	// GET /v1.0/changelog/shared-rules-graph/<key>[?start=<time_utc_usec>&stop=<time_utc_usec>]
 	//
 	// SharedRulesGraph returns any changes to a SharedRules object within a set window.
 	//
@@ -98,7 +107,7 @@ type History interface {
 		stop time.Time,
 	) ([]api.ChangeDescription, error)
 
-	// GET /v1.0/changelog/cluster-graph/<key>[?start=<time string>&stop=<time string>]
+	// GET /v1.0/changelog/cluster-graph/<key>[?start=<time_utc_usec>&stop=<time_utc_usec>]
 	//
 	// ClusterGraph returns any changes to a cluster and any domains that have
 	// started, or stopped, routing to a cluster within a set window.
@@ -113,7 +122,7 @@ type History interface {
 		stop time.Time,
 	) ([]api.ChangeDescription, error)
 
-	// GET /v1.0/changelog/zone/<key>[?start=<time string>&stop=<time string>]
+	// GET /v1.0/changelog/zone/<key>[?start=<time_utc_usec>&stop=<time_utc_usec>]
 	//
 	// Zone returns any changes within a Zone that occurred during a window.
 	//
@@ -126,27 +135,4 @@ type History interface {
 		start,
 		stop time.Time,
 	) ([]api.ChangeDescription, error)
-}
-
-// RecentChanges returns a set of changes between the time of call and a
-// window of time precending the call. Window may be positive or negative.
-// If positive the value will be subtracted from time.Now(). If negative
-// the value will be added to time.Now().
-func RecentChanges(
-	history History,
-	window time.Duration,
-	org api.OrgKey,
-) ([]api.ChangeDescription, error) {
-	if int64(window) > 0 {
-		window = window * -1
-	}
-
-	end := time.Now()
-	start := end.Add(window)
-
-	tr := changelog.TimeRange{}
-	tr.SetStart(start)
-	tr.SetEnd(end)
-
-	return history.Index(changelog.Filter{OrgKey: org, TimeRange: tr})
 }

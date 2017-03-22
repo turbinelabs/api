@@ -62,6 +62,10 @@ func TestIndex(t *testing.T) {
 			assert.Equal(t, rr.Underlying().URL.Path, "/v1.0/changelog/adhoc")
 			filterGot := rr.QueryArg(queryargs.IndexFilters)
 			assert.Equal(t, filterGot, string(filterStr))
+			_, hasStart := rr.QueryArgOk(queryargs.WindowStart)
+			assert.False(t, hasStart)
+			_, hasStop := rr.QueryArgOk(queryargs.WindowStop)
+			assert.False(t, hasStop)
 		},
 		status:   200,
 		response: stockCD,
@@ -69,7 +73,41 @@ func TestIndex(t *testing.T) {
 
 	srv := httptest.NewServer(verifier)
 	svc := getAllInterface(srv)
-	cds, err := svc.History().Index(filter)
+	cds, err := svc.History().Index(filter, time.Time{}, time.Time{})
+	assert.Nil(t, err)
+	assert.DeepEqual(t, cds, stockCD)
+}
+
+func TestIndexWithTimes(t *testing.T) {
+	filter := changelog.Filter{
+		NegativeMatch: true,
+		ObjectType:    "foo",
+		ObjectKey:     "bar",
+	}
+
+	filterStr, err := json.Marshal(filter)
+	assert.Nil(t, err)
+
+	endT := time.Now()
+	startT := endT.Add(-3 * time.Hour)
+
+	verifier := verifyingHandler{
+		fn: func(rr apihttp.RichRequest) {
+			assert.Equal(t, rr.Underlying().URL.Path, "/v1.0/changelog/adhoc")
+			filterGot := rr.QueryArg(queryargs.IndexFilters)
+			assert.Equal(t, filterGot, string(filterStr))
+			start := rr.QueryArg(queryargs.WindowStart)
+			end := rr.QueryArg(queryargs.WindowStop)
+			assert.Equal(t, start, fmt.Sprintf("%v", tbntime.ToUnixMicro(startT)))
+			assert.Equal(t, end, fmt.Sprintf("%v", tbntime.ToUnixMicro(endT)))
+		},
+		status:   200,
+		response: stockCD,
+	}
+
+	srv := httptest.NewServer(verifier)
+	svc := getAllInterface(srv)
+	cds, err := svc.History().Index(filter, startT, endT)
 	assert.Nil(t, err)
 	assert.DeepEqual(t, cds, stockCD)
 }

@@ -33,6 +33,8 @@ import (
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 )
 
+type FilterFn func(Filter) (Filter, error)
+
 // FilterExpr is a form of a filter than can be used to search for change logs.
 type FilterExpr interface {
 	// Convert the implementing type into a format that is suitable for evaluation.
@@ -40,7 +42,7 @@ type FilterExpr interface {
 
 	// ApplyAll applies some function on all Filters within an expression and
 	// returns a modified expression or error if the function could not be applied.
-	ApplyAll(func(Filter) (Filter, error)) (FilterExpr, error)
+	ApplyAll(FilterFn) (FilterExpr, error)
 }
 
 // TimeRange describes an inclusive window during which we sholud be looking
@@ -78,12 +80,20 @@ func (tr TimeRange) EndNano() *int64 {
 // SetStart sets the range start to the specified time in microseconds since
 // the Unix epoch UTC.
 func (tr *TimeRange) SetStart(t time.Time) {
+	if t.IsZero() {
+		tr.Start = nil
+		return
+	}
 	tr.Start = ptr.Int64(t.UnixNano() / 1000)
 }
 
 // SetEnd sets the range end to the specified time in microseconds since the
 // Unix epoch UTC.
 func (tr *TimeRange) SetEnd(t time.Time) {
+	if t.IsZero() {
+		tr.End = nil
+		return
+	}
 	tr.End = ptr.Int64(t.UnixNano() / 1000)
 }
 
@@ -153,7 +163,7 @@ func (f Filter) AsExpr() FilterOrs {
 	return NewFilterUnion(f)
 }
 
-func (f Filter) ApplyAll(fn func(Filter) (Filter, error)) (FilterExpr, error) {
+func (f Filter) ApplyAll(fn FilterFn) (FilterExpr, error) {
 	f, err := fn(f)
 	if err != nil {
 		return nil, err
@@ -171,7 +181,7 @@ func (fs FilterOrs) AsExpr() FilterOrs {
 	return fs
 }
 
-func (fs FilterOrs) ApplyAll(fn func(Filter) (Filter, error)) (FilterExpr, error) {
+func (fs FilterOrs) ApplyAll(fn FilterFn) (FilterExpr, error) {
 	for _, ands := range fs.FilterAnds {
 		for j, f := range ands.Filters {
 			f, err := fn(f)
@@ -195,7 +205,7 @@ func (fs FilterAnds) AsExpr() FilterOrs {
 	return FilterOrs{[]FilterAnds{fs}}
 }
 
-func (fs FilterAnds) ApplyAll(fn func(Filter) (Filter, error)) (FilterExpr, error) {
+func (fs FilterAnds) ApplyAll(fn FilterFn) (FilterExpr, error) {
 	return fs.AsExpr().ApplyAll(fn)
 }
 

@@ -152,11 +152,25 @@ func TestTimeRangeSetStart(t *testing.T) {
 	assert.DeepEqual(t, tr.Start, ptr.Int64(tbntime.ToUnixMicro(n)))
 }
 
+func TestTimeRangeSetStartZero(t *testing.T) {
+	tr := TimeRange{}
+	tr.SetStart(time.Time{})
+	assert.Nil(t, tr.Start)
+	assert.Nil(t, tr.End)
+}
+
 func TestTimeRangeSetEnd(t *testing.T) {
 	tr := TimeRange{}
 	n := time.Now()
 	tr.SetEnd(n)
 	assert.DeepEqual(t, tr.End, ptr.Int64(tbntime.ToUnixMicro(n)))
+}
+
+func TestTimeRangeSetEndZero(t *testing.T) {
+	tr := TimeRange{}
+	tr.SetEnd(time.Time{})
+	assert.Nil(t, tr.Start)
+	assert.Nil(t, tr.End)
 }
 
 func TestTimeRangeStartNano(t *testing.T) {

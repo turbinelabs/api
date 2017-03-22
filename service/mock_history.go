@@ -31,15 +31,15 @@ func (_m *MockHistory) EXPECT() *_MockHistoryRecorder {
 	return _m.recorder
 }
 
-func (_m *MockHistory) Index(filters changelog.FilterExpr) ([]api.ChangeDescription, error) {
-	ret := _m.ctrl.Call(_m, "Index", filters)
+func (_m *MockHistory) Index(filters changelog.FilterExpr, start time.Time, end time.Time) ([]api.ChangeDescription, error) {
+	ret := _m.ctrl.Call(_m, "Index", filters, start, end)
 	ret0, _ := ret[0].([]api.ChangeDescription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockHistoryRecorder) Index(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Index", arg0)
+func (_mr *_MockHistoryRecorder) Index(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Index", arg0, arg1, arg2)
 }
 
 func (_m *MockHistory) DomainGraph(domainKey api.DomainKey, start time.Time, stop time.Time) ([]api.ChangeDescription, error) {
