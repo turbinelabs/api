@@ -16,7 +16,7 @@ limitations under the License.
 
 package client
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go
+//go:generate $TBN_HOME/scripts/mockgen_internal.sh -type internalStatsClient -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go
 
 import (
 	"bytes"
@@ -167,9 +167,8 @@ func (hs *httpStatsV1) Forward(payload *statsapi.Payload) (*statsapi.ForwardResu
 	try := <-responseChan
 	if try.IsError() {
 		return nil, try.Error()
-	} else {
-		return try.Get().(*statsapi.ForwardResult), nil
 	}
+	return try.Get().(*statsapi.ForwardResult), nil
 }
 
 func (hs *httpStatsV1) Close() error {

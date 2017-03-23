@@ -68,7 +68,7 @@ func (bt batcherTest) run(t *testing.T) {
 
 	cbfChan := make(chan executor.CallbackFunc, 2)
 
-	mockUnderlyingStatsClient := NewMockinternalStatsClient(ctrl)
+	mockUnderlyingStatsClient := newMockInternalStatsClient(ctrl)
 
 	for _, payloadSize := range bt.expectedPayloadSizes {
 		expectedPayload := payloadOfSize(payloadSize)
@@ -391,7 +391,7 @@ func TestBatchingStatsClientQuery(t *testing.T) {
 	query := &statsapi.Query{}
 	want := &statsapi.QueryResult{}
 
-	mockClient := NewMockinternalStatsClient(ctrl)
+	mockClient := newMockInternalStatsClient(ctrl)
 	mockClient.EXPECT().Query(query).Return(want, nil)
 
 	client := &httpBatchingStatsV1{internalStatsClient: mockClient}
@@ -408,7 +408,7 @@ func TestBatchingStatsClientQueryErr(t *testing.T) {
 	wantErr := errors.New("Gah!")
 	query := &statsapi.Query{}
 
-	mockClient := NewMockinternalStatsClient(ctrl)
+	mockClient := newMockInternalStatsClient(ctrl)
 	mockClient.EXPECT().Query(query).Return(nil, wantErr)
 
 	client := &httpBatchingStatsV1{internalStatsClient: mockClient}
