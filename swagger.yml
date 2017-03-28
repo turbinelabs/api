@@ -19,15 +19,27 @@ security:
 
 tags:
   - name: Zone
-    description: A logical deployment of services, which typically maps to a datacenter, availability zone, or compute cluster
-  - name: Domain
-    description: A served hostname and port
+    description: A logical deployment of services, which typically maps to a
+                 datacenter, availability zone, or compute cluster.
   - name: Proxy
-    description: A running instance of a proxy, serving one or more Domains
+    description: A configuration that can be applied to one or more running
+                 Proxies serving one or more Domains.
+  - name: Domain
+    description: A served hostname and port.
   - name: Route
-    description: A served path within a Domain
+    description: A served path within a Domain.
+  - name: Shared Rules
+    description: A collection of rules specifying how a request should be
+                 mapped to an instance within a cluster. These may be
+                 shared between multiple Routes.
   - name: Cluster
-    description: A collection of Instances, homogeneous in their purpose, heterogeneous in their metadata
+    description: A collection of Instances, homogeneous in their purpose,
+                 heterogeneous in their metadata.
+  - name: Audit Log
+    description: A collection of events that have occurred in your
+                 infrastructure. This includes changes detected by the
+                 deployed collectors (new Clusters or Cluster instances)
+                 as well as routing changes through the UI or API.
 
 # will be prefixed to all paths
 basePath: /v1.0
@@ -504,7 +516,7 @@ paths:
       summary: delete proxy
       description: Delete existing proxy
       tags:
-        - Proxies
+        - Proxy
       parameters:
         - name: proxyKey
           in: path
@@ -974,9 +986,179 @@ definitions:
         type: integer
       checksum:
         type: string
+      redirects:
+        type: array
+        items:
+          $ref: "#/definitions/Redirect"
       gzip_enabled:
-        description: "EXPERIMENTAL: if set to true will enable gzip compression on data that passes trough this domain"
+        description: "Experimental: if set to true will enable gzip compression on data that passes trough this domain"
         type: boolean
+      ssl_config:
+        $ref: "#/definitions/SSLConfig"
+      cors_config:
+         $ref: "#/definitions/CORSConfig"
+      aliases:
+          description: |
+            A set of alternate names that this Domain may be referenced by. May
+            start ('*.') or end ('.*') with a wildcard.
+          type: array
+          items:
+            type: string
+  Redirect:
+    description: |
+      Specifies how a URL within a domain should be rewritten when requested.
+    type: object
+    required:
+      - name
+      - from
+      - to
+      - redirect_type
+    properties:
+      name:
+        description: A unique (to this Domain) name for the Redirect. Must match the regexp "^[0-9a-zA-Z-]+$"
+        type: string
+      from:
+        description: A regexp that will be matched against the URL (not including the host/port). May include capture groups for reference in "to."
+        type: string
+      to:
+        description: The new URL that will be constructed from the request. Capture groups from "from" may be referenced as "$&lt;group number&gt;" which begins at 1.
+        type: string
+      redirect_type:
+        description: How this redirect should be presented via HTTP response code.
+        type: string
+        enum:
+          - permanent
+          - temporary
+      header_constraints:
+        type: array
+        items:
+          $ref: "#/definitions/HeaderConstraint"
+  HeaderConstraint:
+    description: |
+      Indicates that a request's headers should meet some requirement before being
+      selected for a rewrite. Must have zore or one elements.
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        description: |
+          The header that is being checked. This must match the regexp "^[0-9a-zA-Z-]+$".
+          This is checked in a case insensitive manner.
+        type: string
+      value:
+        description: |
+          If set the header's value will be compared to this. The default is to
+          make case insensitive comparisons.
+        type: string
+      case_sensitive:
+        description: If set, the header value check will be case sensitive.
+        type: boolean
+      invert:
+        description: |
+          If set, the header constraint will succeed if the match described faile.
+        type: boolean
+  SSLConfig:
+    description: |
+      Experimental: Specifies whether a domain should support SSL/TLS
+      connections from clients.  If not set the proxy will expect unencrypted HTTP
+      traffic.
+    type: object
+    required:
+      - cert_key_pairs
+    properties:
+      cert_key_pairs:
+        description: "SSLConfig must have one cert_key_pairs entry specified."
+        type: array
+        items:
+          $ref: "#/definitions/CertKeyPathPair"
+      cipher_filter:
+        description: |
+          An OpenSSL compatible filter string indicating the ciphers acceptable
+          for this proxy to use while communicating with clients. The default value
+          is EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH. For more information
+          see https://wiki.openssl.org/index.php/Manual:Ciphers(1)
+        type: string
+      protocols:
+        description: |
+          A list of acceptable SSL/TLS protocol. The default values are TLSv1,
+          TLSv1.1, TLSv1.2. Additional valid values are SSLv2 and SSLv3.
+        type: array
+        items:
+          type: string
+  CORSConfig:
+    type: object
+    description: |
+      Experimental: Controls simple CORS responses for the associated domain.
+      The configurable properties map closely to the CORS specification which
+      should be referenced for a full discussion on their meaning:
+      https://www.w3.org/TR/cors/ or https://developer.mozilla.org/docs/Web/HTTP/Access_control_CORS.
+    required:
+      - allowed_origins
+      - allowed_methods
+    properties:
+      allowed_origins:
+        description: |
+          Must contain a single element specifying the domain (origin) allowed
+          to make requsets to this domain. If any origin is acceptable '*' may
+          be used as a wildcard https://www.w3.org/TR/cors/#origin-request-header,
+          https://www.w3.org/TR/cors/#access-control-allow-origin-response-header.
+        type: array
+        items:
+          type: string
+      allow_credentials:
+        description: |
+          Indicates whether the response to request can be exposed when the
+          omit credentials flag is unset
+          https://www.w3.org/TR/cors/#access-control-allow-credentials-response-header.
+        type: boolean
+      exposed_headers:
+        description: |
+          Indicates which response headers may be accessed from the browser.
+          https://www.w3.org/TR/cors/#http-access-control-expose-headers.
+        type: array
+        items:
+          type: string
+      max_age:
+        description: |
+          Sets how long (in seconds) the response to a preflight request may be
+          cached. https://www.w3.org/TR/cors/#access-control-max-age-response-header.
+        type: integer
+      allowed_methods:
+        description: |
+          Indicates which HTTP request types may be used to call an endpoint.
+          https://www.w3.org/TR/cors/#access-control-allow-methods-response-header.
+        type: array
+        items:
+          type: string
+      allowed_headers:
+        description: |
+          Specifies what headers are allowed to be set when a request is made.
+          https://www.w3.org/TR/cors/#access-control-allow-headers-response-header.
+        type: array
+        items:
+          type: string
+  CertKeyPathPair:
+    description: |
+      A key/cert pair that will be served when a domain terminates a SSL/TLS
+      request.  Paths should be absolute and accessible to the user running
+      the proxy instance.
+    type: object
+    required:
+      - certificate_path
+      - key_path
+    properties:
+      certificate_path:
+        description: |
+          Path to a certificate in the PEM format for the domain. If multiple
+          certificates need to be specified then should be contained in this file
+          in the following order: first the primary certificate followed by any
+          intermediary certificats.
+        type: string
+      key_path:
+        description: |
+          Path to a file with the secret key in the PEM format for the domain.
+        type: string
   DomainCreate:
     type: object
     properties:
@@ -1124,6 +1306,8 @@ definitions:
         type: string
       metadata:
         $ref: "#/definitions/Metadata"
+      properties:
+        $ref: "#/definitions/Metadata"
       weight:
         type: integer
   RouteCreate:
@@ -1171,6 +1355,13 @@ definitions:
         type: string
       name:
         type: string
+      require_tls:
+        description: |
+          Experimental:
+          If set, requests to this collection of hosts will be made via HTTPS.
+          At this time neither certificate validation and certificate pinning
+          are supported for proxy clients of this cluster.
+        type: boolean
       instances:
         $ref: "#/definitions/Instances"
       checksum:
