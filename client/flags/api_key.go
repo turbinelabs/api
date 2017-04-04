@@ -20,6 +20,7 @@ package flags
 
 import (
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
+	"github.com/turbinelabs/nonstdlib/flag/usage"
 )
 
 // APIAuthKeyFromFlags represents command-line flags for specifying an
@@ -50,12 +51,12 @@ func NewAPIAuthKeyFromFlags(flagset tbnflag.FlagSet, opts ...APIAuthKeyOption) A
 		apply(ff)
 	}
 
-	usage := "The auth key for {{NAME}} requests"
+	u := usage.New("The auth key for {{NAME}} requests").SetSensitive()
 	if !ff.optional {
-		usage = tbnflag.Required(usage)
+		u = u.SetRequired()
 	}
 
-	flagset.StringVar(&ff.apiKey, "key", "", usage)
+	flagset.StringVar(&ff.apiKey, "key", "", u.String())
 
 	return ff
 }
