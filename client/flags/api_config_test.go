@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
+	"github.com/turbinelabs/nonstdlib/flag/usage"
 	"github.com/turbinelabs/test/assert"
 )
 
@@ -35,7 +36,7 @@ func TestNewAPIConfigFromFlags(t *testing.T) {
 
 	theFlag := flagset.Unwrap().Lookup("key")
 	assert.NonNil(t, theFlag)
-	assert.True(t, tbnflag.IsRequired(theFlag))
+	assert.True(t, usage.IsRequired(theFlag))
 
 	assert.NonNil(t, ffImpl.FromFlags)
 }
@@ -57,7 +58,7 @@ func TestNewAPIConfigFromFlagsWithPrefix(t *testing.T) {
 
 	theFlag := flagset.Unwrap().Lookup("api.key")
 	assert.NonNil(t, theFlag)
-	assert.False(t, tbnflag.IsRequired(theFlag))
+	assert.False(t, usage.IsRequired(theFlag))
 
 	assert.NonNil(t, ffImpl.FromFlags)
 }

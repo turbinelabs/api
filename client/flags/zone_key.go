@@ -24,6 +24,7 @@ import (
 	"github.com/turbinelabs/api"
 	"github.com/turbinelabs/api/service"
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
+	"github.com/turbinelabs/nonstdlib/flag/usage"
 )
 
 // ZoneKeyFromFlags represents command-line flags for specifying a
@@ -46,7 +47,7 @@ func NewZoneKeyFromFlags(flagset tbnflag.FlagSet) ZoneKeyFromFlags {
 		&ff.zoneName,
 		"zone-name",
 		"",
-		tbnflag.Required("The name of the API Zone for {{NAME}} requests."),
+		usage.Required("The name of the API Zone for {{NAME}} requests."),
 	)
 
 	return ff
