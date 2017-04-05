@@ -19,24 +19,10 @@ limitations under the License.
 package fixture
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/turbinelabs/api"
 )
-
-// Map() exposes a copy of the fixture test data in a map fromat. As this
-// map is a copy it's fine to mutate and it won't update the original fixtures.
-func Map() map[string]string {
-	data := make(map[string]string)
-	for k, v := range initialTestData {
-		data[k] = v
-	}
-
-	return data
-}
 
 // struct containing fixture data
 type DataFixturesT struct {
@@ -197,285 +183,284 @@ type DataFixturesT struct {
 
 // Provides access to key data within the store; simple values are set here
 // while complex values are constructed in init()
-var DataFixtures DataFixturesT = DataFixturesT{
-	APIKey:        "key-present",
-	InvalidAPIKey: "key-missing",
-	ValidOrgID:    "1",
-	InvalidOrgID:  "nope",
+// TODO: convert this to a function producing a new DataFixturesT
+func New() DataFixturesT {
+	df := DataFixturesT{
+		APIKey:        "key-present",
+		InvalidAPIKey: "key-missing",
+		ValidOrgID:    "1",
+		InvalidOrgID:  "nope",
 
-	ZoneKey1:      api.ZoneKey("zone-1"),
-	ZoneName1:     "us-west",
-	ZoneOrgKey1:   api.OrgKey("1"),
-	ZoneChecksum1: api.Checksum{"Z-CS-1"},
-	ZoneKey2:      api.ZoneKey("zone-2"),
-	ZoneName2:     "us-east",
-	ZoneOrgKey2:   api.OrgKey("2"),
-	ZoneChecksum2: api.Checksum{"Z-CS-2"},
+		ZoneKey1:      api.ZoneKey("zone-1"),
+		ZoneName1:     "us-west",
+		ZoneOrgKey1:   api.OrgKey("1"),
+		ZoneChecksum1: api.Checksum{"Z-CS-1"},
+		ZoneKey2:      api.ZoneKey("zone-2"),
+		ZoneName2:     "us-east",
+		ZoneOrgKey2:   api.OrgKey("2"),
+		ZoneChecksum2: api.Checksum{"Z-CS-2"},
 
-	OrgKey1:          api.OrgKey("1"),
-	OrgName1:         "ExampleCo",
-	OrgContactEmail1: "adminco1@example.com",
-	OrgChecksum1:     api.Checksum{"Org-CS-1"},
-	OrgKey2:          api.OrgKey("2"),
-	OrgName2:         "ExampleCo2",
-	OrgContactEmail2: "adminco2@alt.example.com",
-	OrgChecksum2:     api.Checksum{"Org-CS-2"},
+		OrgKey1:          api.OrgKey("1"),
+		OrgName1:         "ExampleCo",
+		OrgContactEmail1: "adminco1@example.com",
+		OrgChecksum1:     api.Checksum{"Org-CS-1"},
+		OrgKey2:          api.OrgKey("2"),
+		OrgName2:         "ExampleCo2",
+		OrgContactEmail2: "adminco2@alt.example.com",
+		OrgChecksum2:     api.Checksum{"Org-CS-2"},
 
-	UserKey1:        api.UserKey("1"),
-	UserLoginEmail1: "someuser@example.com",
-	UserAPIAuthKey1: api.APIAuthKey("user-api-key-1"),
-	UserOrgKey1:     "1",
-	UserDeletedAt1:  nil,
-	UserChecksum1:   api.Checksum{"user-cs-1"},
+		UserKey1:        api.UserKey("1"),
+		UserLoginEmail1: "someuser@example.com",
+		UserAPIAuthKey1: api.APIAuthKey("user-api-key-1"),
+		UserOrgKey1:     "1",
+		UserDeletedAt1:  nil,
+		UserChecksum1:   api.Checksum{"user-cs-1"},
 
-	UserKey2:        api.UserKey("2"),
-	UserLoginEmail2: "otheruser@example.com",
-	UserAPIAuthKey2: api.APIAuthKey("user-api-key-2"),
-	UserOrgKey2:     "1",
-	UserDeletedAt2:  nil,
-	UserChecksum2:   api.Checksum{"user-cs-2"},
+		UserKey2:        api.UserKey("2"),
+		UserLoginEmail2: "otheruser@example.com",
+		UserAPIAuthKey2: api.APIAuthKey("user-api-key-2"),
+		UserOrgKey2:     "1",
+		UserDeletedAt2:  nil,
+		UserChecksum2:   api.Checksum{"user-cs-2"},
 
-	ClusterKey1:        "98a13568-a599-4c8d-4ae8-657f3917e2cf",
-	ClusterZone1:       "zk1",
-	ClusterName1:       "cluster1",
-	ClusterRequireTLS1: false,
-	ClusterChecksum1:   api.Checksum{"cluster-checksum-1"},
-	ClusterOrgKey1:     "1",
-	ClusterKey2:        "2794c958-d44c-418c-5cac-4d1af020df99",
-	ClusterZone2:       "zk2",
-	ClusterName2:       "cluster2",
-	ClusterRequireTLS2: true,
-	ClusterOrgKey2:     "1",
-	ClusterChecksum2:   api.Checksum{"cluster-checksum-2"},
+		ClusterKey1:        "98a13568-a599-4c8d-4ae8-657f3917e2cf",
+		ClusterZone1:       "zk1",
+		ClusterName1:       "cluster1",
+		ClusterRequireTLS1: false,
+		ClusterChecksum1:   api.Checksum{"cluster-checksum-1"},
+		ClusterOrgKey1:     "1",
+		ClusterKey2:        "2794c958-d44c-418c-5cac-4d1af020df99",
+		ClusterZone2:       "zk2",
+		ClusterName2:       "cluster2",
+		ClusterRequireTLS2: true,
+		ClusterOrgKey2:     "1",
+		ClusterChecksum2:   api.Checksum{"cluster-checksum-2"},
 
-	DomainKey1:       "asonetuhasonetuh",
-	DomainZone1:      "zk1",
-	DomainName1:      "domain-1",
-	DomainPort1:      8080,
-	DomainSSLConfig1: nil,
-	DomainRedirects1: api.Redirects{{
-		"redirect1",
-		".*",
-		"http://www.example.com",
-		api.PermanentRedirect,
-		api.HeaderConstraints{{"x-random-header", "", false, true}},
-	}},
-	DomainGzipEnabled1: true,
-	DomainCorsConfig1: &api.CorsConfig{
-		AllowedOrigins:   []string{"*"},
-		AllowCredentials: true,
-		ExposedHeaders:   []string{"x-expose-1", "x-expose-2"},
-		MaxAge:           600,
-		AllowedMethods:   []string{"GET", "POST"},
-		AllowedHeaders:   []string{"x-allowed-1", "x-allowed-2"},
-	},
-	DomainAliases1:     api.DomainAliases{"example.com", "*.example.com"},
-	DomainChecksum1:    api.Checksum{"ck1"},
-	DomainOrgKey1:      "1",
-	DomainKey2:         "sntaohesntahoesuntaohe",
-	DomainZone2:        "zk2",
-	DomainName2:        "domain-2",
-	DomainPort2:        5050,
-	DomainSSLConfig2:   nil,
-	DomainRedirects2:   nil,
-	DomainGzipEnabled2: false,
-	DomainCorsConfig2:  nil,
-	DomainAliases2:     nil,
-	DomainOrgKey2:      "1",
-	DomainChecksum2:    api.Checksum{"ck2"},
+		DomainKey1:       "asonetuhasonetuh",
+		DomainZone1:      "zk1",
+		DomainName1:      "domain-1",
+		DomainPort1:      8080,
+		DomainSSLConfig1: nil,
+		DomainRedirects1: api.Redirects{{
+			"redirect1",
+			".*",
+			"http://www.example.com",
+			api.PermanentRedirect,
+			api.HeaderConstraints{{"x-random-header", "", false, true}},
+		}},
+		DomainGzipEnabled1: true,
+		DomainCorsConfig1: &api.CorsConfig{
+			AllowedOrigins:   []string{"*"},
+			AllowCredentials: true,
+			ExposedHeaders:   []string{"x-expose-1", "x-expose-2"},
+			MaxAge:           600,
+			AllowedMethods:   []string{"GET", "POST"},
+			AllowedHeaders:   []string{"x-allowed-1", "x-allowed-2"},
+		},
+		DomainAliases1:     api.DomainAliases{"example.com", "*.example.com"},
+		DomainChecksum1:    api.Checksum{"ck1"},
+		DomainOrgKey1:      "1",
+		DomainKey2:         "sntaohesntahoesuntaohe",
+		DomainZone2:        "zk2",
+		DomainName2:        "domain-2",
+		DomainPort2:        5050,
+		DomainSSLConfig2:   nil,
+		DomainRedirects2:   nil,
+		DomainGzipEnabled2: false,
+		DomainCorsConfig2:  nil,
+		DomainAliases2:     nil,
+		DomainOrgKey2:      "1",
+		DomainChecksum2:    api.Checksum{"ck2"},
 
-	ProxyKey1:      "proxy-1",
-	ProxyZone1:     "proxy-zone-1",
-	ProxyName1:     "proxy-name-1",
-	ProxyChecksum1: api.Checksum{"proxy-cs-1"},
-	ProxyOrgKey1:   "1",
-	ProxyKey2:      "proxy-2",
-	ProxyZone2:     "proxy-zone-2",
-	ProxyName2:     "proxy-name-2",
-	ProxyOrgKey2:   "1",
-	ProxyChecksum2: api.Checksum{"proxy-cs-2"},
+		ProxyKey1:      "proxy-1",
+		ProxyZone1:     "proxy-zone-1",
+		ProxyName1:     "proxy-name-1",
+		ProxyChecksum1: api.Checksum{"proxy-cs-1"},
+		ProxyOrgKey1:   "1",
+		ProxyKey2:      "proxy-2",
+		ProxyZone2:     "proxy-zone-2",
+		ProxyName2:     "proxy-name-2",
+		ProxyOrgKey2:   "1",
+		ProxyChecksum2: api.Checksum{"proxy-cs-2"},
 
-	RouteKey1:      "route-key-1",
-	RouteDomain1:   "route-dom-1",
-	RouteZone1:     "route-zone-1",
-	RoutePath1:     "for/bar/path",
-	RouteOrgKey1:   "1",
-	RouteChecksum1: api.Checksum{"route-cs-1"},
-	RouteKey2:      "route-key-2",
-	RouteDomain2:   "route-dom-2",
-	RouteZone2:     "route-zone-2",
-	RoutePath2:     "quix/qux/quuuuux",
-	RouteOrgKey2:   "1",
-	RouteChecksum2: api.Checksum{"route-cs-2"},
+		RouteKey1:      "route-key-1",
+		RouteDomain1:   "route-dom-1",
+		RouteZone1:     "route-zone-1",
+		RoutePath1:     "for/bar/path",
+		RouteOrgKey1:   "1",
+		RouteChecksum1: api.Checksum{"route-cs-1"},
+		RouteKey2:      "route-key-2",
+		RouteDomain2:   "route-dom-2",
+		RouteZone2:     "route-zone-2",
+		RoutePath2:     "quix/qux/quuuuux",
+		RouteOrgKey2:   "1",
+		RouteChecksum2: api.Checksum{"route-cs-2"},
 
-	SharedRulesKey1:      "shared-rules-key-1",
-	SharedRulesName1:     "shared-rules-name-1",
-	SharedRulesZone1:     "shared-rules-zone-1",
-	SharedRulesOrgKey1:   "1",
-	SharedRulesChecksum1: api.Checksum{"shared-rules-cs-1"},
-	SharedRulesKey2:      "shared-rules-key-2",
-	SharedRulesName2:     "shared-rules-name-2",
-	SharedRulesZone2:     "shared-rules-zone-2",
-	SharedRulesOrgKey2:   "1",
-	SharedRulesChecksum2: api.Checksum{"shared-rules-cs-2"},
-}
-
-var initialTestData map[string]string = make(map[string]string)
-
-func init() {
-	DataFixtures.Org1 = api.Org{
-		DataFixtures.OrgKey1,
-		DataFixtures.OrgName1,
-		DataFixtures.OrgContactEmail1,
-		DataFixtures.OrgChecksum1,
+		SharedRulesKey1:      "shared-rules-key-1",
+		SharedRulesName1:     "shared-rules-name-1",
+		SharedRulesZone1:     "shared-rules-zone-1",
+		SharedRulesOrgKey1:   "1",
+		SharedRulesChecksum1: api.Checksum{"shared-rules-cs-1"},
+		SharedRulesKey2:      "shared-rules-key-2",
+		SharedRulesName2:     "shared-rules-name-2",
+		SharedRulesZone2:     "shared-rules-zone-2",
+		SharedRulesOrgKey2:   "1",
+		SharedRulesChecksum2: api.Checksum{"shared-rules-cs-2"},
 	}
-	DataFixtures.Org2 = api.Org{
-		DataFixtures.OrgKey2,
-		DataFixtures.OrgName2,
-		DataFixtures.OrgContactEmail2,
-		DataFixtures.OrgChecksum2,
+
+	df.Org1 = api.Org{
+		df.OrgKey1,
+		df.OrgName1,
+		df.OrgContactEmail1,
+		df.OrgChecksum1,
 	}
-	DataFixtures.OrgSlice = api.Orgs{DataFixtures.Org1, DataFixtures.Org2}
+	df.Org2 = api.Org{
+		df.OrgKey2,
+		df.OrgName2,
+		df.OrgContactEmail2,
+		df.OrgChecksum2,
+	}
+	df.OrgSlice = api.Orgs{df.Org1, df.Org2}
 
 	ts := time.Date(2015, 2, 28, 12, 30, 0, 0, time.UTC)
-	DataFixtures.UserDeletedAt2 = &ts
-	DataFixtures.Zone1 = api.Zone{
-		DataFixtures.ZoneKey1,
-		DataFixtures.ZoneName1,
-		DataFixtures.ZoneOrgKey1,
-		DataFixtures.ZoneChecksum1,
+	df.UserDeletedAt2 = &ts
+	df.Zone1 = api.Zone{
+		df.ZoneKey1,
+		df.ZoneName1,
+		df.ZoneOrgKey1,
+		df.ZoneChecksum1,
 	}
-	DataFixtures.Zone2 = api.Zone{
-		DataFixtures.ZoneKey2,
-		DataFixtures.ZoneName2,
-		DataFixtures.ZoneOrgKey2,
-		DataFixtures.ZoneChecksum2,
+	df.Zone2 = api.Zone{
+		df.ZoneKey2,
+		df.ZoneName2,
+		df.ZoneOrgKey2,
+		df.ZoneChecksum2,
 	}
-	DataFixtures.ZoneSlice = api.Zones{DataFixtures.Zone1, DataFixtures.Zone2}
-	DataFixtures.PublicZoneSlice = make(api.Zones, len(DataFixtures.ZoneSlice))
-	for i, z := range DataFixtures.ZoneSlice {
+	df.ZoneSlice = api.Zones{df.Zone1, df.Zone2}
+	df.PublicZoneSlice = make(api.Zones, len(df.ZoneSlice))
+	for i, z := range df.ZoneSlice {
 		z.OrgKey = ""
-		DataFixtures.PublicZoneSlice[i] = z
+		df.PublicZoneSlice[i] = z
 	}
 
-	DataFixtures.User1 = api.User{
-		UserKey:    DataFixtures.UserKey1,
-		LoginEmail: DataFixtures.UserLoginEmail1,
-		APIAuthKey: DataFixtures.UserAPIAuthKey1,
-		OrgKey:     DataFixtures.UserOrgKey1,
-		DeletedAt:  DataFixtures.UserDeletedAt1,
-		Checksum:   DataFixtures.UserChecksum1,
+	df.User1 = api.User{
+		UserKey:    df.UserKey1,
+		LoginEmail: df.UserLoginEmail1,
+		APIAuthKey: df.UserAPIAuthKey1,
+		OrgKey:     df.UserOrgKey1,
+		DeletedAt:  df.UserDeletedAt1,
+		Checksum:   df.UserChecksum1,
 	}
-	DataFixtures.User2 = api.User{
-		UserKey:    DataFixtures.UserKey2,
-		LoginEmail: DataFixtures.UserLoginEmail2,
-		APIAuthKey: DataFixtures.UserAPIAuthKey2,
-		OrgKey:     DataFixtures.UserOrgKey2,
-		DeletedAt:  DataFixtures.UserDeletedAt2,
-		Checksum:   DataFixtures.UserChecksum2,
+	df.User2 = api.User{
+		UserKey:    df.UserKey2,
+		LoginEmail: df.UserLoginEmail2,
+		APIAuthKey: df.UserAPIAuthKey2,
+		OrgKey:     df.UserOrgKey2,
+		DeletedAt:  df.UserDeletedAt2,
+		Checksum:   df.UserChecksum2,
 	}
-	DataFixtures.UserSlice = api.Users{DataFixtures.User1, DataFixtures.User2}
-	DataFixtures.PublicUserSlice = make(api.Users, len(DataFixtures.UserSlice))
-	for i, u := range DataFixtures.UserSlice {
-		DataFixtures.PublicUserSlice[i] = u
-	}
-
-	DataFixtures.Cluster1 = api.Cluster{
-		ClusterKey: DataFixtures.ClusterKey1,
-		ZoneKey:    DataFixtures.ClusterZone1,
-		Name:       DataFixtures.ClusterName1,
-		RequireTLS: DataFixtures.ClusterRequireTLS1,
-		OrgKey:     DataFixtures.ClusterOrgKey1,
-		Checksum:   DataFixtures.ClusterChecksum1,
+	df.UserSlice = api.Users{df.User1, df.User2}
+	df.PublicUserSlice = make(api.Users, len(df.UserSlice))
+	for i, u := range df.UserSlice {
+		df.PublicUserSlice[i] = u
 	}
 
-	DataFixtures.Instance21 = api.Instance{
+	df.Cluster1 = api.Cluster{
+		ClusterKey: df.ClusterKey1,
+		ZoneKey:    df.ClusterZone1,
+		Name:       df.ClusterName1,
+		RequireTLS: df.ClusterRequireTLS1,
+		OrgKey:     df.ClusterOrgKey1,
+		Checksum:   df.ClusterChecksum1,
+	}
+
+	df.Instance21 = api.Instance{
 		Host: "int-host", Port: 1234, Metadata: api.Metadata{{"key1", "value1"}, {"key2", "value2"}}}
 
-	DataFixtures.Instance22 = api.Instance{Host: "int-host-2", Port: 1234}
+	df.Instance22 = api.Instance{Host: "int-host-2", Port: 1234}
 
-	DataFixtures.Cluster2 = api.Cluster{
-		ClusterKey: DataFixtures.ClusterKey2,
-		ZoneKey:    DataFixtures.ClusterZone2,
-		Name:       DataFixtures.ClusterName2,
-		RequireTLS: DataFixtures.ClusterRequireTLS2,
-		Instances:  api.Instances{DataFixtures.Instance21, DataFixtures.Instance22},
-		OrgKey:     DataFixtures.ClusterOrgKey2,
-		Checksum:   DataFixtures.ClusterChecksum2,
+	df.Cluster2 = api.Cluster{
+		ClusterKey: df.ClusterKey2,
+		ZoneKey:    df.ClusterZone2,
+		Name:       df.ClusterName2,
+		RequireTLS: df.ClusterRequireTLS2,
+		Instances:  api.Instances{df.Instance21, df.Instance22},
+		OrgKey:     df.ClusterOrgKey2,
+		Checksum:   df.ClusterChecksum2,
 	}
 
-	DataFixtures.ClusterSlice = []api.Cluster{DataFixtures.Cluster1, DataFixtures.Cluster2}
-	DataFixtures.PublicClusterSlice = make(api.Clusters, len(DataFixtures.ClusterSlice))
-	for i, c := range DataFixtures.ClusterSlice {
+	df.ClusterSlice = []api.Cluster{df.Cluster1, df.Cluster2}
+	df.PublicClusterSlice = make(api.Clusters, len(df.ClusterSlice))
+	for i, c := range df.ClusterSlice {
 		c.OrgKey = ""
-		DataFixtures.PublicClusterSlice[i] = c
+		df.PublicClusterSlice[i] = c
 	}
 
 	// domain setup
-	DataFixtures.Domain1 = api.Domain{
-		DataFixtures.DomainKey1,
-		DataFixtures.DomainZone1,
-		DataFixtures.DomainName1,
-		DataFixtures.DomainPort1,
-		DataFixtures.DomainSSLConfig1,
-		DataFixtures.DomainRedirects1,
-		DataFixtures.DomainGzipEnabled1,
-		DataFixtures.DomainCorsConfig1,
-		DataFixtures.DomainAliases1,
-		DataFixtures.DomainOrgKey1,
-		DataFixtures.DomainChecksum1,
+	df.Domain1 = api.Domain{
+		df.DomainKey1,
+		df.DomainZone1,
+		df.DomainName1,
+		df.DomainPort1,
+		df.DomainSSLConfig1,
+		df.DomainRedirects1,
+		df.DomainGzipEnabled1,
+		df.DomainCorsConfig1,
+		df.DomainAliases1,
+		df.DomainOrgKey1,
+		df.DomainChecksum1,
 	}
 
-	DataFixtures.Domain2 = api.Domain{
-		DataFixtures.DomainKey2,
-		DataFixtures.DomainZone2,
-		DataFixtures.DomainName2,
-		DataFixtures.DomainPort2,
-		DataFixtures.DomainSSLConfig2,
-		DataFixtures.DomainRedirects2,
-		DataFixtures.DomainGzipEnabled2,
-		DataFixtures.DomainCorsConfig2,
-		DataFixtures.DomainAliases2,
-		DataFixtures.DomainOrgKey2,
-		DataFixtures.DomainChecksum2,
+	df.Domain2 = api.Domain{
+		df.DomainKey2,
+		df.DomainZone2,
+		df.DomainName2,
+		df.DomainPort2,
+		df.DomainSSLConfig2,
+		df.DomainRedirects2,
+		df.DomainGzipEnabled2,
+		df.DomainCorsConfig2,
+		df.DomainAliases2,
+		df.DomainOrgKey2,
+		df.DomainChecksum2,
 	}
 
-	DataFixtures.DomainSlice = api.Domains{DataFixtures.Domain1, DataFixtures.Domain2}
-	DataFixtures.PublicDomainSlice = make(api.Domains, len(DataFixtures.DomainSlice))
-	for i, d := range DataFixtures.DomainSlice {
+	df.DomainSlice = api.Domains{df.Domain1, df.Domain2}
+	df.PublicDomainSlice = make(api.Domains, len(df.DomainSlice))
+	for i, d := range df.DomainSlice {
 		d.OrgKey = ""
-		DataFixtures.PublicDomainSlice[i] = d
+		df.PublicDomainSlice[i] = d
 	}
 
 	// proxy setup
-	DataFixtures.ProxyDomainKeys1 = []api.DomainKey{
-		DataFixtures.Domain1.DomainKey,
-		DataFixtures.Domain2.DomainKey,
+	df.ProxyDomainKeys1 = []api.DomainKey{
+		df.Domain1.DomainKey,
+		df.Domain2.DomainKey,
 	}
-	DataFixtures.Proxy1 = api.Proxy{
-		DataFixtures.ProxyKey1,
-		DataFixtures.ProxyZone1,
-		DataFixtures.ProxyName1,
-		DataFixtures.ProxyDomainKeys1,
-		DataFixtures.ProxyOrgKey1,
-		DataFixtures.ProxyChecksum1,
-	}
-
-	DataFixtures.ProxyDomainKeys2 = DataFixtures.ProxyDomainKeys1
-	DataFixtures.Proxy2 = api.Proxy{
-		DataFixtures.ProxyKey2,
-		DataFixtures.ProxyZone2,
-		DataFixtures.ProxyName2,
-		DataFixtures.ProxyDomainKeys2,
-		DataFixtures.ProxyOrgKey2,
-		DataFixtures.ProxyChecksum2,
+	df.Proxy1 = api.Proxy{
+		df.ProxyKey1,
+		df.ProxyZone1,
+		df.ProxyName1,
+		df.ProxyDomainKeys1,
+		df.ProxyOrgKey1,
+		df.ProxyChecksum1,
 	}
 
-	DataFixtures.ProxySlice = []api.Proxy{DataFixtures.Proxy1, DataFixtures.Proxy2}
-	DataFixtures.PublicProxySlice = make(api.Proxies, len(DataFixtures.ProxySlice))
-	for i, p := range DataFixtures.ProxySlice {
+	df.ProxyDomainKeys2 = df.ProxyDomainKeys1
+	df.Proxy2 = api.Proxy{
+		df.ProxyKey2,
+		df.ProxyZone2,
+		df.ProxyName2,
+		df.ProxyDomainKeys2,
+		df.ProxyOrgKey2,
+		df.ProxyChecksum2,
+	}
+
+	df.ProxySlice = []api.Proxy{df.Proxy1, df.Proxy2}
+	df.PublicProxySlice = make(api.Proxies, len(df.ProxySlice))
+	for i, p := range df.ProxySlice {
 		p.OrgKey = ""
-		DataFixtures.PublicProxySlice[i] = p
+		df.PublicProxySlice[i] = p
 	}
 
 	// route setup
@@ -502,35 +487,35 @@ func init() {
 				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, 1234}}},
 	}
 
-	DataFixtures.RouteRules1 = api.Rules{routeRule1}
-	DataFixtures.RouteRules2 = api.Rules{routeRule1, routeRule2}
-	DataFixtures.Route1 = api.Route{
-		DataFixtures.RouteKey1,
-		DataFixtures.RouteDomain1,
-		DataFixtures.RouteZone1,
-		DataFixtures.RoutePath1,
-		DataFixtures.SharedRulesKey1,
-		DataFixtures.RouteRules1,
-		DataFixtures.RouteOrgKey1,
-		DataFixtures.RouteChecksum1,
+	df.RouteRules1 = api.Rules{routeRule1}
+	df.RouteRules2 = api.Rules{routeRule1, routeRule2}
+	df.Route1 = api.Route{
+		df.RouteKey1,
+		df.RouteDomain1,
+		df.RouteZone1,
+		df.RoutePath1,
+		df.SharedRulesKey1,
+		df.RouteRules1,
+		df.RouteOrgKey1,
+		df.RouteChecksum1,
 	}
 
-	DataFixtures.Route2 = api.Route{
-		DataFixtures.RouteKey2,
-		DataFixtures.RouteDomain2,
-		DataFixtures.RouteZone2,
-		DataFixtures.RoutePath2,
-		DataFixtures.SharedRulesKey2,
-		DataFixtures.RouteRules2,
-		DataFixtures.RouteOrgKey2,
-		DataFixtures.RouteChecksum2,
+	df.Route2 = api.Route{
+		df.RouteKey2,
+		df.RouteDomain2,
+		df.RouteZone2,
+		df.RoutePath2,
+		df.SharedRulesKey2,
+		df.RouteRules2,
+		df.RouteOrgKey2,
+		df.RouteChecksum2,
 	}
 
-	DataFixtures.RouteSlice = api.Routes{DataFixtures.Route1, DataFixtures.Route2}
-	DataFixtures.PublicRouteSlice = make(api.Routes, len(DataFixtures.RouteSlice))
-	for i, r := range DataFixtures.RouteSlice {
+	df.RouteSlice = api.Routes{df.Route1, df.Route2}
+	df.PublicRouteSlice = make(api.Routes, len(df.RouteSlice))
+	for i, r := range df.RouteSlice {
 		r.OrgKey = ""
-		DataFixtures.PublicRouteSlice[i] = r
+		df.PublicRouteSlice[i] = r
 	}
 
 	// sharedRules setup
@@ -562,97 +547,36 @@ func init() {
 			{"cc-4", api.HeaderMatchKind, api.Metadata{{"k", "v"}, {"k2", "v2"}}, api.Metadata{{"state", "released"}}, 23}}}
 	sharedRulesDefault2 := sharedRulesDefault1
 
-	DataFixtures.SharedRulesDefault1 = sharedRulesDefault1
-	DataFixtures.SharedRulesRules1 = api.Rules{sharedRulesRule1}
-	DataFixtures.SharedRulesDefault2 = sharedRulesDefault2
-	DataFixtures.SharedRulesRules2 = api.Rules{sharedRulesRule1, sharedRulesRule2}
-	DataFixtures.SharedRules1 = api.SharedRules{
-		DataFixtures.SharedRulesKey1,
-		DataFixtures.SharedRulesName1,
-		DataFixtures.SharedRulesZone1,
-		DataFixtures.SharedRulesDefault1,
-		DataFixtures.SharedRulesRules1,
-		DataFixtures.SharedRulesOrgKey1,
-		DataFixtures.SharedRulesChecksum1,
+	df.SharedRulesDefault1 = sharedRulesDefault1
+	df.SharedRulesRules1 = api.Rules{sharedRulesRule1}
+	df.SharedRulesDefault2 = sharedRulesDefault2
+	df.SharedRulesRules2 = api.Rules{sharedRulesRule1, sharedRulesRule2}
+	df.SharedRules1 = api.SharedRules{
+		df.SharedRulesKey1,
+		df.SharedRulesName1,
+		df.SharedRulesZone1,
+		df.SharedRulesDefault1,
+		df.SharedRulesRules1,
+		df.SharedRulesOrgKey1,
+		df.SharedRulesChecksum1,
 	}
 
-	DataFixtures.SharedRules2 = api.SharedRules{
-		DataFixtures.SharedRulesKey2,
-		DataFixtures.SharedRulesName2,
-		DataFixtures.SharedRulesZone2,
-		DataFixtures.SharedRulesDefault2,
-		DataFixtures.SharedRulesRules2,
-		DataFixtures.SharedRulesOrgKey2,
-		DataFixtures.SharedRulesChecksum2,
+	df.SharedRules2 = api.SharedRules{
+		df.SharedRulesKey2,
+		df.SharedRulesName2,
+		df.SharedRulesZone2,
+		df.SharedRulesDefault2,
+		df.SharedRulesRules2,
+		df.SharedRulesOrgKey2,
+		df.SharedRulesChecksum2,
 	}
 
-	DataFixtures.SharedRulesSlice = api.SharedRulesSlice{DataFixtures.SharedRules1, DataFixtures.SharedRules2}
-	DataFixtures.PublicSharedRulesSlice = make(api.SharedRulesSlice, len(DataFixtures.SharedRulesSlice))
-	for i, r := range DataFixtures.SharedRulesSlice {
+	df.SharedRulesSlice = api.SharedRulesSlice{df.SharedRules1, df.SharedRules2}
+	df.PublicSharedRulesSlice = make(api.SharedRulesSlice, len(df.SharedRulesSlice))
+	for i, r := range df.SharedRulesSlice {
 		r.OrgKey = ""
-		DataFixtures.PublicSharedRulesSlice[i] = r
+		df.PublicSharedRulesSlice[i] = r
 	}
 
-	// install api key
-	initialTestData["/tbn/api-keys/"+DataFixtures.APIKey] = string(DataFixtures.ValidOrgID)
-
-	// install clusters
-	c1Encoded, err := json.Marshal(DataFixtures.Cluster1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	key1 := fmt.Sprintf("/tbn/api/%s/cluster/%s", DataFixtures.ValidOrgID, string(DataFixtures.ClusterKey1))
-	initialTestData[key1] = string(c1Encoded)
-
-	c2Encoded, err := json.Marshal(DataFixtures.Cluster2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	key2 := fmt.Sprintf("/tbn/api/%s/cluster/%s", DataFixtures.ValidOrgID, string(DataFixtures.ClusterKey2))
-	initialTestData[key2] = string(c2Encoded)
-
-	// install domains
-	d1Encoded, err := json.Marshal(DataFixtures.Domain1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	dkey1 := fmt.Sprintf("/tbn/api/%s/domain/%s", DataFixtures.ValidOrgID, string(DataFixtures.DomainKey1))
-	initialTestData[dkey1] = string(d1Encoded)
-
-	d2Encoded, err := json.Marshal(DataFixtures.Domain2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	dkey2 := fmt.Sprintf("/tbn/api/%s/domain/%s", DataFixtures.ValidOrgID, string(DataFixtures.DomainKey2))
-	initialTestData[dkey2] = string(d2Encoded)
-
-	// install proxies
-	p1Encoded, err := json.Marshal(DataFixtures.Proxy1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	pkey1 := fmt.Sprintf("/tbn/api/%s/proxy/%s", DataFixtures.ValidOrgID, string(DataFixtures.ProxyKey1))
-	initialTestData[pkey1] = string(p1Encoded)
-
-	p2Encoded, err := json.Marshal(DataFixtures.Proxy2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	pkey2 := fmt.Sprintf("/tbn/api/%s/proxy/%s", DataFixtures.ValidOrgID, string(DataFixtures.ProxyKey2))
-	initialTestData[pkey2] = string(p2Encoded)
-
-	// install routes
-	r1Encoded, err := json.Marshal(DataFixtures.Route1)
-	if err != nil {
-		log.Fatal(err)
-	}
-	rkey1 := fmt.Sprintf("/tbn/api/%s/route/%s", DataFixtures.ValidOrgID, string(DataFixtures.RouteKey1))
-	initialTestData[rkey1] = string(r1Encoded)
-
-	r2Encoded, err := json.Marshal(DataFixtures.Route2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	rkey2 := fmt.Sprintf("/tbn/api/%s/route/%s", DataFixtures.ValidOrgID, string(DataFixtures.RouteKey2))
-	initialTestData[rkey2] = string(r2Encoded)
+	return df
 }

@@ -45,7 +45,7 @@ const (
 	userCommonURL        = "/v1.0/admin/user"
 )
 
-var fixtures = fixture.DataFixtures
+var fixtures = fixture.New()
 
 // Used for verifying http client tests. It does clever things to decide how
 // to write out a response:
