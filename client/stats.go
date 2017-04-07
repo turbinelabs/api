@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/turbinelabs/api"
 	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
 	apiheader "github.com/turbinelabs/api/http/header"
@@ -34,8 +35,6 @@ import (
 )
 
 const (
-	statsClientID string = "tbn-stats-client (v0.1)"
-
 	forwardPath = "/v1.0/stats/forward"
 	queryPath   = "/v1.0/stats/query"
 	queryArg    = "query"
@@ -62,14 +61,16 @@ type httpStatsV1 struct {
 func NewStatsClient(
 	dest apihttp.Endpoint,
 	apiKey string,
+	clientApp App,
 	exec executor.Executor,
 ) (statsapi.StatsService, error) {
-	return newInternalStatsClient(dest, apiKey, exec)
+	return newInternalStatsClient(dest, apiKey, clientApp, exec)
 }
 
 func newInternalStatsClient(
 	dest apihttp.Endpoint,
 	apiKey string,
+	clientApp App,
 	exec executor.Executor,
 ) (internalStatsClient, error) {
 	// Copy the Endpoint to avoid polluting the original with our
@@ -77,7 +78,9 @@ func newInternalStatsClient(
 	dest = dest.Copy()
 
 	dest.AddHeader(apiheader.Authorization, apiKey)
-	dest.AddHeader(apiheader.ClientID, statsClientID)
+	dest.AddHeader(apiheader.ClientType, clientType)
+	dest.AddHeader(apiheader.ClientVersion, api.TbnPublicVersion)
+	dest.AddHeader(apiheader.ClientApp, string(clientApp))
 
 	// see encodePayload; payloads are sent as gzipped json
 	dest.AddHeader("Content-Type", "application/json")

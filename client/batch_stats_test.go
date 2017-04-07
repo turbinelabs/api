@@ -125,7 +125,8 @@ func TestNewBatchingStatsClient(t *testing.T) {
 		time.Second,
 		100,
 		endpoint,
-		testApiKey,
+		clientTestAPIKey,
+		clientTestApp,
 		exec,
 		log.NewNoopLogger(),
 	)
@@ -159,7 +160,8 @@ func TestNewBatchingStatsClientValidation(t *testing.T) {
 		999*time.Millisecond,
 		1,
 		endpoint,
-		testApiKey,
+		clientTestAPIKey,
+		clientTestApp,
 		exec,
 		log,
 	)
@@ -170,7 +172,8 @@ func TestNewBatchingStatsClientValidation(t *testing.T) {
 		time.Second,
 		0,
 		endpoint,
-		testApiKey,
+		clientTestAPIKey,
+		clientTestApp,
 		exec,
 		log,
 	)

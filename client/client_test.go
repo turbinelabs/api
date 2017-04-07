@@ -26,6 +26,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/turbinelabs/api"
 	"github.com/turbinelabs/api/fixture"
 	apihttp "github.com/turbinelabs/api/http"
 	"github.com/turbinelabs/api/http/envelope"
@@ -35,7 +36,8 @@ import (
 )
 
 const (
-	clientTestApiKey     = "whee-whee-whee"
+	clientTestAPIKey     = "whee-whee-whee"
+	clientTestApp        = App("app")
 	clusterCommonURL     = "/v1.0/cluster"
 	domainCommonURL      = "/v1.0/domain"
 	proxyCommonURL       = "/v1.0/proxy"
@@ -59,38 +61,63 @@ type verifyingHandler struct {
 	fn       func(apihttp.RichRequest)
 	status   int
 	response interface{}
-	clientID string
 }
 
 func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rr := apihttp.NewRichRequest(r)
-	rrw := apihttp.RichResponseWriter{rw}
-
-	if w.clientID == "" {
-		w.clientID = apiClientID
-	}
+	rrw := apihttp.RichResponseWriter{ResponseWriter: rw}
 
 	apiKey := rr.Underlying().Header.Get(apiheader.Authorization)
-	if apiKey != clientTestApiKey {
+	if apiKey != clientTestAPIKey {
 		rw.WriteHeader(400)
 		rw.Write([]byte(
 			fmt.Sprintf(
-				"wrong api key header, got %s, want %s",
+				"wrong %s header, got %s, want %s",
+				apiheader.Authorization,
 				apiKey,
-				clientTestApiKey,
+				clientTestAPIKey,
 			),
 		))
 		return
 	}
 
-	clientID := rr.Underlying().Header.Get(apiheader.ClientID)
-	if clientID != w.clientID {
+	cType := rr.Underlying().Header.Get(apiheader.ClientType)
+	if cType != clientType {
 		rw.WriteHeader(400)
 		rw.Write([]byte(
 			fmt.Sprintf(
-				"wrong client ID header: got %s, want %s",
-				clientID,
-				w.clientID,
+				"wrong %s header: got %s, want %s",
+				apiheader.ClientType,
+				cType,
+				clientType,
+			),
+		))
+		return
+	}
+
+	clientVersion := rr.Underlying().Header.Get(apiheader.ClientVersion)
+	if clientVersion != api.TbnPublicVersion {
+		rw.WriteHeader(400)
+		rw.Write([]byte(
+			fmt.Sprintf(
+				"wrong %s header: got %s, want %s",
+				apiheader.ClientVersion,
+				clientVersion,
+				api.TbnPublicVersion,
+			),
+		))
+		return
+	}
+
+	cApp := App(rr.Underlying().Header.Get(apiheader.ClientApp))
+	if cApp != clientTestApp {
+		rw.WriteHeader(400)
+		rw.Write([]byte(
+			fmt.Sprintf(
+				"wrong %s header: got %s, want %s",
+				apiheader.ClientApp,
+				cApp,
+				clientTestApp,
 			),
 		))
 		return
@@ -151,7 +178,7 @@ func newTestEndpointFromServer(server *httptest.Server) apihttp.Endpoint {
 
 func getAllInterface(server *httptest.Server) service.All {
 	endpoint := newTestEndpointFromServer(server)
-	serviceall, err := NewAll(endpoint, clientTestApiKey)
+	serviceall, err := NewAll(endpoint, clientTestAPIKey, clientTestApp)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -160,7 +187,7 @@ func getAllInterface(server *httptest.Server) service.All {
 
 func getAdminInterface(server *httptest.Server) service.Admin {
 	endpoint := newTestEndpointFromServer(server)
-	admin, err := NewAdmin(endpoint, clientTestApiKey)
+	admin, err := NewAdmin(endpoint, clientTestAPIKey, clientTestApp)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -174,7 +201,7 @@ func TestNewAllCopiesEndpoint(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, len(r.Header), 0)
 
-	all, err := NewAll(endpoint, clientTestApiKey)
+	all, err := NewAll(endpoint, clientTestAPIKey, clientTestApp)
 	assert.Nil(t, err)
 	assert.NonNil(t, all)
 
@@ -186,9 +213,11 @@ func TestNewAllCopiesEndpoint(t *testing.T) {
 
 	r, err = allEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
-	assert.Equal(t, len(r.Header), 2)
-	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestApiKey})
-	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{apiClientID})
+	assert.Equal(t, len(r.Header), 4)
+	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestAPIKey})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientType], []string{clientType})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientVersion], []string{api.TbnPublicVersion})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientApp], []string{string(clientTestApp)})
 }
 
 func TestNewAdminCopiesEndpoint(t *testing.T) {
@@ -198,7 +227,7 @@ func TestNewAdminCopiesEndpoint(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, len(r.Header), 0)
 
-	all, err := NewAdmin(endpoint, clientTestApiKey)
+	all, err := NewAdmin(endpoint, clientTestAPIKey, clientTestApp)
 	assert.Nil(t, err)
 	assert.NonNil(t, all)
 
@@ -210,7 +239,9 @@ func TestNewAdminCopiesEndpoint(t *testing.T) {
 
 	r, err = adminEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
-	assert.Equal(t, len(r.Header), 2)
-	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestApiKey})
-	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{apiClientID})
+	assert.Equal(t, len(r.Header), 4)
+	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestAPIKey})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientType], []string{clientType})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientVersion], []string{api.TbnPublicVersion})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientApp], []string{string(clientTestApp)})
 }

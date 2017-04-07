@@ -36,7 +36,7 @@ var (
 func TestNewClientFromFlags(t *testing.T) {
 	flagset := tbnflag.NewTestFlagSet()
 
-	ff := NewClientFromFlags(flagset)
+	ff := NewClientFromFlags("app", flagset)
 	ffImpl := ff.(*clientFromFlags)
 	assert.NonNil(t, ffImpl.apiConfigFromFlags)
 
@@ -49,7 +49,7 @@ func TestNewClientFromFlagsWithSharedAPIKey(t *testing.T) {
 	apiConfigFromFlags := NewAPIConfigFromFlags(flagset)
 	assert.NonNil(t, flagset.Unwrap().Lookup("key"))
 
-	ff := NewClientFromFlagsWithSharedAPIConfig(flagset, apiConfigFromFlags)
+	ff := NewClientFromFlagsWithSharedAPIConfig("app", flagset, apiConfigFromFlags)
 	ffImpl := ff.(*clientFromFlags)
 	assert.NonNil(t, ffImpl.apiConfigFromFlags)
 	assert.SameInstance(t, ffImpl.apiConfigFromFlags, apiConfigFromFlags)
@@ -59,12 +59,12 @@ func TestClientFromFlagsMake(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
-	mockApiConfig := NewMockAPIConfigFromFlags(ctrl)
+	mockAPIConfig := NewMockAPIConfigFromFlags(ctrl)
 
-	mockApiConfig.EXPECT().APIKey().Return("api-key")
-	mockApiConfig.EXPECT().MakeEndpoint().Return(fakeEndpoint, nil)
+	mockAPIConfig.EXPECT().APIKey().Return("api-key")
+	mockAPIConfig.EXPECT().MakeEndpoint().Return(fakeEndpoint, nil)
 
-	ff := &clientFromFlags{mockApiConfig}
+	ff := &clientFromFlags{clientApp: "app", apiConfigFromFlags: mockAPIConfig}
 
 	svc, err := ff.Make()
 	assert.Nil(t, err)
@@ -75,11 +75,11 @@ func TestClientFromFlagsMakeError(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
-	mockApiConfig := NewMockAPIConfigFromFlags(ctrl)
+	mockAPIConfig := NewMockAPIConfigFromFlags(ctrl)
 
-	mockApiConfig.EXPECT().MakeEndpoint().Return(apihttp.Endpoint{}, errors.New("nope"))
+	mockAPIConfig.EXPECT().MakeEndpoint().Return(apihttp.Endpoint{}, errors.New("nope"))
 
-	ff := &clientFromFlags{mockApiConfig}
+	ff := &clientFromFlags{clientApp: "app", apiConfigFromFlags: mockAPIConfig}
 
 	svc, err := ff.Make()
 	assert.ErrorContains(t, err, "nope")

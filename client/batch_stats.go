@@ -54,6 +54,7 @@ func NewBatchingStatsClient(
 	maxSize int,
 	dest apihttp.Endpoint,
 	apiKey string,
+	clientApp App,
 	exec executor.Executor,
 	logger *log.Logger,
 ) (statsapi.StatsService, error) {
@@ -65,7 +66,7 @@ func NewBatchingStatsClient(
 		return nil, errors.New("max size must be at least 1")
 	}
 
-	underlyingStatsClient, err := newInternalStatsClient(dest, apiKey, exec)
+	underlyingStatsClient, err := newInternalStatsClient(dest, apiKey, clientApp, exec)
 	if err != nil {
 		return nil, err
 	}

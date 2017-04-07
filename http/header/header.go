@@ -22,18 +22,26 @@ const (
 	// specific user and, by extension, organization.
 	APIKey = "X-Turbine-Api-Key"
 
-	// Standard HTTP authorization header.
+	// Authorization is the Standard HTTP authorization header.
 	Authorization = "Authorization"
 
-	// ClientID indicates which Turbine client is making a request (go http
+	// ClientApp is the name of the application calling the API
+	ClientApp = "X-Tbn-Api-Client-App"
+
+	// ClientType indicates which kind of API client is making a request (go http
 	// client vs js web client etc.)
-	ClientID = "X-Turbine-Api-Clientid"
+	ClientType = "X-Tbn-Api-Client-Type"
+
+	// ClientVersion indicates the version of the API client
+	ClientVersion = "X-Tbn-Api-Client-Version"
 )
 
 var (
 	headers = []string{
 		APIKey,
 		Authorization,
-		ClientID,
+		ClientApp,
+		ClientType,
+		ClientVersion,
 	}
 )

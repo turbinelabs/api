@@ -31,12 +31,16 @@ limitations under the License.
 package client
 
 import (
+	"github.com/turbinelabs/api"
 	apihttp "github.com/turbinelabs/api/http"
 	apiheader "github.com/turbinelabs/api/http/header"
 	"github.com/turbinelabs/api/service"
 )
 
 type httpMethod string
+
+// App is passed in the X-Tbn-Client-App header in API calls
+type App string
 
 const (
 	mGET    httpMethod = "GET"
@@ -45,7 +49,8 @@ const (
 	mDELETE            = "DELETE"
 )
 
-const apiClientID string = "tbn-api-client (v0.1)"
+// clientType is the value sent for the X-Tbn-Client-Type header
+const clientType = "github.com/turbinelabs/api/client"
 
 // Create a new Service backed by a Turbine api server at dest. Communication
 // with this server will happen via HTTP (or HTTPS as specified in the
@@ -62,9 +67,9 @@ const apiClientID string = "tbn-api-client (v0.1)"
 func NewAll(
 	dest apihttp.Endpoint,
 	apiKey string,
+	clientApp App,
 ) (service.All, error) {
-	dest = configureEndpoint(dest, apiKey)
-
+	dest = configureEndpoint(dest, apiKey, clientApp)
 	c, err := NewClusterV1(dest)
 	if err != nil {
 		return nil, err
@@ -112,8 +117,9 @@ func NewAll(
 func NewAdmin(
 	dest apihttp.Endpoint,
 	apiKey string,
+	clientApp App,
 ) (service.Admin, error) {
-	dest = configureEndpoint(dest, apiKey)
+	dest = configureEndpoint(dest, apiKey, clientApp)
 
 	u, err := NewUserV1(dest)
 	if err != nil {
@@ -125,12 +131,14 @@ func NewAdmin(
 	return &httpAdmin, nil
 }
 
-func configureEndpoint(dest apihttp.Endpoint, apiKey string) apihttp.Endpoint {
+func configureEndpoint(dest apihttp.Endpoint, apiKey string, clientApp App) apihttp.Endpoint {
 	// Copy the Endpoint to avoid polluting the original with our
 	// headers.
 	dest = dest.Copy()
 	dest.AddHeader(apiheader.Authorization, apiKey)
-	dest.AddHeader(apiheader.ClientID, apiClientID)
+	dest.AddHeader(apiheader.ClientType, clientType)
+	dest.AddHeader(apiheader.ClientVersion, api.TbnPublicVersion)
+	dest.AddHeader(apiheader.ClientApp, string(clientApp))
 	return dest
 }
 

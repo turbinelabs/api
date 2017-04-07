@@ -40,8 +40,8 @@ type ClientFromFlags interface {
 
 // NewClientFromFlags creates a ServiceFromFlags, which configures the
 // necessary flags to construct a service.All instance.
-func NewClientFromFlags(flagset tbnflag.FlagSet) ClientFromFlags {
-	return NewClientFromFlagsWithSharedAPIConfig(flagset, nil)
+func NewClientFromFlags(clientApp client.App, flagset tbnflag.FlagSet) ClientFromFlags {
+	return NewClientFromFlagsWithSharedAPIConfig(clientApp, flagset, nil)
 }
 
 // NewClientFromFlagsWithSharedAPIConfig creates a ClientFromFlags,
@@ -49,10 +49,11 @@ func NewClientFromFlags(flagset tbnflag.FlagSet) ClientFromFlags {
 // instance. The given APIConfigFromFlags is used to obtain the API
 // auth key.
 func NewClientFromFlagsWithSharedAPIConfig(
+	clientApp client.App,
 	flagset tbnflag.FlagSet,
 	apiConfigFromFlags APIConfigFromFlags,
 ) ClientFromFlags {
-	ff := &clientFromFlags{}
+	ff := &clientFromFlags{clientApp: clientApp}
 
 	if apiConfigFromFlags == nil {
 		ff.apiConfigFromFlags = NewAPIConfigFromFlags(flagset)
@@ -64,6 +65,7 @@ func NewClientFromFlagsWithSharedAPIConfig(
 }
 
 type clientFromFlags struct {
+	clientApp          client.App
 	apiConfigFromFlags APIConfigFromFlags
 }
 
@@ -79,7 +81,7 @@ func (ff *clientFromFlags) Make() (service.All, error) {
 
 	apiKey := ff.apiConfigFromFlags.APIKey()
 
-	return client.NewAll(endpoint, apiKey)
+	return client.NewAll(endpoint, apiKey, ff.clientApp)
 }
 
 func (ff *clientFromFlags) MakeAdmin() (service.Admin, error) {
@@ -90,5 +92,5 @@ func (ff *clientFromFlags) MakeAdmin() (service.Admin, error) {
 
 	apiKey := ff.apiConfigFromFlags.APIKey()
 
-	return client.NewAdmin(endpoint, apiKey)
+	return client.NewAdmin(endpoint, apiKey, ff.clientApp)
 }

@@ -34,15 +34,15 @@ const (
 	DefaultMaxBatchSize  = 100
 )
 
-// FromFlags validates and constructs a a statsapi.StatsService from command line
+// StatsClientFromFlags validates and constructs a a statsapi.StatsService from command line
 // flags.
 type StatsClientFromFlags interface {
 	Validate() error
 
-	// Constructs a statsapi.StatsService using the given Executor and Logger.
+	// Make constructs a statsapi.StatsService using the given Executor and Logger.
 	Make(executor.Executor, *log.Logger) (statsapi.StatsService, error)
 
-	// Returns the API Key used to construct the statsapi.StatsService.
+	// APIKey returns the API Key used to construct the statsapi.StatsService.
 	APIKey() string
 }
 
@@ -58,8 +58,12 @@ func StatsClientWithAPIConfigFromFlags(apiConfigFromFlags APIConfigFromFlags) St
 	}
 }
 
-func NewStatsClientFromFlags(pfs tbnflag.FlagSet, options ...StatsClientOption) StatsClientFromFlags {
-	ff := &statsClientFromFlags{}
+func NewStatsClientFromFlags(
+	clientApp client.App,
+	pfs tbnflag.FlagSet,
+	options ...StatsClientOption,
+) StatsClientFromFlags {
+	ff := &statsClientFromFlags{clientApp: clientApp}
 
 	for _, option := range options {
 		option(ff)
@@ -95,6 +99,7 @@ func NewStatsClientFromFlags(pfs tbnflag.FlagSet, options ...StatsClientOption) 
 }
 
 type statsClientFromFlags struct {
+	clientApp          client.App
 	apiConfigFromFlags APIConfigFromFlags
 	useBatching        bool
 	maxBatchDelay      time.Duration
@@ -141,11 +146,17 @@ func (ff *statsClientFromFlags) Make(
 			ff.maxBatchSize,
 			endpoint,
 			ff.apiConfigFromFlags.APIKey(),
+			ff.clientApp,
 			exec,
 			logger,
 		)
 	} else {
-		stats, err = client.NewStatsClient(endpoint, ff.apiConfigFromFlags.APIKey(), exec)
+		stats, err = client.NewStatsClient(
+			endpoint,
+			ff.apiConfigFromFlags.APIKey(),
+			ff.clientApp,
+			exec,
+		)
 	}
 
 	if err != nil {

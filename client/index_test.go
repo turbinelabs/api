@@ -80,12 +80,11 @@ func (tc indexTestCase) run(t *testing.T) {
 	}
 
 	verifier := verifyingHandler{
-		func(rr apihttp.RichRequest) {
+		fn: func(rr apihttp.RichRequest) {
 			assertIndexURL(t, rr.Underlying().URL, tc.urlPrefix, wantFilterStr)
 		},
-		http.StatusOK,
-		tc.responseObj,
-		apiClientID,
+		status:   http.StatusOK,
+		response: tc.responseObj,
 	}
 
 	s := httptest.NewServer(verifier)

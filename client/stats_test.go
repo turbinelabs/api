@@ -33,6 +33,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/turbinelabs/api"
 	apihttp "github.com/turbinelabs/api/http"
 	"github.com/turbinelabs/api/http/envelope"
 	httperr "github.com/turbinelabs/api/http/error"
@@ -72,8 +73,6 @@ var (
 			},
 		},
 	}
-
-	testApiKey = "i.am.a.key"
 
 	endpoint, _ = apihttp.NewEndpoint(apihttp.HTTP, "example.com", 8080)
 )
@@ -138,7 +137,7 @@ func prepareStatsClientTest(
 			},
 		)
 
-	client, err := NewStatsClient(e, testApiKey, mockExec)
+	client, err := NewStatsClient(e, clientTestAPIKey, clientTestApp, mockExec)
 	assert.Nil(t, err)
 
 	rvChan := make(chan forwardResult, 1)
@@ -196,53 +195,28 @@ type testHandler struct {
 }
 
 func (h *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	apiKey := req.Header.Get(apiheader.Authorization)
-	if apiKey != testApiKey {
-		resp.WriteHeader(400)
-		resp.Write([]byte(
-			fmt.Sprintf(
-				"wrong api key header, got %s, want %s",
-				apiKey,
-				testApiKey,
-			),
-		))
-		return
+	handler := verifyingHandler{
+		fn: func(rr apihttp.RichRequest) {
+			body := rr.Underlying().Body
+			assert.NonNil(h.t, body)
+
+			gzipReader, err := gzip.NewReader(body)
+			assert.Nil(h.t, err)
+
+			bytes, err := ioutil.ReadAll(gzipReader)
+			defer gzipReader.Close()
+			assert.Nil(h.t, err)
+
+			stats := &statsapi.Payload{}
+			err = json.Unmarshal(bytes, stats)
+			assert.Nil(h.t, err)
+			h.requestPayload = stats
+		},
+		status:   200,
+		response: &envelope.Response{Error: h.responseError, Payload: h.responsePayload},
 	}
 
-	clientId := req.Header.Get(http.CanonicalHeaderKey(apiheader.ClientID))
-	if clientId != statsClientID {
-		resp.WriteHeader(400)
-		resp.Write([]byte(
-			fmt.Sprintf(
-				"wrong client id header: got %s, want %s",
-				clientId,
-				statsClientID,
-			),
-		))
-		return
-	}
-
-	body := req.Body
-	assert.NonNil(h.t, body)
-
-	gzipReader, err := gzip.NewReader(body)
-	assert.Nil(h.t, err)
-
-	bytes, err := ioutil.ReadAll(gzipReader)
-	defer gzipReader.Close()
-	assert.Nil(h.t, err)
-
-	stats := &statsapi.Payload{}
-	err = json.Unmarshal(bytes, stats)
-	assert.Nil(h.t, err)
-	h.requestPayload = stats
-
-	envelope := &envelope.Response{Error: h.responseError, Payload: h.responsePayload}
-	bytes, err = json.Marshal(envelope)
-	assert.Nil(h.t, err)
-
-	resp.WriteHeader(200)
-	resp.Write(bytes)
+	handler.ServeHTTP(resp, req)
 }
 
 func runStatsClientFuncTest(
@@ -297,22 +271,21 @@ func TestStatsClientQuerySuccess(t *testing.T) {
 	want := &statsapi.QueryResult{}
 
 	verifier := verifyingHandler{
-		func(rr apihttp.RichRequest) {
+		fn: func(rr apihttp.RichRequest) {
 			assert.Equal(t, rr.Underlying().URL.Path, queryPath)
 			assert.NonNil(t, rr.Underlying().URL.Query()["query"])
 			assert.Equal(t, len(rr.Underlying().URL.Query()["query"]), 1)
 			assert.Equal(t, rr.Underlying().URL.Query()["query"][0], wantQueryStr)
 		},
-		http.StatusOK,
-		want,
-		statsClientID,
+		status:   http.StatusOK,
+		response: want,
 	}
 
 	server := httptest.NewServer(verifier)
 	defer server.Close()
 
 	endpoint := newTestEndpointFromServer(server)
-	client, _ := NewStatsClient(endpoint, clientTestApiKey, nil)
+	client, _ := NewStatsClient(endpoint, clientTestAPIKey, clientTestApp, nil)
 
 	got, gotErr := client.Query(&statsapi.Query{})
 	assert.Nil(t, gotErr)
@@ -326,22 +299,21 @@ func TestStatsClientQueryError(t *testing.T) {
 	wantErr := httperr.New500("Gah!", httperr.UnknownUnclassifiedCode)
 
 	verifier := verifyingHandler{
-		func(rr apihttp.RichRequest) {
+		fn: func(rr apihttp.RichRequest) {
 			assert.Equal(t, rr.Underlying().URL.Path, queryPath)
 			assert.NonNil(t, rr.Underlying().URL.Query()["query"])
 			assert.Equal(t, len(rr.Underlying().URL.Query()["query"]), 1)
 			assert.Equal(t, rr.Underlying().URL.Query()["query"][0], wantQueryStr)
 		},
-		http.StatusInternalServerError,
-		envelope.Response{wantErr, nil},
-		statsClientID,
+		status:   http.StatusInternalServerError,
+		response: envelope.Response{wantErr, nil},
 	}
 
 	server := httptest.NewServer(verifier)
 	defer server.Close()
 
 	endpoint := newTestEndpointFromServer(server)
-	client, _ := NewStatsClient(endpoint, clientTestApiKey, nil)
+	client, _ := NewStatsClient(endpoint, clientTestAPIKey, clientTestApp, nil)
 
 	got, gotErr := client.Query(&statsapi.Query{})
 	assert.DeepEqual(t, gotErr, wantErr)
@@ -355,7 +327,7 @@ func TestNewInternalStatsClientCopiesEndpoint(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, len(r.Header), 0)
 
-	client, err := newInternalStatsClient(endpoint, clientTestApiKey, nil)
+	client, err := newInternalStatsClient(endpoint, clientTestAPIKey, clientTestApp, nil)
 	assert.Nil(t, err)
 	assert.NonNil(t, client)
 
@@ -367,9 +339,11 @@ func TestNewInternalStatsClientCopiesEndpoint(t *testing.T) {
 
 	r, err = statsEndpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
-	assert.Equal(t, len(r.Header), 4)
-	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestApiKey})
-	assert.ArrayEqual(t, r.Header[apiheader.ClientID], []string{statsClientID})
+	assert.Equal(t, len(r.Header), 6)
+	assert.ArrayEqual(t, r.Header[apiheader.Authorization], []string{clientTestAPIKey})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientType], []string{clientType})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientVersion], []string{api.TbnPublicVersion})
+	assert.ArrayEqual(t, r.Header[apiheader.ClientApp], []string{string(clientTestApp)})
 	assert.ArrayEqual(t, r.Header["Content-Type"], []string{"application/json"})
 	assert.ArrayEqual(t, r.Header["Content-Encoding"], []string{"gzip"})
 }

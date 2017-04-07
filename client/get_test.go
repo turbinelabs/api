@@ -46,12 +46,11 @@ type getTestCase struct {
 
 func (tc getTestCase) run(t *testing.T) {
 	verifier := verifyingHandler{
-		func(rr apihttp.RichRequest) {
+		fn: func(rr apihttp.RichRequest) {
 			tc.assertURL(t, rr.Underlying().URL, tc.key)
 		},
-		http.StatusOK,
-		tc.responseObj,
-		apiClientID,
+		status:   http.StatusOK,
+		response: tc.responseObj,
 	}
 
 	s := httptest.NewServer(verifier)

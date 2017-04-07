@@ -39,6 +39,7 @@ func TestStatsClientFromFlagsValidatesNormalClient(t *testing.T) {
 	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
 
 	ff := NewStatsClientFromFlags(
+		"app",
 		fs.Scope("pfix", ""),
 		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
 	)
@@ -70,6 +71,7 @@ func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
 	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
 
 	ff := NewStatsClientFromFlags(
+		"app",
 		fs.Scope("pfix", ""),
 		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
 	)
@@ -88,13 +90,14 @@ func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
 	assert.NonNil(t, statsClient)
 	assert.Nil(t, err)
 
-	expectedErr := errors.New("no endpoints for you!")
+	expectedErr := errors.New("no endpoints for you")
 	apiConfigFromFlags.EXPECT().
 		MakeEndpoint().
 		Return(apihttp.Endpoint{}, expectedErr)
 
 	fs = tbnflag.NewTestFlagSet()
 	ff = NewStatsClientFromFlags(
+		"app",
 		fs.Scope("pfix", ""),
 		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
 	)
@@ -122,7 +125,11 @@ func TestStatsClientFromFlagsCachesClient(t *testing.T) {
 	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
 	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
 
-	ff := NewStatsClientFromFlags(pfs, StatsClientWithAPIConfigFromFlags(apiConfigFromFlags))
+	ff := NewStatsClientFromFlags(
+		"app",
+		pfs,
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
 	assert.NonNil(t, ff)
 
 	statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
@@ -153,6 +160,7 @@ func TestStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
 	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
 
 	ff := NewStatsClientFromFlags(
+		"app",
 		fs.Scope("pfix", ""),
 		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
 	)
@@ -182,6 +190,7 @@ func TestStatsClientFromFlagsValidatesBatchingClient(t *testing.T) {
 	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
 
 	ff := NewStatsClientFromFlags(
+		"app",
 		fs.Scope("pfix", ""),
 		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
 	)
