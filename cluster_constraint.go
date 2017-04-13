@@ -131,6 +131,15 @@ func (ccs ClusterConstraints) Equals(o ClusterConstraints) bool {
 	return true
 }
 
+func (ccs ClusterConstraints) AsMap() map[ConstraintKey]ClusterConstraint {
+	m := map[ConstraintKey]ClusterConstraint{}
+	for _, cc := range ccs {
+		m[cc.ConstraintKey] = cc
+	}
+
+	return m
+}
+
 // Checks validity of a slice of cluster constraints. This means that each item
 // in the slice must be valid and no constraint key may be duplicated.
 func (ccs ClusterConstraints) IsValid(container string) *ValidationError {

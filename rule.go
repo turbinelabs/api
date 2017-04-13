@@ -67,6 +67,14 @@ func (r Rules) Equals(o Rules) bool {
 	return true
 }
 
+func (rs Rules) AsMap() map[RuleKey]Rule {
+	m := map[RuleKey]Rule{}
+	for _, r := range rs {
+		m[r.RuleKey] = r
+	}
+	return m
+}
+
 // Check for validity of a slice of Rule objects. A valid rule is one that is
 // composed only of valid Rule structs.
 func (r Rules) IsValid() *ValidationError {
