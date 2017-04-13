@@ -37,6 +37,10 @@ type User struct {
 	Checksum
 }
 
+func (o User) GetOrgKey() OrgKey     { return o.OrgKey }
+func (o User) Key() string           { return string(o.UserKey) }
+func (o User) GetChecksum() Checksum { return o.Checksum }
+
 func (u User) IsNil() bool {
 	return u.Equals(User{})
 }

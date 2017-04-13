@@ -45,6 +45,11 @@ type Route struct {
 	Checksum
 }
 
+func (o Route) GetZoneKey() ZoneKey   { return o.ZoneKey }
+func (o Route) GetOrgKey() OrgKey     { return o.OrgKey }
+func (o Route) Key() string           { return string(o.RouteKey) }
+func (o Route) GetChecksum() Checksum { return o.Checksum }
+
 func (r Route) IsNil() bool {
 	return r.Equals(Route{})
 }

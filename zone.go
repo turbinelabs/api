@@ -29,6 +29,10 @@ type Zone struct {
 	Checksum
 }
 
+func (o Zone) GetZoneKey() ZoneKey   { return o.ZoneKey }
+func (o Zone) Key() string           { return string(o.ZoneKey) }
+func (o Zone) GetChecksum() Checksum { return o.Checksum }
+
 func (z Zone) IsNil() bool {
 	return z.Equals(Zone{})
 }

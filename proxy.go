@@ -34,6 +34,11 @@ type Proxy struct {
 	Checksum
 }
 
+func (p Proxy) GetZoneKey() ZoneKey   { return p.ZoneKey }
+func (p Proxy) GetOrgKey() OrgKey     { return p.OrgKey }
+func (p Proxy) Key() string           { return string(p.ProxyKey) }
+func (p Proxy) GetChecksum() Checksum { return p.Checksum }
+
 // Check validity of a new or existing proxy. A Valid proxy requires a
 // ProxyKey (unless new), a ZoneKey, and valid sub objects (Instance & Domains).
 func (p Proxy) IsValid() *ValidationError {

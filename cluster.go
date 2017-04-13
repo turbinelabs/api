@@ -50,6 +50,11 @@ type Cluster struct {
 	Checksum
 }
 
+func (o Cluster) GetZoneKey() ZoneKey   { return o.ZoneKey }
+func (o Cluster) GetOrgKey() OrgKey     { return o.OrgKey }
+func (o Cluster) Key() string           { return string(o.ClusterKey) }
+func (o Cluster) GetChecksum() Checksum { return o.Checksum }
+
 func (c Cluster) IsNil() bool {
 	return c.Equals(Cluster{})
 }

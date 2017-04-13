@@ -62,6 +62,11 @@ type Domain struct {
 	Checksum
 }
 
+func (o Domain) GetZoneKey() ZoneKey   { return o.ZoneKey }
+func (o Domain) GetOrgKey() OrgKey     { return o.OrgKey }
+func (o Domain) Key() string           { return string(o.DomainKey) }
+func (o Domain) GetChecksum() Checksum { return o.Checksum }
+
 type DomainAliases []DomainAlias
 
 func (d DomainAliases) Strings() []string {

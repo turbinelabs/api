@@ -28,6 +28,10 @@ type Org struct {
 	Checksum
 }
 
+func (o Org) GetOrgKey() OrgKey     { return o.OrgKey }
+func (o Org) Key() string           { return string(o.OrgKey) }
+func (o Org) GetChecksum() Checksum { return o.Checksum }
+
 func (o Org) IsNil() bool {
 	return o.Equals(Org{})
 }

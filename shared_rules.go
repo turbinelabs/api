@@ -42,6 +42,11 @@ type SharedRules struct {
 	Checksum
 }
 
+func (o SharedRules) GetZoneKey() ZoneKey   { return o.ZoneKey }
+func (o SharedRules) GetOrgKey() OrgKey     { return o.OrgKey }
+func (o SharedRules) Key() string           { return string(o.SharedRulesKey) }
+func (o SharedRules) GetChecksum() Checksum { return o.Checksum }
+
 type SharedRulesSlice []SharedRules
 
 func (r SharedRules) IsNil() bool {

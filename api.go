@@ -171,3 +171,50 @@ func (eca ValidationErrorsByAttribute) Less(i, j int) bool {
 func (eca ValidationErrorsByAttribute) Swap(i, j int) {
 	eca.e.Errors[i], eca.e.Errors[j] = eca.e.Errors[j], eca.e.Errors[i]
 }
+
+type HasZone interface {
+	HasKey
+	GetZoneKey() ZoneKey
+}
+
+func GetZoneKey(i interface{}) (ZoneKey, bool) {
+	if z, ok := i.(HasZone); ok {
+		return z.GetZoneKey(), true
+	}
+	return "", false
+}
+
+type HasOrg interface {
+	HasKey
+	GetOrgKey() OrgKey
+}
+
+func GetOrgKey(i interface{}) (OrgKey, bool) {
+	if o, ok := i.(HasOrg); ok {
+		return o.GetOrgKey(), true
+	}
+	return "", false
+}
+
+type HasChecksum interface {
+	HasKey
+	GetChecksum() Checksum
+}
+
+func GetChecksum(i interface{}) (Checksum, bool) {
+	if c, ok := i.(HasChecksum); ok {
+		return c.GetChecksum(), true
+	}
+	return Checksum{}, false
+}
+
+type HasKey interface {
+	Key() string
+}
+
+func GetKey(i interface{}) (string, bool) {
+	if k, ok := i.(HasKey); ok {
+		return k.Key(), true
+	}
+	return "", false
+}
