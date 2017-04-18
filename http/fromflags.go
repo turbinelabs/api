@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
+	tbnstrings "github.com/turbinelabs/nonstdlib/strings"
 )
 
 // FromFlags constructs an Endpoint from command line flags.
@@ -63,12 +64,12 @@ func NewFromFlags(defaultHost string, flagset tbnflag.FlagSet) FromFlags {
 type header string
 
 func (h header) split() (string, string, error) {
-	parts := strings.SplitN(string(h), ":", 2)
-	if len(parts) != 2 {
+	name, value := tbnstrings.SplitFirstColon(string(h))
+	if name == "" || value == "" {
 		return "", "", fmt.Errorf("invalid header: %s", string(h))
 	}
 
-	return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]), nil
+	return strings.TrimSpace(name), strings.TrimSpace(value), nil
 }
 
 type fromFlags struct {

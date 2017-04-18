@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -32,6 +31,7 @@ import (
 	"github.com/turbinelabs/api/http/envelope"
 	apiheader "github.com/turbinelabs/api/http/header"
 	"github.com/turbinelabs/api/service"
+	tbnstrings "github.com/turbinelabs/nonstdlib/strings"
 	"github.com/turbinelabs/test/assert"
 )
 
@@ -166,9 +166,7 @@ func newTestEndpointFromServer(server *httptest.Server) apihttp.Endpoint {
 		log.Fatal(e)
 	}
 
-	hostPortPair := strings.Split(u.Host, ":")
-	host := hostPortPair[0]
-	port, e := strconv.Atoi(hostPortPair[1])
+	host, port, e := tbnstrings.SplitHostPort(u.Host)
 	if e != nil {
 		log.Fatal(e)
 	}
