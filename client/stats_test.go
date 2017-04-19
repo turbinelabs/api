@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -41,6 +40,7 @@ import (
 	statsapi "github.com/turbinelabs/api/service/stats"
 	"github.com/turbinelabs/nonstdlib/executor"
 	"github.com/turbinelabs/nonstdlib/ptr"
+	tbnstrings "github.com/turbinelabs/nonstdlib/strings"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 	"github.com/turbinelabs/test/assert"
 )
@@ -229,8 +229,7 @@ func runStatsClientFuncTest(
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	host, portStr, _ := net.SplitHostPort(server.Listener.Addr().String())
-	port, _ := net.LookupPort(server.Listener.Addr().Network(), portStr)
+	host, port, _ := tbnstrings.SplitHostPort(server.Listener.Addr().String())
 
 	endpoint, err := apihttp.NewEndpoint(apihttp.HTTP, host, port)
 	assert.Nil(t, err)
