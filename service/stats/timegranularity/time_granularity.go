@@ -22,12 +22,21 @@ import (
 	"fmt"
 )
 
+// TimeGranularity represents the granularity of stats query results.
 type TimeGranularity int
 
 const (
+	// Seconds specifies per-second query results. Currently
+	// not supported.
 	Seconds TimeGranularity = iota
+
+	// Minutes specifies per-minute query results.
 	Minutes
+
+	// Hours specifies per-minute query results.
 	Hours
+
+	// Unknown represents an unknown time granularity.
 	Unknown
 )
 
@@ -50,10 +59,14 @@ var granularityNames = [...]string{
 
 var maxTimeGranularity = TimeGranularity(len(granularityNames) - 1)
 
+// IsValid tests a TimeGranularity and reports whether it is valid
+// value or not.
 func IsValid(i TimeGranularity) bool {
 	return i >= 0 && i <= maxTimeGranularity
 }
 
+// FromName converts a string into a TimeGranularity, returning
+// Unknown if the string is not a valid TimeGranularity name.
 func FromName(s string) TimeGranularity {
 	for idx, name := range granularityNames {
 		if name == s {
@@ -64,6 +77,7 @@ func FromName(s string) TimeGranularity {
 	return Unknown
 }
 
+// ForEach iterates over the value values and invokes f for each one.
 func ForEach(f func(TimeGranularity)) {
 	for i := 0; i <= int(maxTimeGranularity); i++ {
 		tg := TimeGranularity(i)
@@ -71,6 +85,7 @@ func ForEach(f func(TimeGranularity)) {
 	}
 }
 
+// String converts the TimeGranularity into a string.
 func (tg TimeGranularity) String() string {
 	if !IsValid(tg) {
 		return fmt.Sprintf("unknown(%d)", tg)
@@ -78,6 +93,7 @@ func (tg TimeGranularity) String() string {
 	return granularityNames[tg]
 }
 
+// MarshalJSON converts the TimeGranularity into a quoted JSON string.
 func (tg *TimeGranularity) MarshalJSON() ([]byte, error) {
 	if tg == nil {
 		return nil, fmt.Errorf("cannot marshal unknown time granularity (nil)")
@@ -95,6 +111,8 @@ func (tg *TimeGranularity) MarshalJSON() ([]byte, error) {
 	return append(b, '"'), nil
 }
 
+// UnmarshalJSON parses a quoted JSON string and updates the value of
+// the target TimeGranularity.
 func (tg *TimeGranularity) UnmarshalJSON(bytes []byte) error {
 	if tg == nil {
 		return fmt.Errorf("cannot unmarshal into nil TimeGranularity")
@@ -115,6 +133,8 @@ func (tg *TimeGranularity) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+// UnmarshalForm parses a form value string and updates the value of
+// the target TimeGranularity.
 func (tg *TimeGranularity) UnmarshalForm(value string) error {
 	if tg == nil {
 		return fmt.Errorf("cannot unmarshal into nil TimeGranularity")
