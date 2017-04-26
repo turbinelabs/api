@@ -21,6 +21,7 @@ package http
 import (
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -37,13 +38,17 @@ type FromFlags interface {
 	MakeEndpoint() (Endpoint, error)
 }
 
-func NewFromFlags(defaultHost string, flagset tbnflag.FlagSet) FromFlags {
+func NewFromFlags(defaultHostPort string, flagset tbnflag.FlagSet) FromFlags {
 	ff := &fromFlags{
 		headers: tbnflag.NewStrings(),
 	}
 
-	flagset.StringVar(&ff.host, "host", defaultHost, "The hostname for {{NAME}} requests")
-	flagset.IntVar(&ff.port, "port", 443, "The port for {{NAME}} requests")
+	flagset.StringVar(
+		&ff.hostPort,
+		"host",
+		defaultHostPort,
+		"The address (`host:port`) for {{NAME}} requests. If no port is given, it defaults to port 443 if --{{PREFIX}}ssl is true and port 80 otherwise.",
+	)
 	flagset.BoolVar(&ff.ssl, "ssl", true, "If true, use SSL for {{NAME}} requests")
 	flagset.BoolVar(
 		&ff.insecure,
@@ -73,8 +78,7 @@ func (h header) split() (string, string, error) {
 }
 
 type fromFlags struct {
-	host     string
-	port     int
+	hostPort string
 	ssl      bool
 	insecure bool
 	headers  tbnflag.Strings
@@ -91,10 +95,49 @@ func (ff *fromFlags) makeClient() *http.Client {
 	return cl
 }
 
-func (ff *fromFlags) Validate() error {
-	if ff.port <= 0 || ff.port > 0xFFFF {
-		return fmt.Errorf("invalid API port (%d), must be between 0 and 65536", ff.port)
+func checkHostPort(hostPort string, ssl bool) (string, error) {
+	host, port, err := net.SplitHostPort(hostPort)
+	if err != nil {
+		origErr := err
+		// If the address is just missing a port, this will
+		// succeed returning an empty port.
+		host, port, err = net.SplitHostPort(hostPort + ":")
+		if err != nil || port != "" {
+			return "", origErr
+		}
 	}
+
+	if host == "" {
+		return "", fmt.Errorf("address %s: missing hostname or address", hostPort)
+	}
+
+	if port == "" {
+		// e.g. hostPort was just a hostname or address.
+		if hostPort[0] == '[' {
+			// Replace the brackets that SplitHostPort stripped.
+			host = fmt.Sprintf("[%s]", host)
+		}
+
+		if ssl {
+			return fmt.Sprintf("%s:443", host), nil
+		}
+
+		return fmt.Sprintf("%s:80", host), nil
+	}
+
+	if _, err := net.LookupPort("tcp", port); err != nil {
+		return "", fmt.Errorf("address %s: invalid port", hostPort)
+	}
+
+	return hostPort, nil
+}
+
+func (ff *fromFlags) Validate() error {
+	hostPort, err := checkHostPort(ff.hostPort, ff.ssl)
+	if err != nil {
+		return err
+	}
+	ff.hostPort = hostPort
 
 	for _, hs := range ff.headers.Strings {
 		if _, _, err := header(hs).split(); err != nil {
@@ -113,7 +156,7 @@ func (ff *fromFlags) MakeEndpoint() (Endpoint, error) {
 		protocol = HTTP
 	}
 
-	e, err := NewEndpoint(protocol, ff.host, ff.port)
+	e, err := NewEndpoint(protocol, ff.hostPort)
 	if err != nil {
 		return e, err
 	}

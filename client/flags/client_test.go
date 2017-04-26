@@ -30,7 +30,7 @@ import (
 
 var (
 	fakeClient      = &http.Client{}
-	fakeEndpoint, _ = apihttp.NewEndpoint(apihttp.HTTPS, "localhost", 1234)
+	fakeEndpoint, _ = apihttp.NewEndpoint(apihttp.HTTPS, "localhost:1234")
 )
 
 func TestNewClientFromFlags(t *testing.T) {

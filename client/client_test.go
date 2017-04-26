@@ -31,7 +31,6 @@ import (
 	"github.com/turbinelabs/api/http/envelope"
 	apiheader "github.com/turbinelabs/api/http/header"
 	"github.com/turbinelabs/api/service"
-	tbnstrings "github.com/turbinelabs/nonstdlib/strings"
 	"github.com/turbinelabs/test/assert"
 )
 
@@ -152,8 +151,8 @@ func stripURLPrefix(url, prefix string) string {
 	return url[len(prefix):]
 }
 
-func newTestEndpoint(host string, port int) apihttp.Endpoint {
-	e, err := apihttp.NewEndpoint(apihttp.HTTP, host, port)
+func newTestEndpoint(hostPort string) apihttp.Endpoint {
+	e, err := apihttp.NewEndpoint(apihttp.HTTP, hostPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -166,12 +165,7 @@ func newTestEndpointFromServer(server *httptest.Server) apihttp.Endpoint {
 		log.Fatal(e)
 	}
 
-	host, port, e := tbnstrings.SplitHostPort(u.Host)
-	if e != nil {
-		log.Fatal(e)
-	}
-
-	return newTestEndpoint(host, port)
+	return newTestEndpoint(u.Host)
 }
 
 func getAllInterface(server *httptest.Server) service.All {
@@ -193,7 +187,7 @@ func getAdminInterface(server *httptest.Server) service.Admin {
 }
 
 func TestNewAllCopiesEndpoint(t *testing.T) {
-	e := newTestEndpoint("example.com", 80)
+	e := newTestEndpoint("example.com:80")
 
 	r, err := e.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
@@ -219,7 +213,7 @@ func TestNewAllCopiesEndpoint(t *testing.T) {
 }
 
 func TestNewAdminCopiesEndpoint(t *testing.T) {
-	e := newTestEndpoint("example.com", 80)
+	e := newTestEndpoint("example.com:80")
 
 	r, err := e.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)

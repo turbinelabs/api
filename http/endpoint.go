@@ -42,8 +42,7 @@ type Params map[string]string
 //	  specifies whether we should be using HTTP or HTTPS there is currently no
 // 	  special configuration for HTTPS (certificate pinning, custom root CAs,
 //	  etc.)
-//	host - DNS entry, or IP, for the service we should connect to
-// 	port - open port on the host above
+//	hostPost - host:port for the service we should connect to
 //
 // Returns a new Endpoint object and an error if there was a problem. Currently
 // the only error possible is the result of a failed call to url.Parse which
@@ -53,15 +52,14 @@ type Params map[string]string
 // Endpoint.AddHeader), and the net/http.Client created by
 // HeaderPreservingClient. You may specify an alternate client via
 // Endpoint.SetClient.
-func NewEndpoint(protocol Protocol, host string, port int) (Endpoint, error) {
-	url, err := url.Parse(fmt.Sprintf("%s://%s:%d", string(protocol), host, port))
+func NewEndpoint(protocol Protocol, hostPort string) (Endpoint, error) {
+	url, err := url.Parse(fmt.Sprintf("%s://%s", string(protocol), hostPort))
 	if err != nil {
 		return Endpoint{}, err
 	}
 
 	return Endpoint{
-		host:     host,
-		port:     port,
+		hostPort: hostPort,
 		protocol: protocol,
 		header:   http.Header{},
 		client:   HeaderPreservingClient(),
@@ -70,8 +68,7 @@ func NewEndpoint(protocol Protocol, host string, port int) (Endpoint, error) {
 }
 
 type Endpoint struct {
-	host     string
-	port     int
+	hostPort string
 	protocol Protocol
 	header   http.Header
 	client   *http.Client

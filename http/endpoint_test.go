@@ -25,10 +25,9 @@ import (
 )
 
 func TestNewEndpointHttp(t *testing.T) {
-	e, err := NewEndpoint(HTTP, "example.com", 80)
+	e, err := NewEndpoint(HTTP, "example.com:80")
 	assert.Nil(t, err)
-	assert.Equal(t, e.host, "example.com")
-	assert.Equal(t, e.port, 80)
+	assert.Equal(t, e.hostPort, "example.com:80")
 	assert.Equal(t, e.protocol, HTTP)
 
 	assert.NonNil(t, e.urlBase)
@@ -36,10 +35,9 @@ func TestNewEndpointHttp(t *testing.T) {
 }
 
 func TestNewEndpointHttps(t *testing.T) {
-	e, err := NewEndpoint(HTTPS, "example.com", 443)
+	e, err := NewEndpoint(HTTPS, "example.com:443")
 	assert.Nil(t, err)
-	assert.Equal(t, e.host, "example.com")
-	assert.Equal(t, e.port, 443)
+	assert.Equal(t, e.hostPort, "example.com:443")
 	assert.Equal(t, e.protocol, HTTPS)
 
 	assert.NonNil(t, e.urlBase)
@@ -47,13 +45,13 @@ func TestNewEndpointHttps(t *testing.T) {
 }
 
 func TestNewEndpointParseError(t *testing.T) {
-	e, err := NewEndpoint(HTTP, "not a domain", 99)
+	e, err := NewEndpoint(HTTP, "not a domain:99")
 	assert.NonNil(t, err)
 	assert.DeepEqual(t, e, Endpoint{})
 }
 
 func TestEndpointClient(t *testing.T) {
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 	otherClient := &http.Client{}
 
 	assert.NonNil(t, e.Client())
@@ -64,7 +62,7 @@ func TestEndpointClient(t *testing.T) {
 }
 
 func TestEndpointAddHeader(t *testing.T) {
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 	assert.Equal(t, len(e.header), 0)
 
 	e.AddHeader("foo", "1")
@@ -77,7 +75,7 @@ func TestEndpointAddHeader(t *testing.T) {
 }
 
 func TestEndpointUrl(t *testing.T) {
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 	u := e.Url("/admin/user", Params{})
 	assert.Equal(t, u, "http://example.com:80/admin/user")
 
@@ -86,7 +84,7 @@ func TestEndpointUrl(t *testing.T) {
 }
 
 func TestEndpointNewRequestWithParams(t *testing.T) {
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 
 	params := Params{"uid": "123"}
 	r, err := e.NewRequest("GET", "/admin/user", params, nil)
@@ -98,7 +96,7 @@ func TestEndpointNewRequestWithParams(t *testing.T) {
 }
 
 func TestEndpointNewRequestWithHeader(t *testing.T) {
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 	e.AddHeader("my-header", "my-value")
 
 	r, err := e.NewRequest("GET", "/admin/user", Params{}, nil)
@@ -110,7 +108,7 @@ func TestEndpointNewRequestWithHeader(t *testing.T) {
 }
 
 func TestEndpointNewRequestWithBody(t *testing.T) {
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 
 	// Use a ReadCloser so net/http doesn't do any wrapping
 	body := io.NewFailingReader()
@@ -124,7 +122,7 @@ func TestEndpointNewRequestWithBody(t *testing.T) {
 }
 
 func TestEndpointNewRequestError(t *testing.T) {
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 
 	newUrlBase := *e.urlBase
 	newUrlBase.Host = "not a domain, hoss"
@@ -137,11 +135,11 @@ func TestEndpointNewRequestError(t *testing.T) {
 }
 
 func TestEndpointCopy(t *testing.T) {
-	simple, _ := NewEndpoint(HTTPS, "example.com", 443)
+	simple, _ := NewEndpoint(HTTPS, "example.com:443")
 	simpleCopy := simple.Copy()
 	assert.DeepEqual(t, simpleCopy, simple)
 
-	e, _ := NewEndpoint(HTTP, "example.com", 80)
+	e, _ := NewEndpoint(HTTP, "example.com:80")
 	e.AddHeader("before", "preserved")
 
 	e2 := e.Copy()

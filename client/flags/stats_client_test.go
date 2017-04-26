@@ -62,7 +62,7 @@ func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
 
 	mockExec := executor.NewMockExecutor(ctrl)
 
-	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com", 538)
+	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
 	assert.Nil(t, err)
 	assert.NonNil(t, endpoint)
 
@@ -117,7 +117,7 @@ func TestStatsClientFromFlagsCachesClient(t *testing.T) {
 	mockExec := executor.NewMockExecutor(ctrl)
 	otherMockExec := executor.NewMockExecutor(ctrl)
 
-	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com", 538)
+	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
 	assert.Nil(t, err)
 	assert.NonNil(t, endpoint)
 
@@ -151,7 +151,7 @@ func TestStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
 
 	mockExec := executor.NewMockExecutor(ctrl)
 
-	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com", 538)
+	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
 	assert.Nil(t, err)
 	assert.NonNil(t, endpoint)
 

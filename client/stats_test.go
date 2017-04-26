@@ -40,7 +40,6 @@ import (
 	statsapi "github.com/turbinelabs/api/service/stats"
 	"github.com/turbinelabs/nonstdlib/executor"
 	"github.com/turbinelabs/nonstdlib/ptr"
-	tbnstrings "github.com/turbinelabs/nonstdlib/strings"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 	"github.com/turbinelabs/test/assert"
 )
@@ -74,7 +73,7 @@ var (
 		},
 	}
 
-	endpoint, _ = apihttp.NewEndpoint(apihttp.HTTP, "example.com", 8080)
+	endpoint, _ = apihttp.NewEndpoint(apihttp.HTTP, "example.com:8080")
 )
 
 func TestEncodePayload(t *testing.T) {
@@ -229,9 +228,7 @@ func runStatsClientFuncTest(
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	host, port, _ := tbnstrings.SplitHostPort(server.Listener.Addr().String())
-
-	endpoint, err := apihttp.NewEndpoint(apihttp.HTTP, host, port)
+	endpoint, err := apihttp.NewEndpoint(apihttp.HTTP, server.Listener.Addr().String())
 	assert.Nil(t, err)
 
 	f, cb, _ := prepareStatsClientTest(t, endpoint, payloadForward(requestPayload))
@@ -320,7 +317,7 @@ func TestStatsClientQueryError(t *testing.T) {
 }
 
 func TestNewInternalStatsClientCopiesEndpoint(t *testing.T) {
-	endpoint := newTestEndpoint("example.com", 80)
+	endpoint := newTestEndpoint("example.com:80")
 
 	r, err := endpoint.NewRequest("GET", "/index.html", apihttp.Params{}, nil)
 	assert.Nil(t, err)
