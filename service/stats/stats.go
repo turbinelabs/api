@@ -21,12 +21,16 @@ package stats
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/turbinelabs/nonstdlib/stats"
+	"github.com/turbinelabs/nonstdlib/ptr"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
+	"github.com/turbinelabs/stats"
 )
+
+var truePtr = ptr.Bool(true)
 
 // StatsService forwards stats data to a remote stats-server.
 type StatsService interface {
@@ -40,15 +44,12 @@ type StatsService interface {
 	Close() error
 }
 
-// Creates a nonstdlib/stats.Stats that uses this StatsService to forward
-// arbitrary stats with the given source and optional scopes.
-func AsStats(svc StatsService, source string, scopes ...string) stats.Stats {
-	resolvedScope := strings.Join(scopes, "/")
-
+// Creates a stats.Stats that uses this StatsService to forward
+// arbitrary stats with the given source.
+func AsStats(svc StatsService, source string) stats.Stats {
 	return &asStats{
 		svc:    svc,
 		source: source,
-		scope:  resolvedScope,
 	}
 }
 
@@ -56,37 +57,114 @@ type asStats struct {
 	svc    StatsService
 	source string
 	scope  string
+	tags   map[string]string
 }
 
 var _ stats.Stats = &asStats{}
 
-func (s *asStats) stat(name string, value float64) error {
-	if s.scope != "" {
-		name = s.scope + "/" + name
+func (s *asStats) toTagMap(tags []stats.Tag) map[string]string {
+	if len(tags) > 0 {
+		tagsMap := make(map[string]string, len(tags)+len(s.tags))
+		for _, tag := range tags {
+			tagsMap[tag.K] = tag.V
+		}
+		for k, v := range s.tags {
+			tagsMap[k] = v
+		}
+		return tagsMap
 	}
 
+	return s.tags
+}
+
+func (s *asStats) statName(stat string) string {
+	if s.scope != "" {
+		return fmt.Sprintf("%s/%s", s.scope, stat)
+	}
+	return stat
+}
+
+func (s *asStats) Count(stat string, value float64, tags ...stats.Tag) {
 	payload := &Payload{
 		Source: s.source,
 		Stats: []Stat{
 			{
-				Name:      name,
+				Name:      s.statName(stat),
 				Value:     &value,
 				Timestamp: tbntime.ToUnixMicro(time.Now()),
+				Tags:      s.toTagMap(tags),
 			},
 		},
 	}
-	_, err := s.svc.Forward(payload)
-	return err
+
+	s.svc.Forward(payload)
 }
 
-func (s *asStats) Inc(name string, v int64) error {
-	return s.stat(name, float64(v))
+func (s *asStats) Gauge(stat string, value float64, tags ...stats.Tag) {
+	payload := &Payload{
+		Source: s.source,
+		Stats: []Stat{
+			{
+				Name:      s.statName(stat),
+				Value:     &value,
+				IsGauge:   truePtr,
+				Timestamp: tbntime.ToUnixMicro(time.Now()),
+				Tags:      s.toTagMap(tags),
+			},
+		},
+	}
+
+	s.svc.Forward(payload)
 }
 
-func (s *asStats) Gauge(name string, v int64) error {
-	return s.stat(name, float64(v))
+func (s *asStats) Histogram(stat string, value float64, tags ...stats.Tag) {
+	payload := &Payload{
+		Source: s.source,
+		Stats: []Stat{
+			{
+				Name:      s.statName(stat),
+				Value:     &value,
+				IsGauge:   truePtr,
+				Timestamp: tbntime.ToUnixMicro(time.Now()),
+				Tags:      s.toTagMap(tags),
+			},
+		},
+	}
+
+	s.svc.Forward(payload)
 }
 
-func (s *asStats) TimingDuration(name string, d time.Duration) error {
-	return s.stat(name, d.Seconds())
+func (s *asStats) Timing(stat string, value time.Duration, tags ...stats.Tag) {
+	s.Histogram(stat, value.Seconds(), tags...)
+}
+
+func (s *asStats) AddTags(tags ...stats.Tag) {
+	if s.tags == nil {
+		s.tags = make(map[string]string, len(tags))
+	}
+
+	for _, tag := range tags {
+		s.tags[tag.K] = tag.V
+	}
+}
+
+func (s *asStats) Scope(scope string, scopes ...string) stats.Stats {
+	newScopes := scope
+	if len(scopes) > 0 {
+		newScopes = fmt.Sprintf("%s/%s", scope, strings.Join(scopes, "/"))
+	}
+
+	if s.scope != "" {
+		newScopes = fmt.Sprintf("%s/%s", s.scope, newScopes)
+	}
+
+	return &asStats{
+		svc:    s.svc,
+		source: s.source,
+		scope:  newScopes,
+	}
+}
+
+func (s *asStats) Close() error {
+	return s.svc.Close()
 }

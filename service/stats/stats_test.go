@@ -43,7 +43,7 @@ func TestAsStats(t *testing.T) {
 	assert.Equal(t, sImpl.scope, "")
 }
 
-func testStatsWithScope(t *testing.T, scope string, f func(*asStats) error) Stat {
+func testStatsWithScope(t *testing.T, scope string, f func(*asStats)) Stat {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
@@ -55,10 +55,8 @@ func testStatsWithScope(t *testing.T, scope string, f func(*asStats) error) Stat
 	s := &asStats{svc: mockSvc, source: "sourcery", scope: scope}
 
 	before := tbntime.ToUnixMicro(time.Now())
-	err := f(s)
+	f(s)
 	after := tbntime.ToUnixMicro(time.Now())
-
-	assert.Nil(t, err)
 
 	payload := payloadCaptor.V.(*Payload)
 	assert.Equal(t, payload.Source, "sourcery")
@@ -70,20 +68,20 @@ func testStatsWithScope(t *testing.T, scope string, f func(*asStats) error) Stat
 	return payload.Stats[0]
 }
 
-func testStats(t *testing.T, f func(*asStats) error) Stat {
+func testStats(t *testing.T, f func(*asStats)) Stat {
 	return testStatsWithScope(t, "", f)
 }
 
-func TestStatsInc(t *testing.T) {
-	st := testStats(t, func(s *asStats) error {
-		return s.Inc("metric", 1)
+func TestStatsCount(t *testing.T) {
+	st := testStats(t, func(s *asStats) {
+		s.Count("metric", 1)
 	})
 
 	assert.Equal(t, st.Name, "metric")
 	assert.Equal(t, *st.Value, 1.0)
 
-	st = testStatsWithScope(t, "a/b/c", func(s *asStats) error {
-		return s.Inc("metric", 2)
+	st = testStatsWithScope(t, "a/b/c", func(s *asStats) {
+		s.Count("metric", 2)
 	})
 
 	assert.Equal(t, st.Name, "a/b/c/metric")
@@ -91,15 +89,15 @@ func TestStatsInc(t *testing.T) {
 }
 
 func TestStatsGauge(t *testing.T) {
-	st := testStats(t, func(s *asStats) error {
-		return s.Gauge("metric", 123)
+	st := testStats(t, func(s *asStats) {
+		s.Gauge("metric", 123)
 	})
 
 	assert.Equal(t, st.Name, "metric")
 	assert.Equal(t, *st.Value, 123.0)
 
-	st = testStatsWithScope(t, "a/b/c", func(s *asStats) error {
-		return s.Gauge("metric", 200)
+	st = testStatsWithScope(t, "a/b/c", func(s *asStats) {
+		s.Gauge("metric", 200)
 	})
 
 	assert.Equal(t, st.Name, "a/b/c/metric")
@@ -107,15 +105,15 @@ func TestStatsGauge(t *testing.T) {
 }
 
 func TestStatsTimingDuration(t *testing.T) {
-	st := testStats(t, func(s *asStats) error {
-		return s.TimingDuration("metric", 1234*time.Millisecond)
+	st := testStats(t, func(s *asStats) {
+		s.Timing("metric", 1234*time.Millisecond)
 	})
 
 	assert.Equal(t, st.Name, "metric")
 	assert.Equal(t, *st.Value, 1.234)
 
-	st = testStatsWithScope(t, "a/b/c", func(s *asStats) error {
-		return s.TimingDuration("metric", 2*time.Second)
+	st = testStatsWithScope(t, "a/b/c", func(s *asStats) {
+		s.Timing("metric", 2*time.Second)
 	})
 
 	assert.Equal(t, st.Name, "a/b/c/metric")
