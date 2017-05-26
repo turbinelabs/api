@@ -34,11 +34,6 @@ const (
 	TemporaryRedirect RedirectType = "temporary"
 )
 
-// HeaderPattern limits the possible headers that can be matched as part of a
-// redirect. This is a limited subset of what the actual spec allows because
-// of constraints in the current proxying layer.
-var HeaderPattern = regexp.MustCompile("^[0-9A-Za-z-]+$")
-
 // Redirects is a collection of Domain redirect definitions
 type Redirects []Redirect
 
@@ -133,8 +128,8 @@ type Redirect struct {
 type HeaderConstraints []HeaderConstraint
 
 // HeaderConstraint specifies requirements of request header for a redirect
-// directive. Name must match the HeaderPattern regex and Value must be a valid
-// regex.
+// directive. Name must match the HeaderNamePattern regex and Value must be a
+// valid regex.
 //
 // CaseSensitive means that the header's value will be compared to Value without
 // taking case into account; header name is always compared to Name without case
@@ -174,7 +169,7 @@ func (hc HeaderConstraint) Equals(o HeaderConstraint) bool {
 // IsValid checks the validity of a Redirect; we currently verify that a
 // redirect:
 //
-//   * has a non-empty name matching HeaderPattern
+//   * has a non-empty name matching HeaderNamePattern
 //   * contains a valid regex in From
 //   * contains a non-empty to
 //   * has a valid redirect type
@@ -191,10 +186,10 @@ func (r Redirect) IsValid() *ValidationError {
 	if r.Name == "" {
 		errs.AddNew(ecase("name", "must not be empty"))
 	} else {
-		if !HeaderPattern.MatchString(r.Name) {
+		if !HeaderNamePattern.MatchString(r.Name) {
 			errs.AddNew(ecase(
 				"name",
-				fmt.Sprintf("must match %s", HeaderPattern.String()),
+				fmt.Sprintf("must match %s", HeaderNamePatternStr),
 			))
 		}
 	}
@@ -256,10 +251,10 @@ func (hc HeaderConstraint) IsValid() *ValidationError {
 	if strings.TrimSpace(hc.Name) == "" {
 		errs.AddNew(ec("name", "may not be empty"))
 	} else {
-		if !HeaderPattern.MatchString(hc.Name) {
+		if !HeaderNamePattern.MatchString(hc.Name) {
 			errs.AddNew(ec(
 				"name",
-				fmt.Sprintf("must match %s", HeaderPattern.String())))
+				fmt.Sprintf("must match %s", HeaderNamePatternStr)))
 		}
 	}
 

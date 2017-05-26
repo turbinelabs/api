@@ -31,7 +31,7 @@ func getRulesDefaults() (Rule, Rule) {
 			Match{CookieMatchKind, Metadatum{"x-2", "value"}, Metadatum{"other", "true"}}},
 		AllConstraints{
 			Light: ClusterConstraints{
-				ClusterConstraint{"cckey1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, 1234}}},
+				ClusterConstraint{"cckey1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}}},
 	}
 
 	rule2 := Rule{
@@ -41,9 +41,9 @@ func getRulesDefaults() (Rule, Rule) {
 			Match{CookieMatchKind, Metadatum{"x-2", "value"}, Metadatum{"other", "true"}}},
 		AllConstraints{
 			Tap: ClusterConstraints{
-				ClusterConstraint{"cckey1", "ckey3", Metadata{{"key-2", "value-2"}}, nil, 1234}},
+				ClusterConstraint{"cckey1", "ckey3", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 			Light: ClusterConstraints{
-				ClusterConstraint{"cckey2", "ckey2", Metadata{{"key-2", "value-2"}}, nil, 1234}}},
+				ClusterConstraint{"cckey2", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}}},
 	}
 
 	return rule1, rule2
@@ -61,6 +61,7 @@ func getRouteDefaults() (Route, Route) {
 		"host/slug/some/other",
 		srk,
 		rules,
+		getRD(),
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -72,6 +73,7 @@ func getRouteDefaults() (Route, Route) {
 		"host/slug/some/other",
 		srk,
 		rules,
+		getRD(),
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -85,6 +87,14 @@ func TestRouteEqualsSuccess(t *testing.T) {
 
 	assert.True(t, r1.Equals(r2))
 	assert.True(t, r2.Equals(r1))
+}
+
+func TestRouteEqualsResponseDataVaries(t *testing.T) {
+	r1, r2 := getRouteDefaults()
+	r1.ResponseData.Headers[0].Value += "aosenuth"
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
 }
 
 func TestRouteEqualsOrgVaries(t *testing.T) {
@@ -166,6 +176,16 @@ func TestRouteIsValidSuccess(t *testing.T) {
 	r, _ := getRouteDefaults()
 
 	assert.Nil(t, r.IsValid())
+}
+
+func TestRouteIsValidBadResponseData(t *testing.T) {
+	r, _ := getRouteDefaults()
+	r.ResponseData.Headers[0].Value = ""
+	n := r.ResponseData.Headers[0].Name
+
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"route.response_data.headers[" + n + "].value", "may not be empty"},
+	}})
 }
 
 func TestRouteIsValidNoDomainKey(t *testing.T) {

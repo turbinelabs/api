@@ -44,6 +44,14 @@ const (
 	// KeyPatternMatchFailure is a message returned when some key did not match
 	// the pattern required.
 	KeyPatternMatchFailure = "must match pattern: " + KeyPatternStr
+
+	// HeaderNamePatternStr specifies what can be used when a header name is
+	// required.
+	HeaderNamePatternStr = "^[0-9A-Za-z-]+$"
+
+	// CookieNamePatternStr specifies what can be used when a cooke name is
+	// required.
+	CookieNamePatternStr = "^[0-9A-Za-z_.-]+$"
 )
 
 var (
@@ -54,6 +62,14 @@ var (
 	// KeyPattern is the pattern that a key must match. This is a more strict
 	// form of AllowedIndexPattern.
 	KeyPattern = regexp.MustCompile(KeyPatternStr)
+
+	// HeaderNamePattern is the pattern that a string which will be used an a
+	// HTTP header.
+	HeaderNamePattern = regexp.MustCompile(HeaderNamePatternStr)
+
+	// CookieNamePattern is the pattern that a string must match if it going to
+	// be used as a cookie name.
+	CookieNamePattern = regexp.MustCompile(CookieNamePatternStr)
 )
 
 // ErrorCase represents an error in an API object. It contains both the
@@ -134,20 +150,33 @@ func (ve *ValidationError) MergePrefixed(children *ValidationError, under string
 	ve.Merge(c2)
 }
 
-func errCheckKey(key string, with *ValidationError, named string) {
-	if strings.TrimSpace(key) == "" {
+func errCheckPattern(
+	mayBeEmpty bool,
+	value string,
+	with *ValidationError,
+	vs *regexp.Regexp,
+	named,
+	failureMsg string,
+) {
+	if !mayBeEmpty && strings.TrimSpace(value) == "" {
 		with.AddNew(ErrorCase{named, "may not be empty"})
-	} else if !KeyPattern.MatchString(key) {
-		with.AddNew(ErrorCase{named, KeyPatternMatchFailure})
+		return
+	}
+
+	if !vs.MatchString(value) {
+		if failureMsg == "" {
+			failureMsg = fmt.Sprintf("must match %v", vs.String())
+		}
+		with.AddNew(ErrorCase{named, failureMsg})
 	}
 }
 
+func errCheckKey(key string, with *ValidationError, named string) {
+	errCheckPattern(false, key, with, KeyPattern, named, KeyPatternMatchFailure)
+}
+
 func errCheckIndex(v string, with *ValidationError, named string) {
-	if strings.TrimSpace(v) == "" {
-		with.AddNew(ErrorCase{named, "may not be empty"})
-	} else if !AllowedIndexPattern.MatchString(v) {
-		with.AddNew(ErrorCase{named, AllowedIndexPatternMatchFailure})
-	}
+	errCheckPattern(false, v, with, AllowedIndexPattern, named, AllowedIndexPatternMatchFailure)
 }
 
 // ValidationErrorsByAttribute implements sort.Interface

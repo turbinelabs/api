@@ -120,7 +120,7 @@ func TestRedirectIsValidFailsNameBadChar(t *testing.T) {
 		r.IsValid(),
 		&ValidationError{[]ErrorCase{{
 			"name",
-			fmt.Sprintf("must match %s", HeaderPattern.String()),
+			fmt.Sprintf("must match %s", HeaderNamePatternStr),
 		}}},
 	)
 }
@@ -284,19 +284,19 @@ func doTestHeaderConstraintIsValidFails(t *testing.T, hc HeaderConstraint, f, m 
 func TestHeaderConstraintIsValidFalseNamePattern1(t *testing.T) {
 	hc1 := getHC()
 	hc1.Name = "na me"
-	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderPattern.String()))
+	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderNamePatternStr))
 }
 
 func TestHeaderConstraintIsValidFalseNamePattern2(t *testing.T) {
 	hc1 := getHC()
 	hc1.Name = "na;me"
-	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderPattern.String()))
+	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderNamePatternStr))
 }
 
 func TestHeaderConstraintIsValidFalseNamePattern3(t *testing.T) {
 	hc1 := getHC()
 	hc1.Name = "na_me"
-	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderPattern.String()))
+	doTestHeaderConstraintIsValidFails(t, hc1, "name", fmt.Sprintf("must match %s", HeaderNamePatternStr))
 }
 
 func TestHeaderConstraintIsValidFalseNameEmpty(t *testing.T) {
@@ -349,6 +349,6 @@ func TestHeaderConstraintsIsValidFalseNested(t *testing.T) {
 	hcs := HeaderConstraints{hc1}
 
 	assert.DeepEqual(t, hcs.IsValid(), &ValidationError{[]ErrorCase{
-		{"header_constraints[na;me].name", fmt.Sprintf("must match %s", HeaderPattern.String())},
+		{"header_constraints[na;me].name", fmt.Sprintf("must match %s", HeaderNamePatternStr)},
 	}})
 }

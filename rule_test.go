@@ -36,12 +36,14 @@ func getRules() (Rule, Rule) {
 					"ckey1",
 					Metadata{{"key", "value"}, {"key2", "value2"}},
 					nil,
+					ResponseData{},
 					1234},
 				ClusterConstraint{
 					"cckey2",
 					"ckey2",
 					Metadata{{"key-2", "value-2"}},
 					Metadata{{"state", "testing"}},
+					ResponseData{},
 					1234}}},
 	}
 
@@ -58,12 +60,14 @@ func getRules() (Rule, Rule) {
 					"ckey1",
 					Metadata{{"key", "value"}, {"key2", "value2"}},
 					nil,
+					ResponseData{},
 					1234},
 				ClusterConstraint{
 					"cckey2",
 					"ckey2",
 					Metadata{{"key-2", "value-2"}},
 					Metadata{{"state", "testing"}},
+					ResponseData{},
 					1234}}},
 	}
 
@@ -107,7 +111,7 @@ func TestRuleEqualsConstraintsMismatch(t *testing.T) {
 	r1, r2 := getRules()
 	r2.Constraints = AllConstraints{
 		Light: ClusterConstraints{
-			ClusterConstraint{"cckey1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, 1234}},
+			ClusterConstraint{"cckey1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 	}
 
 	assert.False(t, r1.Equals(r2))
@@ -166,7 +170,7 @@ func TestRuleIsValidBadMatches(t *testing.T) {
 func TestRuleIsValidBadConstraints(t *testing.T) {
 	r := getRuleValid()
 	r.Constraints = AllConstraints{
-		Dark: ClusterConstraints{{"cckey0", "ckey2", Metadata{{"key-2", "value-2"}}, Metadata{{"aoeu", "snth"}}, 1234}}}
+		Dark: ClusterConstraints{{"cckey0", "ckey2", Metadata{{"key-2", "value-2"}}, Metadata{{"aoeu", "snth"}}, ResponseData{}, 1234}}}
 
 	assert.NonNil(t, r.IsValid())
 }
@@ -179,7 +183,7 @@ func getRulesValidTestRules() (Rule, Rule) {
 			Match{CookieMatchKind, Metadatum{"x-other", "value"}, Metadatum{"otherflag", "true"}},
 			Match{HeaderMatchKind, Metadatum{"x-random", "value"}, Metadatum{"randomflag", "true"}}},
 		AllConstraints{
-			Light: ClusterConstraints{{"ck0", "ckey2", Metadata{{"key-2", "value-2"}}, nil, 1234}},
+			Light: ClusterConstraints{{"ck0", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 		},
 	}
 
@@ -190,7 +194,7 @@ func getRulesValidTestRules() (Rule, Rule) {
 			Match{CookieMatchKind, Metadatum{"other", "v"}, Metadatum{"flag", "true"}},
 			Match{HeaderMatchKind, Metadatum{"random", "v"}, Metadatum{"random", "true"}}},
 		AllConstraints{
-			Light: ClusterConstraints{{"ck1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, 1234}},
+			Light: ClusterConstraints{{"ck1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 		},
 	}
 

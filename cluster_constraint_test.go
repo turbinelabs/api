@@ -23,9 +23,30 @@ import (
 	"github.com/turbinelabs/test/assert"
 )
 
+func getRD() ResponseData {
+	return ResponseData{
+		[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}},
+		nil,
+	}
+}
+
 func TestClusterConstraintsEqualsSuccess(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, Metadata{{"state", "released"}}, 1234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key-2", "value-2"}}, Metadata{{"stata", "testing"}}, 1234}
+	cc1 := ClusterConstraint{
+		"cckey1",
+		"ckey1",
+		Metadata{{"key", "value"}, {"key2", "value2"}},
+		Metadata{{"state", "released"}},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		1234,
+	}
+	cc2 := ClusterConstraint{
+		"cckey2",
+		"ckey2",
+		Metadata{{"key-2", "value-2"}},
+		Metadata{{"stata", "testing"}},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		1234,
+	}
 
 	slice1 := ClusterConstraints{cc1, cc2}
 	slice2 := ClusterConstraints{cc1, cc2}
@@ -35,9 +56,9 @@ func TestClusterConstraintsEqualsSuccess(t *testing.T) {
 }
 
 func TestClusterConstraintsEqualsFailureMetadata(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, 1234}
-	cc2a := ClusterConstraint{"cckey2", "ckey2", Metadata{}, nil, 1234}
-	cc2b := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key-2", "value-2"}}, nil, 1234}
+	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, ResponseData{}, 1234}
+	cc2a := ClusterConstraint{"cckey2", "ckey2", Metadata{}, nil, ResponseData{}, 1234}
+	cc2b := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}
 
 	slice1 := ClusterConstraints{cc1, cc2a}
 	slice2 := ClusterConstraints{cc1, cc2b}
@@ -47,9 +68,9 @@ func TestClusterConstraintsEqualsFailureMetadata(t *testing.T) {
 }
 
 func TestClusterConstraintsEqualsFailureProperties(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey1", nil, Metadata{{"state", "released"}}, 1234}
-	cc2a := ClusterConstraint{"cckey2", "ckey2", nil, Metadata{{"state", "released"}}, 1234}
-	cc2b := ClusterConstraint{"cckey2", "ckey2", nil, Metadata{{"state", "releasing"}}, 1234}
+	cc1 := ClusterConstraint{"cckey1", "ckey1", nil, Metadata{{"state", "released"}}, ResponseData{}, 1234}
+	cc2a := ClusterConstraint{"cckey2", "ckey2", nil, Metadata{{"state", "released"}}, ResponseData{}, 1234}
+	cc2b := ClusterConstraint{"cckey2", "ckey2", nil, Metadata{{"state", "releasing"}}, ResponseData{}, 1234}
 
 	slice1 := ClusterConstraints{cc1, cc2a}
 	slice2 := ClusterConstraints{cc1, cc2b}
@@ -59,8 +80,8 @@ func TestClusterConstraintsEqualsFailureProperties(t *testing.T) {
 }
 
 func TestClusterConstraintsEqualsLengthMismatch(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, 1234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, 1234}
+	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, ResponseData{}, 1234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, ResponseData{}, 1234}
 
 	slice1 := ClusterConstraints{cc1, cc2}
 	slice2 := ClusterConstraints{}
@@ -70,8 +91,8 @@ func TestClusterConstraintsEqualsLengthMismatch(t *testing.T) {
 }
 
 func getClusterConstraintPair() (ClusterConstraint, ClusterConstraint) {
-	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, 1234}
-	cc2 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, 1234}
+	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, getRD(), 1234}
+	cc2 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, getRD(), 1234}
 	return cc1, cc2
 }
 
@@ -80,6 +101,15 @@ func TestClusterConstraintEqualsSuccess(t *testing.T) {
 
 	assert.True(t, cc1.Equals(cc2))
 	assert.True(t, cc2.Equals(cc1))
+}
+
+func TestClusterConstraintEqualsResponseDataVaries(t *testing.T) {
+	cc1, cc2 := getClusterConstraintPair()
+
+	cc2.ResponseData.Headers[0].Value += "-new"
+
+	assert.False(t, cc1.Equals(cc2))
+	assert.False(t, cc2.Equals(cc1))
 }
 
 func TestClusterConstraintEqualsConstraintKeyVaries(t *testing.T) {
@@ -116,7 +146,17 @@ func TestClusterConstraintEqualsMetadataVaries(t *testing.T) {
 
 // ClusterConstraint.IsValid
 func getValidClusterConstraint() ClusterConstraint {
-	return ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"k", "v"}}, nil, 1234}
+	return ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"k", "v"}}, nil, getRD(), 1234}
+}
+
+func TestClusterConstraintIsValidResponseDataFailure(t *testing.T) {
+	cc := getValidClusterConstraint()
+	cc.ResponseData.Headers[0].Value = ""
+	n := cc.ResponseData.Headers[0].Name
+
+	assert.DeepEqual(t, cc.IsValid(), &ValidationError{[]ErrorCase{
+		{"response_data.headers[" + n + "].value", "may not be empty"},
+	}})
 }
 
 func TestClusterConstraintIsValidSuccess(t *testing.T) {
@@ -155,25 +195,37 @@ func TestClusterConstraintIsValidWeightFailure(t *testing.T) {
 
 // ClusterConstarintSlice.IsValid
 func TestClusterConstraintsIsValidSuccess(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
+	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 123}
 	ccs := ClusterConstraints{cc1, cc2}
 
 	assert.Nil(t, ccs.IsValid("test"))
 }
 
 func TestClusterConstraintsIsValidFailureOnDuplicateConstraintKeys(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
+	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 123}
 	cc2.ConstraintKey = "cckey1"
 	ccs := ClusterConstraints{cc1, cc2}
 
 	assert.NonNil(t, ccs.IsValid("test"))
 }
 
+func TestClusterConstraintsIsValidInvalidResponseData(t *testing.T) {
+	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, getRD(), 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, getRD(), 123}
+	cc2.ResponseData.Headers[0].Value = ""
+	n := cc2.ResponseData.Headers[0].Name
+	ccs := ClusterConstraints{cc1, cc2}
+
+	assert.DeepEqual(t, ccs.IsValid("test"), &ValidationError{[]ErrorCase{
+		{"test[cckey2].response_data.headers[" + n + "].value", "may not be empty"},
+	}})
+}
+
 func TestClusterConstraintsIsValidInvalidContents(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 0}
+	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 0}
 	ccs := ClusterConstraints{cc1, cc2}
 
 	assert.NonNil(t, ccs.IsValid("test"))
@@ -187,8 +239,8 @@ func TestClusterConstraintsIsValidEmpty(t *testing.T) {
 
 // ClusterConstraints.IsValid
 func TestClusterConstraintsIsValidSucces(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
+	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 123}
 	ccs := ClusterConstraints{cc1, cc2}
 
 	set := AllConstraints{ccs, ccs, ccs}
@@ -197,9 +249,9 @@ func TestClusterConstraintsIsValidSucces(t *testing.T) {
 }
 
 func TestClusterConstraintsIsValidFailsWithBadLight(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
-	ccbad := ClusterConstraint{"cc-bad", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 0}
+	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 123}
+	ccbad := ClusterConstraint{"cc-bad", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 0}
 
 	ccs := ClusterConstraints{cc1, cc2}
 	ccsBad := ClusterConstraints{cc1, cc2, ccbad}
@@ -211,9 +263,9 @@ func TestClusterConstraintsIsValidFailsWithBadLight(t *testing.T) {
 }
 
 func TestClusterConstraintsIsValidFailsWithBadDark(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
-	ccbad := ClusterConstraint{"cc-bad", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 0}
+	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 123}
+	ccbad := ClusterConstraint{"cc-bad", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 0}
 
 	ccs := ClusterConstraints{cc1, cc2}
 	ccsBad := ClusterConstraints{cc1, cc2, ccbad}
@@ -225,9 +277,9 @@ func TestClusterConstraintsIsValidFailsWithBadDark(t *testing.T) {
 }
 
 func TestClusterConstraintsIsValidFailsWithBadTap(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
-	ccbad := ClusterConstraint{"cc-bad", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 0}
+	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 123}
+	ccbad := ClusterConstraint{"cc-bad", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 0}
 
 	ccs := ClusterConstraints{cc1, cc2}
 	ccsBad := ClusterConstraints{cc1, cc2, ccbad}
@@ -239,8 +291,8 @@ func TestClusterConstraintsIsValidFailsWithBadTap(t *testing.T) {
 }
 
 func TestClusterConstraintsIsValidFailsWithZeroLight(t *testing.T) {
-	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 234}
-	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, 123}
+	cc1 := ClusterConstraint{"cckey1", "ckey", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 234}
+	cc2 := ClusterConstraint{"cckey2", "ckey2", Metadata{{"key", "value"}, {"k", "v"}}, Metadata{}, ResponseData{}, 123}
 	ccs := ClusterConstraints{cc1, cc2}
 
 	set := AllConstraints{ccs, ccs, ccs}
@@ -314,6 +366,7 @@ func getTestCC() ClusterConstraint {
 		"ck-1",
 		md,
 		props,
+		ResponseData{},
 		100,
 	}
 }

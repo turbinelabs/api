@@ -41,6 +41,7 @@ type Route struct {
 	Path           string         `json:"path"`
 	SharedRulesKey SharedRulesKey `json:"shared_rules_key"`
 	Rules          Rules          `json:"rules"`
+	ResponseData   ResponseData   `json:"response_data"`
 	OrgKey         OrgKey         `json:"-"`
 	Checksum
 }
@@ -66,9 +67,10 @@ func (r Route) Equals(o Route) bool {
 		eqCS    = r.Checksum.Equals(o.Checksum)
 		eqOrg   = r.OrgKey == o.OrgKey
 		eqSRKey = r.SharedRulesKey == o.SharedRulesKey
+		eqRd    = r.ResponseData.Equals(o.ResponseData)
 	)
 
-	if !(eqKey && eqDom && eqZone && eqPath && eqCS && eqOrg && eqSRKey) {
+	if !(eqKey && eqDom && eqZone && eqPath && eqCS && eqOrg && eqSRKey && eqRd) {
 		return false
 	}
 
@@ -92,6 +94,7 @@ func (r Route) IsValid() *ValidationError {
 	}
 
 	errs.MergePrefixed(r.Rules.IsValid(), "route")
+	errs.MergePrefixed(r.ResponseData.IsValid(), scope("response_data"))
 
 	return errs.OrNil()
 }

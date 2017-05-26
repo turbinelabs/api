@@ -38,6 +38,7 @@ type SharedRules struct {
 	ZoneKey        ZoneKey        `json:"zone_key"`
 	Default        AllConstraints `json:"default"`
 	Rules          Rules          `json:"rules"`
+	ResponseData   ResponseData   `json:"response_data"`
 	OrgKey         OrgKey         `json:"-"`
 	Checksum
 }
@@ -63,9 +64,10 @@ func (r SharedRules) Equals(o SharedRules) bool {
 		eqName = r.Name == o.Name
 		eqCS   = r.Checksum.Equals(o.Checksum)
 		eqOrg  = r.OrgKey == o.OrgKey
+		eqRd   = r.ResponseData.Equals(o.ResponseData)
 	)
 
-	if !(eqKey && eqName && eqZone && eqCS && eqOrg) {
+	if !(eqKey && eqName && eqZone && eqCS && eqOrg && eqRd) {
 		return false
 	}
 
@@ -76,14 +78,16 @@ func (r SharedRules) Equals(o SharedRules) bool {
 // SharedRulesKey (or be precreation), have a ZoneKey, a Path, and valid Default +
 // Rules.
 func (r SharedRules) IsValid() *ValidationError {
+	scope := func(s string) string { return "shared_rules." + s }
 	errs := &ValidationError{}
 
-	errCheckKey(string(r.SharedRulesKey), errs, "shared_rules_key")
-	errCheckIndex(r.Name, errs, "name")
-	errCheckKey(string(r.ZoneKey), errs, "zone_key")
+	errCheckKey(string(r.SharedRulesKey), errs, scope("shared_rules_key"))
+	errCheckIndex(r.Name, errs, scope("name"))
+	errCheckKey(string(r.ZoneKey), errs, scope("zone_key"))
 
 	errs.MergePrefixed(r.Default.IsValid("default"), "shared_rules")
 	errs.MergePrefixed(r.Rules.IsValid(), "shared_rules")
+	errs.MergePrefixed(r.ResponseData.IsValid(), scope("response_data"))
 
 	return errs.OrNil()
 }

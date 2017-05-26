@@ -146,6 +146,7 @@ type DataFixturesT struct {
 	RoutePath1           string
 	RouteSharedRulesKey1 api.SharedRulesKey
 	RouteRules1          api.Rules
+	RouteResponseData1   api.ResponseData
 	RouteChecksum1       api.Checksum
 	RouteOrgKey1         api.OrgKey
 	RouteKey2            api.RouteKey
@@ -154,6 +155,7 @@ type DataFixturesT struct {
 	RoutePath2           string
 	RouteSharedRulesKey2 api.SharedRulesKey
 	RouteRules2          api.Rules
+	RouteResponseData2   api.ResponseData
 	RouteChecksum2       api.Checksum
 	RouteOrgKey2         api.OrgKey
 	Route1               api.Route
@@ -161,24 +163,26 @@ type DataFixturesT struct {
 	RouteSlice           api.Routes
 	PublicRouteSlice     api.Routes
 
-	SharedRulesKey1        api.SharedRulesKey
-	SharedRulesName1       string
-	SharedRulesZone1       api.ZoneKey
-	SharedRulesDefault1    api.AllConstraints
-	SharedRulesRules1      api.Rules
-	SharedRulesChecksum1   api.Checksum
-	SharedRulesOrgKey1     api.OrgKey
-	SharedRulesKey2        api.SharedRulesKey
-	SharedRulesName2       string
-	SharedRulesZone2       api.ZoneKey
-	SharedRulesDefault2    api.AllConstraints
-	SharedRulesRules2      api.Rules
-	SharedRulesChecksum2   api.Checksum
-	SharedRulesOrgKey2     api.OrgKey
-	SharedRules1           api.SharedRules
-	SharedRules2           api.SharedRules
-	SharedRulesSlice       api.SharedRulesSlice
-	PublicSharedRulesSlice api.SharedRulesSlice
+	SharedRulesKey1          api.SharedRulesKey
+	SharedRulesName1         string
+	SharedRulesZone1         api.ZoneKey
+	SharedRulesDefault1      api.AllConstraints
+	SharedRulesRules1        api.Rules
+	SharedRulesResponseData1 api.ResponseData
+	SharedRulesChecksum1     api.Checksum
+	SharedRulesOrgKey1       api.OrgKey
+	SharedRulesKey2          api.SharedRulesKey
+	SharedRulesName2         string
+	SharedRulesZone2         api.ZoneKey
+	SharedRulesDefault2      api.AllConstraints
+	SharedRulesRules2        api.Rules
+	SharedRulesResponseData2 api.ResponseData
+	SharedRulesChecksum2     api.Checksum
+	SharedRulesOrgKey2       api.OrgKey
+	SharedRules1             api.SharedRules
+	SharedRules2             api.SharedRules
+	SharedRulesSlice         api.SharedRulesSlice
+	PublicSharedRulesSlice   api.SharedRulesSlice
 }
 
 // Provides access to key data within the store; simple values are set here
@@ -472,7 +476,14 @@ func New() DataFixturesT {
 			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", ""}, api.Metadatum{"other", "true"}}},
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
-				{"cc-0", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "test"}}, 1234}}},
+				{
+					"cc-0",
+					"ckey2",
+					api.Metadata{{"key-2", "value-2"}},
+					api.Metadata{{"state", "test"}},
+					api.ResponseData{},
+					1234,
+				}}},
 	}
 
 	routeRule2 := api.Rule{
@@ -482,13 +493,49 @@ func New() DataFixturesT {
 			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", "value"}, api.Metadatum{"other", "true"}}},
 		api.AllConstraints{
 			Tap: api.ClusterConstraints{
-				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, 1234}},
+				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}},
 			Light: api.ClusterConstraints{
-				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, 1234}}},
+				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}}},
 	}
 
 	df.RouteRules1 = api.Rules{routeRule1}
+	df.RouteResponseData1 = api.ResponseData{
+		Headers: []api.HeaderDatum{
+			{
+				api.ResponseDatum{
+					Name:  "X-Route1-Tbn-Server-Addr",
+					Value: "server-addr",
+				},
+			},
+			{
+				ResponseDatum: api.ResponseDatum{
+					Name:           "X-Route1-Tbn-Server-Literal",
+					Value:          "some literal value",
+					ValueIsLiteral: true,
+				},
+			},
+		},
+		Cookies: []api.CookieDatum{
+			{
+				ResponseDatum: api.ResponseDatum{
+					Name:  "route1-server-version",
+					Value: "server-version",
+				},
+				Secure:   true,
+				SameSite: api.SameSiteStrict,
+			},
+			{
+				ResponseDatum: api.ResponseDatum{
+					Name:  "route1-server-addr",
+					Value: "server-addr",
+				},
+				Secure:   true,
+				SameSite: api.SameSiteStrict,
+			},
+		},
+	}
 	df.RouteRules2 = api.Rules{routeRule1, routeRule2}
+	df.RouteResponseData2 = api.ResponseData{}
 	df.Route1 = api.Route{
 		df.RouteKey1,
 		df.RouteDomain1,
@@ -496,6 +543,7 @@ func New() DataFixturesT {
 		df.RoutePath1,
 		df.SharedRulesKey1,
 		df.RouteRules1,
+		df.RouteResponseData1,
 		df.RouteOrgKey1,
 		df.RouteChecksum1,
 	}
@@ -507,6 +555,7 @@ func New() DataFixturesT {
 		df.RoutePath2,
 		df.SharedRulesKey2,
 		df.RouteRules2,
+		df.RouteResponseData2,
 		df.RouteOrgKey2,
 		df.RouteChecksum2,
 	}
@@ -527,7 +576,7 @@ func New() DataFixturesT {
 			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", ""}, api.Metadatum{"other", "true"}}},
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
-				{"cc-0", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "test"}}, 1234}}},
+				{"cc-0", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "test"}}, api.ResponseData{}, 1234}}},
 	}
 
 	sharedRulesRule2 := api.Rule{
@@ -537,26 +586,63 @@ func New() DataFixturesT {
 			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", "value"}, api.Metadatum{"other", "true"}}},
 		api.AllConstraints{
 			Tap: api.ClusterConstraints{
-				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, 1234}},
+				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}},
 			Light: api.ClusterConstraints{
-				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, 1234}}},
+				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}}},
 	}
 
 	sharedRulesDefault1 := api.AllConstraints{
 		Light: api.ClusterConstraints{
-			{"cc-4", api.HeaderMatchKind, api.Metadata{{"k", "v"}, {"k2", "v2"}}, api.Metadata{{"state", "released"}}, 23}}}
+			{"cc-4", api.HeaderMatchKind, api.Metadata{{"k", "v"}, {"k2", "v2"}}, api.Metadata{{"state", "released"}}, api.ResponseData{}, 23}}}
 	sharedRulesDefault2 := sharedRulesDefault1
 
 	df.SharedRulesDefault1 = sharedRulesDefault1
 	df.SharedRulesRules1 = api.Rules{sharedRulesRule1}
+	df.SharedRulesResponseData1 = api.ResponseData{
+		Headers: []api.HeaderDatum{
+			{
+				api.ResponseDatum{
+					Name:  "X-Tbn-Server-Addr",
+					Value: "server-addr",
+				},
+			},
+			{
+				api.ResponseDatum{
+					Name:           "X-Tbn-Server-Literal",
+					Value:          "some literal value",
+					ValueIsLiteral: true,
+				},
+			},
+		},
+		Cookies: []api.CookieDatum{
+			{
+				ResponseDatum: api.ResponseDatum{
+					Name:  "server-version",
+					Value: "server-version",
+				},
+				Secure:   true,
+				SameSite: api.SameSiteStrict,
+			},
+			{
+				ResponseDatum: api.ResponseDatum{
+					Name:  "server-addr",
+					Value: "server-addr",
+				},
+				Secure:   true,
+				SameSite: api.SameSiteStrict,
+			},
+		},
+	}
 	df.SharedRulesDefault2 = sharedRulesDefault2
 	df.SharedRulesRules2 = api.Rules{sharedRulesRule1, sharedRulesRule2}
+	df.SharedRulesResponseData2 = api.ResponseData{}
 	df.SharedRules1 = api.SharedRules{
 		df.SharedRulesKey1,
 		df.SharedRulesName1,
 		df.SharedRulesZone1,
 		df.SharedRulesDefault1,
 		df.SharedRulesRules1,
+		df.SharedRulesResponseData1,
 		df.SharedRulesOrgKey1,
 		df.SharedRulesChecksum1,
 	}
@@ -567,6 +653,7 @@ func New() DataFixturesT {
 		df.SharedRulesZone2,
 		df.SharedRulesDefault2,
 		df.SharedRulesRules2,
+		df.SharedRulesResponseData2,
 		df.SharedRulesOrgKey2,
 		df.SharedRulesChecksum2,
 	}

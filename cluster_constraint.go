@@ -34,6 +34,7 @@ type ClusterConstraint struct {
 	ClusterKey    ClusterKey    `json:"cluster_key"`
 	Metadata      Metadata      `json:"metadata"`
 	Properties    Metadata      `json:"properties"`
+	ResponseData  ResponseData  `json:"response_data"`
 	Weight        uint32        `json:"weight"`
 }
 
@@ -52,6 +53,7 @@ func (cc ClusterConstraint) IsValid() *ValidationError {
 
 	errs.MergePrefixed(ConstraintMetadataValid(cc.Metadata), "")
 	errs.MergePrefixed(ConstraintPropertiesValid(cc.Properties), "")
+	errs.MergePrefixed(cc.ResponseData.IsValid(), "response_data")
 
 	return errs.OrNil()
 }
@@ -173,7 +175,8 @@ func (cc ClusterConstraint) coreEquality(o ClusterConstraint) bool {
 func (cc ClusterConstraint) Equals(o ClusterConstraint) bool {
 	return cc.coreEquality(o) &&
 		cc.Metadata.Equals(o.Metadata) &&
-		cc.Properties.Equals(o.Properties)
+		cc.Properties.Equals(o.Properties) &&
+		cc.ResponseData.Equals(o.ResponseData)
 }
 
 // Check equality between two AllConstraints objects. The objects are equal

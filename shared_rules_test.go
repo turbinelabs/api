@@ -30,6 +30,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 				HeaderMatchKind,
 				Metadata{{"k", "v"}, {"k2", "v2"}},
 				Metadata{{"state", "released"}},
+				getRD(),
 				23}}}
 
 	rule1, rule2 := getRulesDefaults()
@@ -41,6 +42,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		"zkey",
 		defaultCC,
 		rules,
+		getRD(),
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -51,6 +53,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		"zkey",
 		defaultCC,
 		rules,
+		getRD(),
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -64,6 +67,14 @@ func TestSharedRulesEqualsSuccess(t *testing.T) {
 
 	assert.True(t, r1.Equals(r2))
 	assert.True(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsResponseDataVaries(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.ResponseData.Headers[0].Value += "-new"
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
 }
 
 func TestSharedRulesEqualsOrgVaries(t *testing.T) {
@@ -93,8 +104,8 @@ func TestSharedRulesEqualsZoneKeyVaries(t *testing.T) {
 func TestSharedRulesEqualsDefaultVaries(t *testing.T) {
 	defaultCC := AllConstraints{
 		Light: ClusterConstraints{
-			ClusterConstraint{"cckey1", HeaderMatchKind, Metadata{{"k1", "v1"}, {"k2", "v2"}}, nil, 23},
-			ClusterConstraint{"cckey2", HeaderMatchKind, Metadata{{"k2", "v2"}, {"k2", "v2"}}, nil, 23}}}
+			ClusterConstraint{"cckey1", HeaderMatchKind, Metadata{{"k1", "v1"}, {"k2", "v2"}}, nil, ResponseData{}, 23},
+			ClusterConstraint{"cckey2", HeaderMatchKind, Metadata{{"k2", "v2"}, {"k2", "v2"}}, nil, ResponseData{}, 23}}}
 
 	r1, r2 := getSharedRulesDefaults()
 	r1.Default = defaultCC
@@ -136,25 +147,41 @@ func TestSharedRulesIsValidSuccess(t *testing.T) {
 	assert.Nil(t, r.IsValid())
 }
 
+func TestSharedRulesIsValidBadResponseData(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.ResponseData.Headers[0].Value = ""
+	n := r.ResponseData.Headers[0].Name
+
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.response_data.headers[" + n + "].value", "may not be empty"},
+	}})
+}
+
 func TestSharedRulesIsValidBadKey(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 	r.SharedRulesKey = "aoeu&snth"
 
-	assert.NonNil(t, r.IsValid())
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.shared_rules_key", "must match pattern: ^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$"},
+	}})
 }
 
 func TestSharedRulesIsValidNoKey(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 	r.SharedRulesKey = ""
 
-	assert.NonNil(t, r.IsValid())
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.shared_rules_key", "may not be empty"},
+	}})
 }
 
 func TestSharedRulesIsValidBadName(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 	r.Name = "name[name]"
 
-	assert.NonNil(t, r.IsValid())
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.name", "may not contain [ or ] characters"},
+	}})
 }
 
 func TestSharedRulesIsValidNoName(t *testing.T) {

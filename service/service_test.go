@@ -26,7 +26,7 @@ import (
 func getSharedRulesFilterTestSharedRules() api.SharedRules {
 	defaultCC := api.AllConstraints{
 		Light: api.ClusterConstraints{
-			{"cc1", api.HeaderMatchKind, api.Metadata{{"k", "v"}, {"k2", "v2"}}, nil, 23}}}
+			{"cc1", api.HeaderMatchKind, api.Metadata{{"k", "v"}, {"k2", "v2"}}, nil, api.ResponseData{}, 23}}}
 
 	rule1 := api.Rule{
 		"rk1",
@@ -42,7 +42,7 @@ func getSharedRulesFilterTestSharedRules() api.SharedRules {
 				api.Metadatum{"other", "true"}}},
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
-				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, 1234}}},
+				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, api.ResponseData{}, 1234}}},
 	}
 
 	rules := api.Rules{rule1}
@@ -53,6 +53,7 @@ func getSharedRulesFilterTestSharedRules() api.SharedRules {
 		"zkey",
 		defaultCC,
 		rules,
+		api.ResponseData{},
 		"123",
 		api.Checksum{"cs-1"},
 	}
@@ -75,7 +76,7 @@ func getRouteFilterTestRoute() api.Route {
 				api.Metadatum{"other", "true"}}},
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
-				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, 1234}}},
+				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, api.ResponseData{}, 1234}}},
 	}
 
 	rules := api.Rules{rule1}
@@ -87,6 +88,7 @@ func getRouteFilterTestRoute() api.Route {
 		"host/slug/some/other",
 		api.SharedRulesKey("shared-rules-key"),
 		rules,
+		api.ResponseData{},
 		"123",
 		api.Checksum{"cs-1"},
 	}
