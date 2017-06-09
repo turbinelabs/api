@@ -16,7 +16,8 @@
 [![Apache 2.0](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/turbinelabs/api?status.svg)](https://godoc.org/github.com/turbinelabs/api)
 [![CircleCI](https://circleci.com/gh/turbinelabs/api.svg?style=shield)](https://circleci.com/gh/turbinelabs/api)
-[![Go Report Card](https://goreportcard.com/badge/github.com/turbinelabs/api)](https://goreportcard.com/report/github.com/turbinelabs/apicli)
+[![Go Report Card](https://goreportcard.com/badge/github.com/turbinelabs/api)](https://goreportcard.com/report/github.com/turbinelabs/api)
+[![codecov](https://codecov.io/gh/turbinelabs/api/branch/master/graph/badge.svg)](https://codecov.io/gh/turbinelabs/api)
 
 The api project provides Go bindings for the Turbine Labs public API. We use
 these bindings in both our open-sourced projects and our private server
