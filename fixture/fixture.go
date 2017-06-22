@@ -147,6 +147,7 @@ type DataFixturesT struct {
 	RouteSharedRulesKey1 api.SharedRulesKey
 	RouteRules1          api.Rules
 	RouteResponseData1   api.ResponseData
+	RouteCohortSeed1     *api.CohortSeed
 	RouteChecksum1       api.Checksum
 	RouteOrgKey1         api.OrgKey
 	RouteKey2            api.RouteKey
@@ -156,6 +157,7 @@ type DataFixturesT struct {
 	RouteSharedRulesKey2 api.SharedRulesKey
 	RouteRules2          api.Rules
 	RouteResponseData2   api.ResponseData
+	RouteCohortSeed2     *api.CohortSeed
 	RouteChecksum2       api.Checksum
 	RouteOrgKey2         api.OrgKey
 	Route1               api.Route
@@ -169,6 +171,7 @@ type DataFixturesT struct {
 	SharedRulesDefault1      api.AllConstraints
 	SharedRulesRules1        api.Rules
 	SharedRulesResponseData1 api.ResponseData
+	SharedRulesCohortSeed1   *api.CohortSeed
 	SharedRulesChecksum1     api.Checksum
 	SharedRulesOrgKey1       api.OrgKey
 	SharedRulesKey2          api.SharedRulesKey
@@ -177,6 +180,7 @@ type DataFixturesT struct {
 	SharedRulesDefault2      api.AllConstraints
 	SharedRulesRules2        api.Rules
 	SharedRulesResponseData2 api.ResponseData
+	SharedRulesCohortSeed2   *api.CohortSeed
 	SharedRulesChecksum2     api.Checksum
 	SharedRulesOrgKey2       api.OrgKey
 	SharedRules1             api.SharedRules
@@ -287,29 +291,33 @@ func New() DataFixturesT {
 		ProxyOrgKey2:   "1",
 		ProxyChecksum2: api.Checksum{"proxy-cs-2"},
 
-		RouteKey1:      "route-key-1",
-		RouteDomain1:   "route-dom-1",
-		RouteZone1:     "route-zone-1",
-		RoutePath1:     "for/bar/path",
-		RouteOrgKey1:   "1",
-		RouteChecksum1: api.Checksum{"route-cs-1"},
-		RouteKey2:      "route-key-2",
-		RouteDomain2:   "route-dom-2",
-		RouteZone2:     "route-zone-2",
-		RoutePath2:     "quix/qux/quuuuux",
-		RouteOrgKey2:   "1",
-		RouteChecksum2: api.Checksum{"route-cs-2"},
+		RouteKey1:        "route-key-1",
+		RouteDomain1:     "route-dom-1",
+		RouteZone1:       "route-zone-1",
+		RoutePath1:       "for/bar/path",
+		RouteCohortSeed1: &api.CohortSeed{api.CohortSeedCookie, "cookie-cohort-data", false},
+		RouteOrgKey1:     "1",
+		RouteChecksum1:   api.Checksum{"route-cs-1"},
+		RouteKey2:        "route-key-2",
+		RouteDomain2:     "route-dom-2",
+		RouteZone2:       "route-zone-2",
+		RoutePath2:       "quix/qux/quuuuux",
+		RouteCohortSeed2: nil,
+		RouteOrgKey2:     "1",
+		RouteChecksum2:   api.Checksum{"route-cs-2"},
 
-		SharedRulesKey1:      "shared-rules-key-1",
-		SharedRulesName1:     "shared-rules-name-1",
-		SharedRulesZone1:     "shared-rules-zone-1",
-		SharedRulesOrgKey1:   "1",
-		SharedRulesChecksum1: api.Checksum{"shared-rules-cs-1"},
-		SharedRulesKey2:      "shared-rules-key-2",
-		SharedRulesName2:     "shared-rules-name-2",
-		SharedRulesZone2:     "shared-rules-zone-2",
-		SharedRulesOrgKey2:   "1",
-		SharedRulesChecksum2: api.Checksum{"shared-rules-cs-2"},
+		SharedRulesKey1:        "shared-rules-key-1",
+		SharedRulesName1:       "shared-rules-name-1",
+		SharedRulesZone1:       "shared-rules-zone-1",
+		SharedRulesCohortSeed1: &api.CohortSeed{api.CohortSeedHeader, "x-cohort-data", true},
+		SharedRulesOrgKey1:     "1",
+		SharedRulesChecksum1:   api.Checksum{"shared-rules-cs-1"},
+		SharedRulesKey2:        "shared-rules-key-2",
+		SharedRulesName2:       "shared-rules-name-2",
+		SharedRulesZone2:       "shared-rules-zone-2",
+		SharedRulesCohortSeed2: nil,
+		SharedRulesOrgKey2:     "1",
+		SharedRulesChecksum2:   api.Checksum{"shared-rules-cs-2"},
 	}
 
 	df.Org1 = api.Org{
@@ -484,6 +492,7 @@ func New() DataFixturesT {
 					api.ResponseData{},
 					1234,
 				}}},
+		nil,
 	}
 
 	routeRule2 := api.Rule{
@@ -496,6 +505,7 @@ func New() DataFixturesT {
 				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}},
 			Light: api.ClusterConstraints{
 				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}}},
+		nil,
 	}
 
 	df.RouteRules1 = api.Rules{routeRule1}
@@ -544,6 +554,7 @@ func New() DataFixturesT {
 		df.SharedRulesKey1,
 		df.RouteRules1,
 		df.RouteResponseData1,
+		df.RouteCohortSeed1,
 		df.RouteOrgKey1,
 		df.RouteChecksum1,
 	}
@@ -556,6 +567,7 @@ func New() DataFixturesT {
 		df.SharedRulesKey2,
 		df.RouteRules2,
 		df.RouteResponseData2,
+		df.RouteCohortSeed2,
 		df.RouteOrgKey2,
 		df.RouteChecksum2,
 	}
@@ -577,6 +589,7 @@ func New() DataFixturesT {
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
 				{"cc-0", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "test"}}, api.ResponseData{}, 1234}}},
+		nil,
 	}
 
 	sharedRulesRule2 := api.Rule{
@@ -589,6 +602,7 @@ func New() DataFixturesT {
 				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}},
 			Light: api.ClusterConstraints{
 				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}}},
+		nil,
 	}
 
 	sharedRulesDefault1 := api.AllConstraints{
@@ -643,6 +657,7 @@ func New() DataFixturesT {
 		df.SharedRulesDefault1,
 		df.SharedRulesRules1,
 		df.SharedRulesResponseData1,
+		df.SharedRulesCohortSeed1,
 		df.SharedRulesOrgKey1,
 		df.SharedRulesChecksum1,
 	}
@@ -654,6 +669,7 @@ func New() DataFixturesT {
 		df.SharedRulesDefault2,
 		df.SharedRulesRules2,
 		df.SharedRulesResponseData2,
+		df.SharedRulesCohortSeed2,
 		df.SharedRulesOrgKey2,
 		df.SharedRulesChecksum2,
 	}

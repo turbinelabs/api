@@ -31,6 +31,13 @@ type SharedRulesKey string
   If one or more Rules applies, the order of the rules informs which is
   tried first. If a Rule fails to produce an Instance, the next applicable
   Rule is tried.
+
+  It is possible to set a cohort seed on a SharedRules, Route, or Rule object.
+  Only one of these will apply to any given request. SharedRules is the most
+  generic of these objects and a seed set on either a Route or Rule will take
+  precedence.
+
+  See CohortSeed docs for additional details of what a cohort seed does.
 */
 type SharedRules struct {
 	SharedRulesKey SharedRulesKey `json:"shared_rules_key"` // overwritten for create
@@ -39,6 +46,7 @@ type SharedRules struct {
 	Default        AllConstraints `json:"default"`
 	Rules          Rules          `json:"rules"`
 	ResponseData   ResponseData   `json:"response_data"`
+	CohortSeed     *CohortSeed    `json:"cohort_seed"`
 	OrgKey         OrgKey         `json:"-"`
 	Checksum
 }
@@ -65,9 +73,10 @@ func (r SharedRules) Equals(o SharedRules) bool {
 		eqCS   = r.Checksum.Equals(o.Checksum)
 		eqOrg  = r.OrgKey == o.OrgKey
 		eqRd   = r.ResponseData.Equals(o.ResponseData)
+		eqCs   = CohortSeedPtrEquals(r.CohortSeed, o.CohortSeed)
 	)
 
-	if !(eqKey && eqName && eqZone && eqCS && eqOrg && eqRd) {
+	if !(eqKey && eqName && eqZone && eqCS && eqOrg && eqRd && eqCs) {
 		return false
 	}
 
@@ -88,6 +97,9 @@ func (r SharedRules) IsValid() *ValidationError {
 	errs.MergePrefixed(r.Default.IsValid("default"), "shared_rules")
 	errs.MergePrefixed(r.Rules.IsValid(), "shared_rules")
 	errs.MergePrefixed(r.ResponseData.IsValid(), scope("response_data"))
+	if r.CohortSeed != nil {
+		errs.MergePrefixed(r.CohortSeed.IsValid(), "shared_rules")
+	}
 
 	return errs.OrNil()
 }

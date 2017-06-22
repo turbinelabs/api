@@ -43,6 +43,7 @@ func getSharedRulesFilterTestSharedRules() api.SharedRules {
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
 				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, api.ResponseData{}, 1234}}},
+		nil,
 	}
 
 	rules := api.Rules{rule1}
@@ -54,6 +55,7 @@ func getSharedRulesFilterTestSharedRules() api.SharedRules {
 		defaultCC,
 		rules,
 		api.ResponseData{},
+		nil,
 		"123",
 		api.Checksum{"cs-1"},
 	}
@@ -77,6 +79,7 @@ func getRouteFilterTestRoute() api.Route {
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
 				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, api.ResponseData{}, 1234}}},
+		nil,
 	}
 
 	rules := api.Rules{rule1}
@@ -89,6 +92,7 @@ func getRouteFilterTestRoute() api.Route {
 		api.SharedRulesKey("shared-rules-key"),
 		rules,
 		api.ResponseData{},
+		nil,
 		"123",
 		api.Checksum{"cs-1"},
 	}

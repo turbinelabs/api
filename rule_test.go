@@ -45,6 +45,7 @@ func getRules() (Rule, Rule) {
 					Metadata{{"state", "testing"}},
 					ResponseData{},
 					1234}}},
+		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
 	}
 
 	r2 := Rule{
@@ -69,6 +70,7 @@ func getRules() (Rule, Rule) {
 					Metadata{{"state", "testing"}},
 					ResponseData{},
 					1234}}},
+		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
 	}
 
 	return r1, r2
@@ -81,6 +83,39 @@ func TestRuleEqualsSuccess(t *testing.T) {
 
 	assert.True(t, r1.Equals(r2))
 	assert.True(t, r2.Equals(r1))
+}
+
+func TestRuleEqualsSuccessCohortNilNil(t *testing.T) {
+	r1, r2 := getRules()
+	r1.CohortSeed = nil
+	r2.CohortSeed = nil
+
+	assert.True(t, r1.Equals(r2))
+	assert.True(t, r2.Equals(r1))
+}
+
+func TestRuleEqualsFailureCohortVaries(t *testing.T) {
+	r1, r2 := getRules()
+	r1.CohortSeed.UseZeroValueSeed = !r2.CohortSeed.UseZeroValueSeed
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestRuleEqualsFailureCohortNilNotNil(t *testing.T) {
+	r1, r2 := getRules()
+	r1.CohortSeed = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestRuleEqualsFailureCohortNotNilNil(t *testing.T) {
+	r1, r2 := getRules()
+	r2.CohortSeed = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
 }
 
 func TestRuleEqualsKeyMismatchFailure(t *testing.T) {
@@ -127,6 +162,17 @@ func TestRuleIsValidSucces(t *testing.T) {
 	r := getRuleValid()
 
 	assert.Nil(t, r.IsValid())
+}
+
+func TestRuleIsValidBadCohort(t *testing.T) {
+	r := getRuleValid()
+	r.CohortSeed.Name = ""
+
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		// cohort_seed is the first segment because the 'rule[$rule_key]' prefix gets
+		// attached at the 'Rules' level
+		{"cohort_seed.name", "may not be empty"},
+	}})
 }
 
 func TestRuleIsValidNoRuleKey(t *testing.T) {
@@ -185,6 +231,7 @@ func getRulesValidTestRules() (Rule, Rule) {
 		AllConstraints{
 			Light: ClusterConstraints{{"ck0", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 		},
+		&CohortSeed{CohortSeedCookie, "cohort-cookie", false},
 	}
 
 	r2 := Rule{
@@ -196,6 +243,7 @@ func getRulesValidTestRules() (Rule, Rule) {
 		AllConstraints{
 			Light: ClusterConstraints{{"ck1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 		},
+		nil,
 	}
 
 	return r1, r2

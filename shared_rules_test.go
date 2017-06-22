@@ -43,6 +43,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		defaultCC,
 		rules,
 		getRD(),
+		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -54,6 +55,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		defaultCC,
 		rules,
 		getRD(),
+		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -67,6 +69,39 @@ func TestSharedRulesEqualsSuccess(t *testing.T) {
 
 	assert.True(t, r1.Equals(r2))
 	assert.True(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsCohortSeedNilNil(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.CohortSeed = nil
+	r2.CohortSeed = nil
+
+	assert.True(t, r1.Equals(r2))
+	assert.True(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsCohortSeedNotNilNil(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r2.CohortSeed = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsCohortSeedNilNotNil(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.CohortSeed = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsCohortSeedVaries(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.CohortSeed.UseZeroValueSeed = !r2.CohortSeed.UseZeroValueSeed
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
 }
 
 func TestSharedRulesEqualsResponseDataVaries(t *testing.T) {
@@ -210,6 +245,22 @@ func TestSharedRulesIsValidBadDefault(t *testing.T) {
 	r.Default = AllConstraints{}
 
 	assert.NonNil(t, r.IsValid())
+}
+
+func TestSharedRulesIsValidNoCohort(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.CohortSeed = nil
+
+	assert.Nil(t, r.IsValid())
+}
+
+func TestSharedRulesIsValidBadCohort(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.CohortSeed.Name = ""
+
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.cohort_seed.name", "may not be empty"},
+	}})
 }
 
 func TestSharedRulesIsValidBadRules(t *testing.T) {

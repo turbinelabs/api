@@ -33,6 +33,14 @@ type RouteKey string
 	If one or more Rules applies, the order of the rules informs which is
 	tried first. If a Rule fails to produce an Instance, the next applicable
 	Rule is tried.
+
+	It is possible to set a cohort seed on a SharedRules, Route, or Rule object.
+	Only one of these will apply to any given request. Route is a subset of
+	SharedRules and not as specific as a Rule so a seed specified by the Route
+	will override one inherited from a SharedRules but not one specified in a
+	Rule (regardless of the Rule source).
+
+	See CohortSeed docs for additional details of what a cohort seed does.
 */
 type Route struct {
 	RouteKey       RouteKey       `json:"route_key"` // overwritten for create
@@ -42,6 +50,7 @@ type Route struct {
 	SharedRulesKey SharedRulesKey `json:"shared_rules_key"`
 	Rules          Rules          `json:"rules"`
 	ResponseData   ResponseData   `json:"response_data"`
+	CohortSeed     *CohortSeed    `json:"cohort_seed"`
 	OrgKey         OrgKey         `json:"-"`
 	Checksum
 }
@@ -60,17 +69,18 @@ func (r Route) IsNil() bool {
 // corresponding field in the parameter.
 func (r Route) Equals(o Route) bool {
 	var (
-		eqKey   = r.RouteKey == o.RouteKey
-		eqDom   = r.DomainKey == o.DomainKey
-		eqZone  = r.ZoneKey == o.ZoneKey
-		eqPath  = r.Path == o.Path
-		eqCS    = r.Checksum.Equals(o.Checksum)
-		eqOrg   = r.OrgKey == o.OrgKey
-		eqSRKey = r.SharedRulesKey == o.SharedRulesKey
-		eqRd    = r.ResponseData.Equals(o.ResponseData)
+		eqKey    = r.RouteKey == o.RouteKey
+		eqDom    = r.DomainKey == o.DomainKey
+		eqZone   = r.ZoneKey == o.ZoneKey
+		eqPath   = r.Path == o.Path
+		eqCS     = r.Checksum.Equals(o.Checksum)
+		eqOrg    = r.OrgKey == o.OrgKey
+		eqSRKey  = r.SharedRulesKey == o.SharedRulesKey
+		eqRd     = r.ResponseData.Equals(o.ResponseData)
+		eqCohort = CohortSeedPtrEquals(r.CohortSeed, o.CohortSeed)
 	)
 
-	if !(eqKey && eqDom && eqZone && eqPath && eqCS && eqOrg && eqSRKey && eqRd) {
+	if !(eqKey && eqDom && eqZone && eqPath && eqCS && eqOrg && eqSRKey && eqRd && eqCohort) {
 		return false
 	}
 
@@ -95,6 +105,9 @@ func (r Route) IsValid() *ValidationError {
 
 	errs.MergePrefixed(r.Rules.IsValid(), "route")
 	errs.MergePrefixed(r.ResponseData.IsValid(), scope("response_data"))
+	if r.CohortSeed != nil {
+		errs.MergePrefixed(r.CohortSeed.IsValid(), "route")
+	}
 
 	return errs.OrNil()
 }

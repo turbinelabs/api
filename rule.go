@@ -33,19 +33,20 @@ type RuleKey string
 	to affect the distribution. Each ClusterConstraint is examined to find a
 	matching Instance, until one is found.
 
-	TODO: Another approach to consider is a default ClusterConstraint, and
-	then a ranked list of ClusterConstraint, each of which is attempted based
-	on an assigned probability. EG, "1% of the time, do the canary. 1% of the
-	remaining time (or if there is no canary), try this, etc, using the default
-	as a fallback." The downsides are that the distribution gets less and less
-	accurate as you go down the list. The upside is that you don't have to shuffle
-	the list.
+	It is possible to set a cohort seed on a SharedRules, Route, or Rule object.
+	Only one of these will apply to any given request. A rule is the most
+	specific way we have to direct a request to some backend so any request
+	that matches a rule will use a cohort seed if set. This is true regardless
+	of the rule source (SharedRules or Route).
+
+	See CohortSeed docs for additional details of what a cohort seed does.
 */
 type Rule struct {
 	RuleKey     RuleKey        `json:"rule_key"`
 	Methods     []string       `json:"methods"`
 	Matches     Matches        `json:"matches"`
 	Constraints AllConstraints `json:"constraints"`
+	CohortSeed  *CohortSeed    `json:"cohort_seed"`
 }
 
 type Rules []Rule
@@ -132,7 +133,7 @@ func (r Rule) Equals(o Rule) bool {
 		return false
 	}
 
-	return true
+	return CohortSeedPtrEquals(r.CohortSeed, o.CohortSeed)
 }
 
 var validMethod map[string]bool = map[string]bool{
@@ -169,6 +170,9 @@ func (r Rule) IsValid() *ValidationError {
 
 	errs.MergePrefixed(r.Matches.IsValid(), "")
 	errs.MergePrefixed(r.Constraints.IsValid("constraints"), "")
+	if r.CohortSeed != nil {
+		errs.MergePrefixed(r.CohortSeed.IsValid(), "")
+	}
 
 	return errs.OrNil()
 }

@@ -32,6 +32,7 @@ func getRulesDefaults() (Rule, Rule) {
 		AllConstraints{
 			Light: ClusterConstraints{
 				ClusterConstraint{"cckey1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}}},
+		nil,
 	}
 
 	rule2 := Rule{
@@ -44,6 +45,7 @@ func getRulesDefaults() (Rule, Rule) {
 				ClusterConstraint{"cckey1", "ckey3", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 			Light: ClusterConstraints{
 				ClusterConstraint{"cckey2", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}}},
+		nil,
 	}
 
 	return rule1, rule2
@@ -62,6 +64,7 @@ func getRouteDefaults() (Route, Route) {
 		srk,
 		rules,
 		getRD(),
+		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -74,6 +77,7 @@ func getRouteDefaults() (Route, Route) {
 		srk,
 		rules,
 		getRD(),
+		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -84,6 +88,31 @@ func getRouteDefaults() (Route, Route) {
 // Route.Equals
 func TestRouteEqualsSuccess(t *testing.T) {
 	r1, r2 := getRouteDefaults()
+
+	assert.True(t, r1.Equals(r2))
+	assert.True(t, r2.Equals(r1))
+}
+
+func TestRouteEqualsCohortSeedVaries(t *testing.T) {
+	r1, r2 := getRouteDefaults()
+	r2.CohortSeed.Name = r1.CohortSeed.Name + "aosentuh"
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestRouteEqualsCohortSeedNotNilNil(t *testing.T) {
+	r1, r2 := getRouteDefaults()
+	r2.CohortSeed = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestRouteEqualsCohortSeedNilNil(t *testing.T) {
+	r1, r2 := getRouteDefaults()
+	r1.CohortSeed = nil
+	r2.CohortSeed = nil
 
 	assert.True(t, r1.Equals(r2))
 	assert.True(t, r2.Equals(r1))
@@ -176,6 +205,15 @@ func TestRouteIsValidSuccess(t *testing.T) {
 	r, _ := getRouteDefaults()
 
 	assert.Nil(t, r.IsValid())
+}
+
+func TestRouteIsValidBadCohortseed(t *testing.T) {
+	r, _ := getRouteDefaults()
+	r.CohortSeed.Name = ""
+
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"route.cohort_seed.name", "may not be empty"},
+	}})
 }
 
 func TestRouteIsValidBadResponseData(t *testing.T) {
