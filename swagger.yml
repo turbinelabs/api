@@ -1253,6 +1253,8 @@ definitions:
           case then the values from Route take precedence over those from a
           SharedRules object.
         $ref: '#/definitions/ResponseData'
+      cohort_seed:
+        $ref: '#/definitions/CohortSeed'
   Rule:
     type: object
     properties:
@@ -1266,6 +1268,8 @@ definitions:
         $ref: "#/definitions/Matches"
       constraints:
         $ref: "#/definitions/AllConstraints"
+      cohort_seed:
+        $ref: '#/definitions/CohortSeed'
   Matches:
     type: array
     items:
@@ -1449,6 +1453,8 @@ definitions:
           configurations will apply; if that's the case then the values from
           the applicable Route and ClusterConstarint takes precedence over those
           specified here.
+      cohort_seed:
+        $ref: '#/definitions/CohortSeed'
       checksum:
         type: string
 
@@ -1507,6 +1513,31 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/ChangeEntry'
+
+  CohortSeed:
+    type: object
+    properties:
+      type:
+        type: string
+        description: Where a request's cohort seed will be drawn from.
+        enum:
+          - header
+          - cookie
+          - query
+      name:
+        type: string
+        description: |
+          The name of the cookie, the header field, or the query argument to
+          be checked for a cohort seed value.
+      use_zero_value_seed:
+        type: boolean
+        description: |
+          If true, requests with a seed source which resolves to an empty value
+          will still be grouped and routed consistently. This means a misspelled
+          or missing seed source on a request will sort all such traffic into a
+          single backend. This could result in all traffic being assigned to a
+          backend intended for only a small percentage of traffic. Use with
+          caution.
 
   ChangeEntry:
     type: object
