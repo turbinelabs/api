@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/turbinelabs/api"
@@ -55,6 +56,12 @@ func (tc getTestCase) run(t *testing.T) {
 
 	s := httptest.NewServer(verifier)
 	defer s.Close()
+
+	if tc.wantErr != nil {
+		if e, ok := tc.wantErr.(*httperr.Error); ok {
+			e.Message = strings.Replace(e.Message, "{{URL}}", s.URL, -1)
+		}
+	}
 
 	got, gotErr := tc.svcCall(tc.key, s)
 
@@ -393,58 +400,66 @@ func TestGetUserReturnsOrg(t *testing.T) {
 }
 
 func TestGetWrapsWeirdResponses(t *testing.T) {
-	wantErr := httperr.New500(
-		"got malformed response; unmarshal error: 'invalid character 'w' looking "+
-			"for beginning of value' - content: 'wtf'",
-		"UnknownDecodingCode")
+	wantErr := func(path string, id interface{}) *httperr.Error {
+		return httperr.New500(
+			fmt.Sprintf(
+				"got malformed response for {{URL}}%s/%v; unmarshal error: "+
+					"'invalid character 'w' looking for beginning of value' "+
+					"- content: 'wtf'",
+				path,
+				id,
+			),
+			"UnknownDecodingCode",
+		)
+	}
 
 	clusterGetTest{
 		clusterKey:  fixtures.ClusterKey1,
 		responseObj: "wtf",
 		wantResp:    api.Cluster{},
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/cluster", fixtures.ClusterKey1),
 	}.run(t)
 
 	domainGetTest{
 		domainKey:   fixtures.DomainKey1,
 		responseObj: "wtf",
 		wantResp:    api.Domain{},
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/domain", fixtures.DomainKey1),
 	}.run(t)
 
 	routeGetTest{
 		routeKey:    fixtures.RouteKey1,
 		responseObj: "wtf",
 		wantResp:    api.Route{},
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/route", fixtures.RouteKey1),
 	}.run(t)
 
 	sharedRulesGetTest{
 		sharedRulesKey: fixtures.SharedRulesKey1,
 		responseObj:    "wtf",
 		wantResp:       api.SharedRules{},
-		wantErr:        wantErr,
+		wantErr:        wantErr("/v1.0/shared_rules", fixtures.SharedRulesKey1),
 	}.run(t)
 
 	proxyGetTest{
 		proxyKey:    fixtures.ProxyKey1,
 		responseObj: "wtf",
 		wantResp:    api.Proxy{},
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/proxy", fixtures.ProxyKey1),
 	}.run(t)
 
 	userGetTest{
 		userKey:     fixtures.UserKey1,
 		responseObj: "wtf",
 		wantResp:    api.User{},
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/admin/user", fixtures.UserKey1),
 	}.run(t)
 
 	zoneGetTest{
 		zoneKey:     fixtures.ZoneKey1,
 		responseObj: "wtf",
 		wantResp:    api.Zone{},
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/zone", fixtures.ZoneKey1),
 	}.run(t)
 }
 

@@ -92,20 +92,20 @@ func TestExpectsNoPayload(t *testing.T) {
 	resp := &http.Response{
 		StatusCode: http.StatusOK,
 	}
-	assert.Nil(t, expectsNoPayload(resp))
+	assert.Nil(t, expectsNoPayload("url", resp))
 
 	resp.StatusCode = http.StatusInternalServerError
 	assert.ErrorContains(
 		t,
-		expectsNoPayload(resp),
-		"error response with no additional information",
+		expectsNoPayload("url", resp),
+		"error response for url with no additional information",
 	)
 
 	resp.Body = testio.NewFailingReader()
-	assert.ErrorContains(t, expectsNoPayload(resp), testio.FailingReaderMessage)
+	assert.ErrorContains(t, expectsNoPayload("url", resp), testio.FailingReaderMessage)
 
 	resp.Body = ioutil.NopCloser(strings.NewReader("not json"))
-	assert.ErrorContains(t, expectsNoPayload(resp), "malformed response")
+	assert.ErrorContains(t, expectsNoPayload("url", resp), "malformed response")
 
 	httpErr := httperr.New400("reasons", httperr.MiscErrorCode)
 	resp.Body = mkBodyReader(t, httpErr, nil)
@@ -113,7 +113,7 @@ func TestExpectsNoPayload(t *testing.T) {
 	// overwrites envelope error status with HTTP response code
 	assert.DeepEqual(
 		t,
-		expectsNoPayload(resp),
+		expectsNoPayload("url", resp),
 		httperr.New500("reasons", httperr.MiscErrorCode),
 	)
 }
@@ -126,21 +126,25 @@ func TestExpectsPayload(t *testing.T) {
 	}
 	assert.ErrorContains(
 		t,
-		expectsPayload(resp, payloadDest),
-		"expected payload but response (200) included no content",
+		expectsPayload("url", resp, payloadDest),
+		"expected payload for url but response (200) included no content",
 	)
 	assert.DeepEqual(t, payloadDest, &testPayload{})
 
 	resp.Body = testio.NewFailingReader()
-	assert.ErrorContains(t, expectsPayload(resp, payloadDest), testio.FailingReaderMessage)
+	assert.ErrorContains(
+		t,
+		expectsPayload("url", resp, payloadDest),
+		testio.FailingReaderMessage,
+	)
 	assert.DeepEqual(t, payloadDest, &testPayload{})
 
 	resp.Body = ioutil.NopCloser(strings.NewReader("not json"))
-	assert.ErrorContains(t, expectsPayload(resp, payloadDest), "malformed response")
+	assert.ErrorContains(t, expectsPayload("url", resp, payloadDest), "malformed response")
 	assert.DeepEqual(t, payloadDest, &testPayload{})
 
 	resp.Body = mkBodyReader(t, nil, &testMalformedPayload{N: testPayload{10}})
-	assert.ErrorContains(t, expectsPayload(resp, payloadDest), "malformed response")
+	assert.ErrorContains(t, expectsPayload("url", resp, payloadDest), "malformed response")
 	assert.DeepEqual(t, payloadDest, &testPayload{})
 
 	httpErr := httperr.New400("reasons", httperr.MiscErrorCode)
@@ -149,7 +153,7 @@ func TestExpectsPayload(t *testing.T) {
 	// overwrites envelope error status with HTTP response code
 	assert.DeepEqual(
 		t,
-		expectsPayload(resp, payloadDest),
+		expectsPayload("url", resp, payloadDest),
 		httperr.New500("reasons", httperr.MiscErrorCode),
 	)
 	assert.DeepEqual(t, payloadDest, &testPayload{})
@@ -160,14 +164,14 @@ func TestExpectsPayload(t *testing.T) {
 	// overwrites envelope error status with HTTP response code, does not unmarshal payload
 	assert.DeepEqual(
 		t,
-		expectsPayload(resp, payloadDest),
+		expectsPayload("url", resp, payloadDest),
 		httperr.New500("reasons", httperr.MiscErrorCode),
 	)
 	assert.DeepEqual(t, payloadDest, &testPayload{})
 
 	resp.Body = mkBodyReader(t, nil, expectedPayload)
 	resp.StatusCode = http.StatusOK
-	assert.Nil(t, expectsPayload(resp, payloadDest))
+	assert.Nil(t, expectsPayload("url", resp, payloadDest))
 	assert.DeepEqual(t, payloadDest, expectedPayload)
 }
 

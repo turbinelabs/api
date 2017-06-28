@@ -45,18 +45,13 @@ func getBody(response *http.Response) ([]byte, *httperr.Error) {
 	return body, nil
 }
 
-func expectsNoPayload(response *http.Response) error {
+func expectsNoPayload(url string, response *http.Response) error {
 	if response.StatusCode == http.StatusOK {
 		return nil
 	}
 
 	if response.Body == nil {
-		err := httperr.Error{
-			"error response with no additional information",
-			httperr.UnknownNoBodyCode,
-			response.StatusCode,
-			nil}
-		return &err
+		return mkNoErrMessageErr(url, response.StatusCode)
 	}
 
 	bodyBytes, err := getBody(response)
@@ -64,10 +59,14 @@ func expectsNoPayload(response *http.Response) error {
 		return err
 	}
 
+	if len(bodyBytes) == 0 {
+		return mkNoErrMessageErr(url, response.StatusCode)
+	}
+
 	env := envelope.Response{}
 	unmarshalErr := json.Unmarshal(bodyBytes, &env)
 	if unmarshalErr != nil {
-		return mkUnmarshalErr(bodyBytes, unmarshalErr)
+		return mkUnmarshalErr(url, bodyBytes, unmarshalErr)
 	}
 
 	if env.Error != nil {
@@ -77,13 +76,9 @@ func expectsNoPayload(response *http.Response) error {
 	return env.Error
 }
 
-func expectsPayload(response *http.Response, payloadDest interface{}) error {
+func expectsPayload(url string, response *http.Response, payloadDest interface{}) error {
 	if response.Body == nil {
-		return httperr.New500(
-			fmt.Sprintf(
-				"expected payload but response (%d) included no content",
-				response.StatusCode),
-			httperr.UnknownNoBodyCode)
+		return mkNoBodyErr(url, response.StatusCode)
 	}
 
 	bodyBytes, err := getBody(response)
@@ -91,11 +86,15 @@ func expectsPayload(response *http.Response, payloadDest interface{}) error {
 		return err
 	}
 
+	if len(bodyBytes) == 0 {
+		return mkNoBodyErr(url, response.StatusCode)
+	}
+
 	var rawResponse json.RawMessage
 	env := envelope.Response{Payload: &rawResponse}
 	unmarshalErr := json.Unmarshal(bodyBytes, &env)
 	if unmarshalErr != nil {
-		return mkUnmarshalErr(bodyBytes, unmarshalErr)
+		return mkUnmarshalErr(url, bodyBytes, unmarshalErr)
 	}
 
 	if env.Error != nil {
@@ -105,7 +104,7 @@ func expectsPayload(response *http.Response, payloadDest interface{}) error {
 
 	unmarshalErr = json.Unmarshal(rawResponse, payloadDest)
 	if unmarshalErr != nil {
-		return mkUnmarshalErr([]byte(rawResponse), unmarshalErr)
+		return mkUnmarshalErr(url, []byte(rawResponse), unmarshalErr)
 	}
 
 	return nil
@@ -123,6 +122,11 @@ func (rh RequestHandler) Do(
 		return fmt.Errorf("could not create request: %s", err.Error())
 	}
 
+	url := "unknown API endpoint"
+	if req.URL != nil {
+		url = req.URL.String()
+	}
+
 	// make HTTP request
 	resp, err := rh.client.Do(req)
 
@@ -130,21 +134,43 @@ func (rh RequestHandler) Do(
 	// something was wrong with the server (this is, admittedly, a guess without
 	// further introspection but we'll let it stand for now).
 	if err != nil {
-		return fmt.Errorf("could not successfully make request: %s", err.Error())
+		return fmt.Errorf("could not successfully make request to %s: %s", url, err.Error())
 	}
 
 	if response == nil {
-		return expectsNoPayload(resp)
+		return expectsNoPayload(url, resp)
 	}
 
-	return expectsPayload(resp, response)
+	return expectsPayload(url, resp, response)
 }
 
-func mkUnmarshalErr(content []byte, underlying error) *httperr.Error {
+func mkNoBodyErr(url string, statusCode int) *httperr.Error {
 	return httperr.New500(
 		fmt.Sprintf(
-			"got malformed response; unmarshal error: '%s' - content: '%s'",
+			"expected payload for %s but response (%d) included no content",
+			url,
+			statusCode,
+		),
+		httperr.UnknownNoBodyCode,
+	)
+}
+
+func mkNoErrMessageErr(url string, statusCode int) *httperr.Error {
+	return &httperr.Error{
+		Message: fmt.Sprintf("error response for %s with no additional information", url),
+		Code:    httperr.UnknownNoBodyCode,
+		Status:  statusCode,
+	}
+}
+
+func mkUnmarshalErr(url string, content []byte, underlying error) *httperr.Error {
+	return httperr.New500(
+		fmt.Sprintf(
+			"got malformed response for %s; unmarshal error: '%s' - content: '%s'",
+			url,
 			underlying.Error(),
-			string(content)),
-		httperr.UnknownDecodingCode)
+			string(content),
+		),
+		httperr.UnknownDecodingCode,
+	)
 }

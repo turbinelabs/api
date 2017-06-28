@@ -18,10 +18,12 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/turbinelabs/api"
@@ -89,6 +91,12 @@ func (tc indexTestCase) run(t *testing.T) {
 
 	s := httptest.NewServer(verifier)
 	defer s.Close()
+
+	if tc.wantErr != nil {
+		if e, ok := tc.wantErr.(*httperr.Error); ok {
+			e.Message = strings.Replace(e.Message, "{{URL}}", s.URL, -1)
+		}
+	}
 
 	got, gotErr := tc.callSvc(t, tc.filters, s)
 	assert.DeepEqual(t, gotErr, tc.wantErr)
@@ -423,44 +431,51 @@ func TestIndexComplexFilterRequiringEscaping(t *testing.T) {
 }
 
 func TestIndexWrapsWeirdResponses(t *testing.T) {
-	wantErr := httperr.New500(
-		"got malformed response; unmarshal error: 'invalid character 'w' looking "+
-			"for beginning of value' - content: 'wtf'",
-		httperr.UnknownDecodingCode)
+	wantErr := func(path string) *httperr.Error {
+		return httperr.New500(
+			fmt.Sprintf(
+				"got malformed response for {{URL}}%s; unmarshal error: "+
+					"'invalid character 'w' looking for beginning of value' "+
+					"- content: 'wtf'",
+				path,
+			),
+			httperr.UnknownDecodingCode,
+		)
+	}
 
 	clusterIndexTest{
 		responseObj: "wtf",
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/cluster"),
 	}.run(t)
 
 	domainIndexTest{
 		responseObj: "wtf",
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/domain"),
 	}.run(t)
 
 	proxyIndexTest{
 		responseObj: "wtf",
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/proxy"),
 	}.run(t)
 
 	routeIndexTest{
 		responseObj: "wtf",
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/route"),
 	}.run(t)
 
 	sharedRulesIndexTest{
 		responseObj: "wtf",
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/shared_rules"),
 	}.run(t)
 
 	userIndexTest{
 		responseObj: "wtf",
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/admin/user"),
 	}.run(t)
 
 	zoneIndexTest{
 		responseObj: "wtf",
-		wantErr:     wantErr,
+		wantErr:     wantErr("/v1.0/zone"),
 	}.run(t)
 }
 
