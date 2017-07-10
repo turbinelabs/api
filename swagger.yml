@@ -279,6 +279,14 @@ paths:
         Get all zones. possibly with filters
       tags:
         - Zone
+      parameters:
+        - name: filters
+          in: query
+          description: |
+            A JSON encoded array of ZoneFilter objects. The filter is taken
+            as a union of intersections. In other words an object that matches
+            every constraint in any ZoneFilter will be included.
+          type: string
       responses:
         200:
           description: A result containing an array of zones
@@ -368,6 +376,14 @@ paths:
     get:
       tags:
         - Domain
+      parameters:
+        - name: filters
+          in: query
+          description: |
+            A JSON encoded array of DomainFilter objects. The filter is taken
+            as a union of intersections. In other words an object that matches
+            every constraint in any DomainFilter will be included.
+          type: string
       summary: get domains
       description: Get a list of domains
       responses:
@@ -458,6 +474,14 @@ paths:
         - Proxy
       summary: list proxies
       description: Get a list of proxies
+      parameters:
+        - name: filters
+          in: query
+          description: |
+            A JSON encoded array of ProxyFilter objects. The filter is taken
+            as a union of intersections. In other words an object that matches
+            every constraint in any ProxyFilter will be included.
+          type: string
       responses:
         200:
           description: a result containing a list of proxies
@@ -546,6 +570,14 @@ paths:
       description: Get a list of shared_rules
       tags:
         - Shared Rules
+      parameters:
+        - name: filters
+          in: query
+          description: |
+            A JSON encoded array of SharedRulesFilter objects. The filter is taken
+            as a union of intersections. In other words an object that matches
+            every constraint in any SharedRulesFilter will be included.
+          type: string
       responses:
         200:
           description: a result containing a list of shared_rules
@@ -663,6 +695,14 @@ paths:
       description: Get a list of routes
       tags:
         - Route
+      parameters:
+        - name: filters
+          in: query
+          description: |
+            A JSON encoded array of RouteFilter objects. The filter is taken
+            as a union of intersections. In other words an object that matches
+            every constraint in any RouteFilter will be included.
+          type: string
       responses:
         200:
           description: a result containing a list of routes
@@ -780,6 +820,14 @@ paths:
       description: Get a list of clusters
       tags:
         - Cluster
+      parameters:
+        - name: filters
+          in: query
+          description: |
+            A JSON encoded array of ClusterFilter objects. The filter is taken
+            as a union of intersections. In other words an object that matches
+            every constraint in any ClusterFilter will be included.
+          type: string
       responses:
         200:
           description: a result containing a list of clusters
@@ -952,6 +1000,8 @@ definitions:
         type: string
   ZoneCreate:
     type: object
+    required:
+      - name
     properties:
       name:
         type: string
@@ -1161,6 +1211,10 @@ definitions:
         type: string
   DomainCreate:
     type: object
+    required:
+      - zone_key
+      - name
+      - port
     properties:
       zone_key:
         type: string
@@ -1197,6 +1251,9 @@ definitions:
         type: string
   ProxyCreate:
     type: object
+    required:
+      - zone_key
+      - name
     properties:
       name:
         type: string
@@ -1333,8 +1390,8 @@ definitions:
   RouteCreate:
     type: object
     required:
-      - name
       - zone_key
+      - name
       - domain_keys
     properties:
       name:
@@ -1388,6 +1445,9 @@ definitions:
         type: string
   ClusterCreate:
     type: object
+    required:
+      - zone_key
+      - name
     properties:
       zone_key:
         type: string
@@ -1461,7 +1521,9 @@ definitions:
   SharedRulesCreate:
     type: object
     required:
+      - name
       - zone_key
+      - cluster_constraints
     properties:
       shared_rules_key:
         type: string
@@ -1767,6 +1829,74 @@ definitions:
         description: |
           If set this will exclude ChangeEntry records that save the addition
           or removal of an empty value.
+
+  ClusterFilter:
+    type: object
+    properties:
+      cluster_key:
+        type: string
+      name:
+        type: string
+      zone_key:
+        type: string
+
+  DomainFilter:
+    type: object
+    properties:
+      domain_key:
+        type: string
+      name:
+        type: string
+      zone_key:
+        type: string
+
+  SharedRulesFilter:
+    type: object
+    properties:
+      shared_rules_key:
+        type: string
+      name:
+        type: string
+      zone_key:
+        type: string
+
+  RouteFilter:
+    type: object
+    properties:
+      route_key:
+        type: string
+      domain_key:
+        type: string
+      shared_rules_key:
+        type: string
+      path:
+        type: string
+      path_prefix:
+        type: string
+      zone_key:
+        type: string
+
+  ProxyFilter:
+    type: object
+    properties:
+      proxy_key:
+        type: string
+      name:
+        type: string
+      domain_keys:
+        type: array
+        items:
+          type: string
+      zone_key:
+        type: string
+
+  ZoneFilter:
+    type: object
+    properties:
+      zone_key:
+        type: string
+      name:
+        type: string
 
   FilterProducts:
     type: object
