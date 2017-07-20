@@ -127,27 +127,8 @@ func (ff *apiConfigFromFlags) Validate() error {
 		return err
 	}
 
-	if ff.mayUseAuthToken {
-		if ff.APIKey() == "" {
-			// validate token cache has non-expired token
-			tc, err := tokencache.NewFromFile(ff.cachePath.CachePath())
-			if err != nil {
-				return err
-			}
-
-			if tc.Expired() {
-				return fmt.Errorf("Your session has timed out, please login again.")
-			}
-			ff.tokenCache = tc
-
-			cfg, err := tokencache.ToOAuthConfig(tc)
-			if err != nil {
-				return fmt.Errorf("Unable to construct OIDC client config: %v", err)
-			}
-			ff.oauth2Config = cfg
-		} else {
-			console.Info().Println("Preferring API Key for authentication")
-		}
+	if ff.mayUseAuthToken && ff.APIKey() != "" {
+		console.Info().Println("Preferring API Key for authentication")
 	}
 
 	return nil
@@ -163,6 +144,22 @@ func (ff *apiConfigFromFlags) MakeEndpoint() (apihttp.Endpoint, error) {
 	if ff.APIKey() != "" {
 		return ep, nil
 	}
+
+	tc, err := tokencache.NewFromFile(ff.cachePath.CachePath())
+	if err != nil {
+		return apihttp.Endpoint{}, err
+	}
+
+	if tc.Expired() {
+		return apihttp.Endpoint{}, fmt.Errorf("your session has timed out, please login again")
+	}
+	ff.tokenCache = tc
+
+	cfg, err := tokencache.ToOAuthConfig(tc)
+	if err != nil {
+		return apihttp.Endpoint{}, fmt.Errorf("unable to construct OIDC client config: %v", err)
+	}
+	ff.oauth2Config = cfg
 
 	// otherwise use the token from cache
 	ctx := context.Background()
