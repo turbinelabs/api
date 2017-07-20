@@ -135,7 +135,9 @@ func configureEndpoint(dest apihttp.Endpoint, apiKey string, clientApp App) apih
 	// Copy the Endpoint to avoid polluting the original with our
 	// headers.
 	dest = dest.Copy()
-	dest.AddHeader(apiheader.Authorization, apiKey)
+	if apiKey != "" {
+		dest.AddHeader(apiheader.Authorization, apiKey)
+	}
 	dest.AddHeader(apiheader.ClientType, clientType)
 	dest.AddHeader(apiheader.ClientVersion, api.TbnPublicVersion)
 	dest.AddHeader(apiheader.ClientApp, string(clientApp))

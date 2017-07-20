@@ -17,8 +17,16 @@ limitations under the License.
 package flags
 
 import (
+	"io/ioutil"
+	"net/http"
+	"os"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"golang.org/x/oauth2"
+
+	"github.com/turbinelabs/api/client/tokencache"
+	apihttp "github.com/turbinelabs/api/http"
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 	"github.com/turbinelabs/nonstdlib/flag/usage"
 	"github.com/turbinelabs/test/assert"
@@ -36,9 +44,10 @@ func TestNewAPIConfigFromFlags(t *testing.T) {
 
 	theFlag := flagset.Unwrap().Lookup("key")
 	assert.NonNil(t, theFlag)
+	assert.True(t, usage.IsSensitive(theFlag))
 	assert.True(t, usage.IsRequired(theFlag))
 
-	assert.NonNil(t, ffImpl.FromFlags)
+	assert.NonNil(t, ffImpl.clientFromFlags)
 }
 
 func TestNewAPIConfigFromFlagsWithPrefix(t *testing.T) {
@@ -60,7 +69,7 @@ func TestNewAPIConfigFromFlagsWithPrefix(t *testing.T) {
 	assert.NonNil(t, theFlag)
 	assert.False(t, usage.IsRequired(theFlag))
 
-	assert.NonNil(t, ffImpl.FromFlags)
+	assert.NonNil(t, ffImpl.clientFromFlags)
 }
 
 func TestAPIConfigFromFlagsGet(t *testing.T) {
@@ -68,4 +77,170 @@ func TestAPIConfigFromFlagsGet(t *testing.T) {
 		apiKeyConfig: &apiAuthKeyFromFlags{optional: false, apiKey: "schlage"},
 	}
 	assert.Equal(t, ff.APIKey(), "schlage")
+}
+
+func TestNewAPIConfigFromFlagsWithAuthTokenImpactOnKeyFlag(t *testing.T) {
+	fset := tbnflag.NewTestFlagSet()
+	NewAPIConfigFromFlags(fset, APIConfigMayUseAuthToken(tokencache.NewStaticPath("nonsense")))
+
+	keyFlag := fset.Unwrap().Lookup("key")
+	assert.NonNil(t, keyFlag)
+	assert.False(t, usage.IsRequired(keyFlag))
+	assert.True(t, usage.IsSensitive(keyFlag))
+}
+
+func TestNewAPIConfigFromFlagsWithAuthToken(t *testing.T) {
+	file, err := ioutil.TempFile("", "token-cache")
+	assert.Nil(t, err)
+	path := file.Name()
+	defer func() { os.Remove(path) }()
+
+	user := "testing"
+	provider := "https://login.turbinelabs.io/auth/realms/turbine-labs"
+	tcBytes := []byte(`{
+       "Username":"testing",
+       "ProviderURL":"https://login.turbinelabs.io/auth/realms/turbine-labs",
+       "Token": {}
+     }`,
+	)
+	assert.Nil(t, ioutil.WriteFile(path, tcBytes, 0600))
+
+	fset := tbnflag.NewTestFlagSet()
+	ff := NewAPIConfigFromFlags(fset, APIConfigMayUseAuthToken(tokencache.NewStaticPath(path)))
+	ffImpl := ff.(*apiConfigFromFlags)
+
+	fset.Parse(nil)
+
+	assert.Nil(t, ff.Validate())
+
+	assert.NonNil(t, ffImpl.oauth2Config)
+	if assert.NonNil(t, ffImpl.tokenCache) {
+		assert.Equal(t, ffImpl.tokenCache.Username, user)
+		assert.Equal(t, ffImpl.tokenCache.ProviderURL, provider)
+	}
+}
+
+func TestNewAPIConfigFromFlagsWithAuthTokenExpired(t *testing.T) {
+	file, err := ioutil.TempFile("", "token-cache")
+	assert.Nil(t, err)
+	path := file.Name()
+	defer func() { os.Remove(path) }()
+
+	tcBytes := []byte(`{
+       "Username":"testing",
+       "ProviderURL":"https://login.turbinelabs.io/auth/realms/turbine-labs"
+     }`,
+	)
+	assert.Nil(t, ioutil.WriteFile(path, tcBytes, 0600))
+
+	fset := tbnflag.NewTestFlagSet()
+	ff := NewAPIConfigFromFlags(fset, APIConfigMayUseAuthToken(tokencache.NewStaticPath(path)))
+
+	fset.Parse(nil)
+	assert.ErrorContains(t, ff.Validate(), "session has timed out")
+}
+
+func TestNewAPIConfigFromFlagsWithAuthTokenBadProvider(t *testing.T) {
+	file, err := ioutil.TempFile("", "token-cache")
+	assert.Nil(t, err)
+	path := file.Name()
+	defer func() { os.Remove(path) }()
+
+	tcBytes := []byte(`{
+       "Username":"testing",
+       "ProviderURL":"http://www.example.com",
+       "Token": {}
+     }`,
+	)
+	assert.Nil(t, ioutil.WriteFile(path, tcBytes, 0600))
+
+	fset := tbnflag.NewTestFlagSet()
+	ff := NewAPIConfigFromFlags(fset, APIConfigMayUseAuthToken(tokencache.NewStaticPath(path)))
+	ffImpl := ff.(*apiConfigFromFlags)
+
+	fset.Parse(nil)
+	ff.Validate()
+	assert.ErrorContains(t, ff.Validate(), "Unable to construct OIDC client config")
+	assert.NonNil(t, ffImpl.tokenCache)
+	assert.DeepEqual(t, ffImpl.oauth2Config, oauth2.Config{})
+}
+
+func TestNewAPIConfigFromFlagsMakeEndpoint(t *testing.T) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	file, err := ioutil.TempFile("", "token-cache")
+	assert.Nil(t, err)
+	path := file.Name()
+	defer func() { os.Remove(path) }()
+
+	tcBytes := []byte(`{
+       "Username":"testing",
+       "ProviderURL":"https://login.turbinelabs.io/auth/realms/turbine-labs",
+       "Token": {}
+     }`,
+	)
+	assert.Nil(t, ioutil.WriteFile(path, tcBytes, 0600))
+
+	fset := tbnflag.NewTestFlagSet()
+	ff := NewAPIConfigFromFlags(fset, APIConfigMayUseAuthToken(tokencache.NewStaticPath(path)))
+	ffImpl := ff.(*apiConfigFromFlags)
+
+	mockFF := apihttp.NewMockFromFlags(ctrl)
+	ffImpl.clientFromFlags = mockFF
+
+	client := &http.Client{}
+	ep := apihttp.Endpoint{}
+	ep.SetClient(client)
+	gomock.InOrder(
+		mockFF.EXPECT().Validate().Return(nil),
+		mockFF.EXPECT().MakeEndpoint().Return(ep, nil),
+	)
+
+	fset.Parse(nil)
+
+	assert.Nil(t, ff.Validate())
+	gotEp, err := ff.MakeEndpoint()
+	assert.Nil(t, err)
+	assert.NotSameInstance(t, gotEp.Client(), client)
+}
+
+func TestNewAPIConfigFromFlagsMakeEndpointKeyOverride(t *testing.T) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	file, err := ioutil.TempFile("", "token-cache")
+	assert.Nil(t, err)
+	path := file.Name()
+	defer func() { os.Remove(path) }()
+
+	tcBytes := []byte(`{
+       "Username":"testing",
+       "ProviderURL":"https://login.turbinelabs.io/auth/realms/turbine-labs",
+       "Token": {}
+     }`,
+	)
+	assert.Nil(t, ioutil.WriteFile(path, tcBytes, 0600))
+
+	fset := tbnflag.NewTestFlagSet()
+	ff := NewAPIConfigFromFlags(fset, APIConfigMayUseAuthToken(tokencache.NewStaticPath(path)))
+	ffImpl := ff.(*apiConfigFromFlags)
+
+	mockFF := apihttp.NewMockFromFlags(ctrl)
+	ffImpl.clientFromFlags = mockFF
+
+	client := &http.Client{}
+	ep := apihttp.Endpoint{}
+	ep.SetClient(client)
+	gomock.InOrder(
+		mockFF.EXPECT().Validate().Return(nil),
+		mockFF.EXPECT().MakeEndpoint().Return(ep, nil),
+	)
+
+	fset.Parse([]string{"-key=wheee"})
+
+	assert.Nil(t, ff.Validate())
+	gotEp, err := ff.MakeEndpoint()
+	assert.Nil(t, err)
+	assert.SameInstance(t, gotEp.Client(), client)
 }

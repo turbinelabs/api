@@ -28,7 +28,7 @@ var redirectOverflow = errors.New("Stopped after 5 redirects")
 // 1) Pass headers from the initial request to the new request
 // 2) Return an error if 5 redirects fail to result in a non 3xx response
 func HeaderPreservingClient() *http.Client {
-	return &http.Client{CheckRedirect: redirectPolicy}
+	return MakeHeaderPreserving(&http.Client{})
 }
 
 func redirectPolicy(next *http.Request, prev []*http.Request) error {
@@ -38,4 +38,14 @@ func redirectPolicy(next *http.Request, prev []*http.Request) error {
 
 	next.Header = prev[0].Header
 	return nil
+}
+
+// MakeHeaderPreserving updates a specified http.Client to have a redirect policy
+// that:
+//
+// 1) Passes headers from the initial requset to the redirected request
+// 2) Returns an error if 5 redirects fail to result in a non 3xx response
+func MakeHeaderPreserving(client *http.Client) *http.Client {
+	client.CheckRedirect = redirectPolicy
+	return client
 }

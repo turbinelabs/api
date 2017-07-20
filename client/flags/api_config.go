@@ -19,14 +19,22 @@ package flags
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=../../http/fromflags.go"
 
 import (
+	"fmt"
+
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
+
+	"github.com/turbinelabs/api/client/tokencache"
 	apihttp "github.com/turbinelabs/api/http"
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
+	"github.com/turbinelabs/nonstdlib/log/console"
 )
 
-// APIConfigFromFlags represents command-line flags for specifying an
-// API authentication key, host, port and SSL settings for the Turbine
+// APIConfigFromFlags represents command-line flags for specifying
+// API authentication, host, port and SSL settings for the Turbine
 // Labs API.
 type APIConfigFromFlags interface {
+	// apihttp.FromFlags constructs an API endpoint
 	apihttp.FromFlags
 
 	// APIKey Returns the API authentication key from the command line.
@@ -52,6 +60,24 @@ func APIConfigSetAPIAuthKeyFromFlags(akff APIAuthKeyFromFlags) APIConfigOption {
 	}
 }
 
+// APIConfigMayUseAuthToken indicates that the API Config can use an auth
+// token to authenticate instead of relying on an API key. As a result if
+// this is set API Key becomes optional. If an API Key is set it takes
+// precedence over an auth token found from the TokenCache.
+//
+// If an APIAuthKeyFromFlags is provided via APIConfigSetAPIAuthKeyFromFlags
+// it may still be considered required depending on the APIAuthKeyFromFlags
+// construction.
+//
+// Parameters:
+//   cachePath - this is a file where cached authed token should be read from
+func APIConfigMayUseAuthToken(cachePath tokencache.PathFromFlags) APIConfigOption {
+	return func(ff *apiConfigFromFlags) {
+		ff.mayUseAuthToken = true
+		ff.cachePath = cachePath
+	}
+}
+
 // NewAPIConfigFromFlags configures the necessary command line flags
 // and returns an APIConfigFromFlags.
 func NewAPIConfigFromFlags(
@@ -65,18 +91,26 @@ func NewAPIConfigFromFlags(
 	}
 
 	if ff.apiKeyConfig == nil {
-		ff.apiKeyConfig = NewAPIAuthKeyFromFlags(flagset)
+		opts := []APIAuthKeyOption{}
+		if ff.mayUseAuthToken {
+			opts = append(opts, APIAuthKeyFlagsOptional())
+		}
+		ff.apiKeyConfig = NewAPIAuthKeyFromFlags(flagset, opts...)
 	}
 
-	ff.FromFlags = apihttp.NewFromFlags("api.turbinelabs.io", flagset)
-
+	ff.clientFromFlags = apihttp.NewFromFlags("api.turbinelabs.io", flagset)
 	return ff
 }
 
 type apiConfigFromFlags struct {
-	apihttp.FromFlags
-	apiKeyConfig APIAuthKeyFromFlags
-	requiredFlag bool
+	clientFromFlags apihttp.FromFlags
+	apiKeyConfig    APIAuthKeyFromFlags
+
+	mayUseAuthToken bool
+	cachePath       tokencache.PathFromFlags
+
+	oauth2Config oauth2.Config
+	tokenCache   tokencache.TokenCache
 }
 
 func (ff *apiConfigFromFlags) APIKey() string {
@@ -85,4 +119,55 @@ func (ff *apiConfigFromFlags) APIKey() string {
 
 func (ff *apiConfigFromFlags) APIAuthKeyFromFlags() APIAuthKeyFromFlags {
 	return ff.apiKeyConfig
+}
+
+func (ff *apiConfigFromFlags) Validate() error {
+	err := ff.clientFromFlags.Validate()
+	if err != nil {
+		return err
+	}
+
+	if ff.mayUseAuthToken {
+		if ff.APIKey() == "" {
+			// validate token cache has non-expired token
+			tc, err := tokencache.NewFromFile(ff.cachePath.CachePath())
+			if err != nil {
+				return err
+			}
+
+			if tc.Expired() {
+				return fmt.Errorf("Your session has timed out, please login again.")
+			}
+			ff.tokenCache = tc
+
+			cfg, err := tokencache.ToOAuthConfig(tc)
+			if err != nil {
+				return fmt.Errorf("Unable to construct OIDC client config: %v", err)
+			}
+			ff.oauth2Config = cfg
+		} else {
+			console.Info().Println("Preferring API Key for authentication")
+		}
+	}
+
+	return nil
+}
+
+func (ff *apiConfigFromFlags) MakeEndpoint() (apihttp.Endpoint, error) {
+	ep, err := ff.clientFromFlags.MakeEndpoint()
+	if err != nil {
+		return apihttp.Endpoint{}, err
+	}
+
+	// If an API Key is present it takes precedence and is assumed valid
+	if ff.APIKey() != "" {
+		return ep, nil
+	}
+
+	// otherwise use the token from cache
+	ctx := context.Background()
+	client := ff.oauth2Config.Client(ctx, ff.tokenCache.Token)
+	ep.SetClient(apihttp.MakeHeaderPreserving(client))
+
+	return ep, nil
 }
