@@ -27,6 +27,18 @@
 			"revisionTime": "2017-07-12T04:22:13Z"
 		},
 		{
+			"checksumSHA1": "KxkAlLxQkuSGHH46Dxu6wpAybO4=",
+			"path": "github.com/pquerna/cachecontrol",
+			"revision": "9299cc36e57c32f83e47ffb3c25d8a3dec10ea0b",
+			"revisionTime": "2017-03-29T16:54:16Z"
+		},
+		{
+			"checksumSHA1": "1jX4QwcFlDAAW827pJwU7cT+kOU=",
+			"path": "github.com/pquerna/cachecontrol/cacheobject",
+			"revision": "9299cc36e57c32f83e47ffb3c25d8a3dec10ea0b",
+			"revisionTime": "2017-03-29T16:54:16Z"
+		},
+		{
 			"checksumSHA1": "dr5+PfIRzXeN+l1VG+s0lea9qz8=",
 			"path": "golang.org/x/net/context",
 			"revision": "b3756b4b77d7b13260a0a2ec658753cf48922eac",
@@ -85,6 +97,24 @@
 			"path": "google.golang.org/appengine/urlfetch",
 			"revision": "ad2570cd3913654e00c5f0183b39d2f998e54046",
 			"revisionTime": "2017-07-07T20:33:49Z"
+		},
+		{
+			"checksumSHA1": "kzRhtiKHuEtzVtb6xZZU4N9u0Fc=",
+			"path": "gopkg.in/square/go-jose.v2",
+			"revision": "b25e6cab129e4a54675b42ea49d38e9c33ade9e6",
+			"revisionTime": "2017-06-07T17:41:08Z"
+		},
+		{
+			"checksumSHA1": "j94zYNLTvPSnfnqVKJ4LUf++uX4=",
+			"path": "gopkg.in/square/go-jose.v2/cipher",
+			"revision": "b25e6cab129e4a54675b42ea49d38e9c33ade9e6",
+			"revisionTime": "2017-06-07T17:41:08Z"
+		},
+		{
+			"checksumSHA1": "JFun0lWY9eqd80Js2iWsehu1gc4=",
+			"path": "gopkg.in/square/go-jose.v2/json",
+			"revision": "b25e6cab129e4a54675b42ea49d38e9c33ade9e6",
+			"revisionTime": "2017-06-07T17:41:08Z"
 		}
 	],
 	"rootPath": "github.com/turbinelabs/api/client"
