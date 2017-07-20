@@ -189,6 +189,8 @@ func (tc *TokenCache) SetToken(tkn OAuth2Token) {
 	} else {
 		tc.RefreshExpiresAt = nil
 	}
+
+	tc.Token = tkn.Token()
 }
 
 // ToOAuthConfig constructs an OAuth2.0 config with the stored login endpoint

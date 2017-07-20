@@ -146,6 +146,7 @@ func doNilTest(t *testing.T, obj OAuth2Token) {
 	assert.Equal(t, tc.ClientKey, want.ClientKey)
 	assert.Equal(t, tc.ProviderURL, want.ProviderURL)
 	assert.Equal(t, tc.Username, want.Username)
+	assert.Nil(t, tc.Token)
 }
 
 func TestSetTokenNil(t *testing.T) {
@@ -195,6 +196,7 @@ func TestSetToken(t *testing.T) {
 				now.Add(nowOffset).Add(1800*time.Second).UTC(),
 			),
 		)
+		assert.SameInstance(t, tc.Token, tkn)
 	})
 }
 
