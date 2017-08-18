@@ -31,3 +31,16 @@ type StatsService interface {
 	// Closes the client and releases any resources it created.
 	Close() error
 }
+
+// StatsServiceV2 forwards stats data to a remote stats-server using
+// the version 2 forwarding interface.
+type StatsServiceV2 interface {
+	// Forward the given stats payload.
+	ForwardV2(*PayloadV2) (*ForwardResult, error)
+
+	// Query for stats
+	Query(*Query) (*QueryResult, error)
+
+	// Closes the client and releases any resources it created.
+	Close() error
+}

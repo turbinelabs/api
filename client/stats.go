@@ -23,6 +23,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -35,27 +36,37 @@ import (
 )
 
 const (
-	forwardPath = "/v1.0/stats/forward"
-	queryPath   = "/v1.0/stats/query"
-	queryArg    = "query"
+	v1ForwardPath = "/v1.0/stats/forward"
+	v2ForwardPath = "/v2.0/stats/forward"
+	v1QueryPath   = "/v1.0/stats/query"
+
+	queryArg = "query"
+)
+
+var (
+	methodNotAllowedV1Err = errors.New("cannot use ForwardV2 on v1 client")
+	methodNotAllowedV2Err = errors.New("cannot use Forward on v2 client")
 )
 
 // internalStatsClient is an internal interface for issuing forwarding
 // requests with a callback
 type internalStatsClient interface {
 	statsapi.StatsService
+
 	// Issues a forwarding request for the given payload with the
 	// given executor.CallbackFunc.
-	ForwardWithCallback(*statsapi.Payload, executor.CallbackFunc) error
+	ForwardWithCallback(interface{}, executor.CallbackFunc) error
 }
 
-type httpStatsV1 struct {
+type httpStats struct {
+	isV2           bool
 	dest           apihttp.Endpoint
+	forwardPath    string
 	requestHandler apihttp.RequestHandler
 	exec           executor.Executor
 }
 
-// NewStatsClient returns a blocking implementation of Stats. Each
+// NewStatsClient returns a blocking implementation of StatsService. Each
 // invocation of Forward accepts a single Payload, issues a forwarding
 // request to a remote stats-server and awaits a response.
 func NewStatsClient(
@@ -64,15 +75,32 @@ func NewStatsClient(
 	clientApp App,
 	exec executor.Executor,
 ) (statsapi.StatsService, error) {
-	return newInternalStatsClient(dest, apiKey, clientApp, exec)
+	return newInternalStatsClient(dest, v1ForwardPath, apiKey, clientApp, exec)
 }
 
-func newInternalStatsClient(
+// NewStatsV2Client returns a blocking implementation of StatsServiceV2. Each
+// invocation of ForwardV2 accepts a single PayloadV2, issues a forwarding
+// request to a remote stats-server and awaits a response.
+func NewStatsV2Client(
 	dest apihttp.Endpoint,
 	apiKey string,
 	clientApp App,
 	exec executor.Executor,
-) (internalStatsClient, error) {
+) (statsapi.StatsServiceV2, error) {
+	client, err := newInternalStatsClient(dest, v2ForwardPath, apiKey, clientApp, exec)
+	if client != nil {
+		client.isV2 = true
+	}
+	return client, err
+}
+
+func newInternalStatsClient(
+	dest apihttp.Endpoint,
+	forwardPath string,
+	apiKey string,
+	clientApp App,
+	exec executor.Executor,
+) (*httpStats, error) {
 	// Copy the Endpoint to avoid polluting the original with our
 	// headers.
 	dest = dest.Copy()
@@ -86,14 +114,15 @@ func newInternalStatsClient(
 	dest.AddHeader("Content-Type", "application/json")
 	dest.AddHeader("Content-Encoding", "gzip")
 
-	return &httpStatsV1{
-		dest,
-		apihttp.NewRequestHandler(dest.Client()),
-		exec,
+	return &httpStats{
+		dest:           dest,
+		forwardPath:    forwardPath,
+		requestHandler: apihttp.NewRequestHandler(dest.Client()),
+		exec:           exec,
 	}, nil
 }
 
-func encodePayload(payload *statsapi.Payload) ([]byte, error) {
+func encodePayload(payload interface{}) ([]byte, error) {
 	var buffer bytes.Buffer
 	gzip := gzip.NewWriter(&buffer)
 	encoder := json.NewEncoder(gzip)
@@ -115,10 +144,19 @@ func encodePayload(payload *statsapi.Payload) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (hs *httpStatsV1) ForwardWithCallback(
-	payload *statsapi.Payload,
+func (hs *httpStats) ForwardWithCallback(
+	payload interface{},
 	cb executor.CallbackFunc,
 ) error {
+	// TODO: remove type check and revert signature to struct pointer when v1 is removed.
+	if hs.isV2 {
+		if _, ok := payload.(*statsapi.PayloadV2); !ok {
+			return fmt.Errorf("invalid payload type: %T", payload)
+		}
+	} else if _, ok := payload.(*statsapi.Payload); !ok {
+		return fmt.Errorf("invalid payload type: %T", payload)
+	}
+
 	encoded, err := encodePayload(payload)
 	if err != nil {
 		return err
@@ -130,12 +168,7 @@ func (hs *httpStatsV1) ForwardWithCallback(
 			if err := hs.requestHandler.Do(
 				func() (*http.Request, error) {
 					rdr := bytes.NewReader(encoded)
-					req, err := hs.dest.NewRequest(
-						"POST",
-						forwardPath,
-						apihttp.Params{},
-						rdr,
-					)
+					req, err := hs.dest.NewRequest("POST", hs.forwardPath, apihttp.Params{}, rdr)
 					if err != nil {
 						return nil, err
 					}
@@ -153,7 +186,7 @@ func (hs *httpStatsV1) ForwardWithCallback(
 	return nil
 }
 
-func (hs *httpStatsV1) Forward(payload *statsapi.Payload) (*statsapi.ForwardResult, error) {
+func (hs *httpStats) doForward(payload interface{}) (*statsapi.ForwardResult, error) {
 	responseChan := make(chan executor.Try, 1)
 	defer close(responseChan)
 
@@ -174,11 +207,25 @@ func (hs *httpStatsV1) Forward(payload *statsapi.Payload) (*statsapi.ForwardResu
 	return try.Get().(*statsapi.ForwardResult), nil
 }
 
-func (hs *httpStatsV1) Close() error {
+func (hs *httpStats) Forward(payload *statsapi.Payload) (*statsapi.ForwardResult, error) {
+	if hs.isV2 {
+		return nil, methodNotAllowedV2Err
+	}
+	return hs.doForward(payload)
+}
+
+func (hs *httpStats) ForwardV2(payload *statsapi.PayloadV2) (*statsapi.ForwardResult, error) {
+	if !hs.isV2 {
+		return nil, methodNotAllowedV1Err
+	}
+	return hs.doForward(payload)
+}
+
+func (hs *httpStats) Close() error {
 	return nil
 }
 
-func (hs *httpStatsV1) Query(query *statsapi.Query) (*statsapi.QueryResult, error) {
+func (hs *httpStats) Query(query *statsapi.Query) (*statsapi.QueryResult, error) {
 	params := apihttp.Params{}
 
 	if query != nil {
@@ -195,7 +242,7 @@ func (hs *httpStatsV1) Query(query *statsapi.Query) (*statsapi.QueryResult, erro
 
 	response := &statsapi.QueryResult{}
 	reqFn := func() (*http.Request, error) {
-		return hs.dest.NewRequest(string(mGET), queryPath, params, nil)
+		return hs.dest.NewRequest(string(mGET), v1QueryPath, params, nil)
 	}
 
 	if err := hs.requestHandler.Do(reqFn, response); err != nil {

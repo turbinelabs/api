@@ -59,3 +59,56 @@ func (_m *MockStatsService) Close() error {
 func (_mr *_MockStatsServiceRecorder) Close() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Close")
 }
+
+// Mock of StatsServiceV2 interface
+type MockStatsServiceV2 struct {
+	ctrl     *gomock.Controller
+	recorder *_MockStatsServiceV2Recorder
+}
+
+// Recorder for MockStatsServiceV2 (not exported)
+type _MockStatsServiceV2Recorder struct {
+	mock *MockStatsServiceV2
+}
+
+func NewMockStatsServiceV2(ctrl *gomock.Controller) *MockStatsServiceV2 {
+	mock := &MockStatsServiceV2{ctrl: ctrl}
+	mock.recorder = &_MockStatsServiceV2Recorder{mock}
+	return mock
+}
+
+func (_m *MockStatsServiceV2) EXPECT() *_MockStatsServiceV2Recorder {
+	return _m.recorder
+}
+
+func (_m *MockStatsServiceV2) ForwardV2(_param0 *PayloadV2) (*ForwardResult, error) {
+	ret := _m.ctrl.Call(_m, "ForwardV2", _param0)
+	ret0, _ := ret[0].(*ForwardResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockStatsServiceV2Recorder) ForwardV2(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ForwardV2", arg0)
+}
+
+func (_m *MockStatsServiceV2) Query(_param0 *Query) (*QueryResult, error) {
+	ret := _m.ctrl.Call(_m, "Query", _param0)
+	ret0, _ := ret[0].(*QueryResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockStatsServiceV2Recorder) Query(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Query", arg0)
+}
+
+func (_m *MockStatsServiceV2) Close() error {
+	ret := _m.ctrl.Call(_m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockStatsServiceV2Recorder) Close() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Close")
+}

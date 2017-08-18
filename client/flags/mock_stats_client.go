@@ -52,6 +52,17 @@ func (_mr *_MockStatsClientFromFlagsRecorder) Make(arg0, arg1 interface{}) *gomo
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Make", arg0, arg1)
 }
 
+func (_m *MockStatsClientFromFlags) MakeV2(_param0 executor.Executor, _param1 *log.Logger) (stats.StatsServiceV2, error) {
+	ret := _m.ctrl.Call(_m, "MakeV2", _param0, _param1)
+	ret0, _ := ret[0].(stats.StatsServiceV2)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockStatsClientFromFlagsRecorder) MakeV2(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "MakeV2", arg0, arg1)
+}
+
 func (_m *MockStatsClientFromFlags) APIKey() string {
 	ret := _m.ctrl.Call(_m, "APIKey")
 	ret0, _ := ret[0].(string)

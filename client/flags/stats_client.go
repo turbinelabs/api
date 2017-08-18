@@ -42,6 +42,9 @@ type StatsClientFromFlags interface {
 	// Make constructs a statsapi.StatsService using the given Executor and Logger.
 	Make(executor.Executor, *log.Logger) (statsapi.StatsService, error)
 
+	// Make constructs a statsapi.StatsServiceV2 using the given Executor and Logger.
+	MakeV2(executor.Executor, *log.Logger) (statsapi.StatsServiceV2, error)
+
 	// APIKey returns the API Key used to construct the statsapi.StatsService.
 	APIKey() string
 }
@@ -105,7 +108,8 @@ type statsClientFromFlags struct {
 	maxBatchDelay      time.Duration
 	maxBatchSize       int
 
-	cachedClient statsapi.StatsService
+	cachedClient   statsapi.StatsService
+	cachedV2Client statsapi.StatsServiceV2
 }
 
 func (ff *statsClientFromFlags) Validate() error {
@@ -164,6 +168,48 @@ func (ff *statsClientFromFlags) Make(
 	}
 
 	ff.cachedClient = stats
+
+	return stats, nil
+}
+
+func (ff *statsClientFromFlags) MakeV2(
+	exec executor.Executor,
+	logger *log.Logger,
+) (statsapi.StatsServiceV2, error) {
+	if ff.cachedV2Client != nil {
+		return ff.cachedV2Client, nil
+	}
+
+	endpoint, err := ff.apiConfigFromFlags.MakeEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	var stats statsapi.StatsServiceV2
+	if ff.useBatching {
+		stats, err = client.NewBatchingStatsV2Client(
+			ff.maxBatchDelay,
+			ff.maxBatchSize,
+			endpoint,
+			ff.apiConfigFromFlags.APIKey(),
+			ff.clientApp,
+			exec,
+			logger,
+		)
+	} else {
+		stats, err = client.NewStatsV2Client(
+			endpoint,
+			ff.apiConfigFromFlags.APIKey(),
+			ff.clientApp,
+			exec,
+		)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	ff.cachedV2Client = stats
 
 	return stats, nil
 }

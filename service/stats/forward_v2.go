@@ -128,7 +128,7 @@ type PayloadV2 struct {
 	// the same as the number of values in the corresponding entry
 	// in this map. The limit value array must be sorted in
 	// ascending order.
-	Limits map[string][]float64 `json:"limits"`
+	Limits map[string][]float64 `json:"limits,omitempty"`
 
 	// Stats is an array of measurements in this payload.
 	Stats []StatV2 `json:"stats"`

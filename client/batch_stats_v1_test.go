@@ -51,7 +51,7 @@ func payloadOfSize(s int) *statsapi.Payload {
 }
 
 type batcherTest struct {
-	expectedPayloadSizes  []int // the bathces: N payloads of given sizes
+	expectedPayloadSizes  []int // the batches: N payloads of given sizes
 	numForwards           int   // number of payloads enqueued
 	forwardedSize         int   // size of each forwarded payload
 	closeAfterLastPayload bool
@@ -137,7 +137,7 @@ func TestNewBatchingStatsClient(t *testing.T) {
 	assert.True(t, ok)
 
 	assert.NonNil(t, clientImpl.internalStatsClient)
-	underlyingImpl, ok := clientImpl.internalStatsClient.(*httpStatsV1)
+	underlyingImpl, ok := clientImpl.internalStatsClient.(*httpStats)
 	assert.True(t, ok)
 	assert.NotDeepEqual(t, underlyingImpl.dest, endpoint)
 	assert.SameInstance(t, underlyingImpl.exec, exec)
@@ -181,13 +181,13 @@ func TestNewBatchingStatsClientValidation(t *testing.T) {
 	assert.ErrorContains(t, err, "max size must be at least 1")
 }
 
-func TestHttpBatchingStatsV1NewBatcher(t *testing.T) {
+func TestHttpBatchingStatsV1GetBatcher(t *testing.T) {
 	client := &httpBatchingStatsV1{
 		batchers: map[string]*payloadBatcher{},
 		mutex:    &sync.RWMutex{},
 	}
 
-	batcher := client.newBatcher(sourceString1)
+	batcher := client.getBatcher(sourceString1)
 	defer close(batcher.ch)
 
 	assert.NonNil(t, batcher)
@@ -195,22 +195,8 @@ func TestHttpBatchingStatsV1NewBatcher(t *testing.T) {
 	assert.Equal(t, batcher.source, sourceString1)
 	assert.NonNil(t, batcher.ch)
 
-	batcher2 := client.newBatcher(sourceString1)
+	batcher2 := client.getBatcher(sourceString1)
 	assert.SameInstance(t, batcher2, batcher)
-}
-
-func TestHttpBatchingStatsV1GetBatcher(t *testing.T) {
-	client := &httpBatchingStatsV1{
-		batchers: map[string]*payloadBatcher{},
-		mutex:    &sync.RWMutex{},
-	}
-
-	assert.Nil(t, client.getBatcher(sourceString1))
-
-	batcher := client.newBatcher(sourceString1)
-	defer close(batcher.ch)
-
-	assert.SameInstance(t, client.getBatcher(sourceString1), batcher)
 }
 
 func TestHttpBatchingStatsV1Forward(t *testing.T) {
@@ -246,8 +232,8 @@ func TestHttpBatchingStatsV1Close(t *testing.T) {
 		mutex:    &sync.RWMutex{},
 	}
 
-	client.newBatcher("this-source")
-	client.newBatcher("that-source")
+	client.getBatcher("this-source")
+	client.getBatcher("that-source")
 	assert.Equal(t, len(client.batchers), 2)
 
 	ch1 := client.batchers["this-source"].ch

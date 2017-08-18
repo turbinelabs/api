@@ -54,133 +54,6 @@ func TestStatsClientFromFlagsValidatesNormalClient(t *testing.T) {
 	assert.Equal(t, ff.Validate(), expectedErr)
 }
 
-func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
-	ctrl := gomock.NewController(assert.Tracing(t))
-	defer ctrl.Finish()
-
-	fs := tbnflag.NewTestFlagSet()
-
-	mockExec := executor.NewMockExecutor(ctrl)
-
-	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
-	assert.Nil(t, err)
-	assert.NonNil(t, endpoint)
-
-	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
-	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
-	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
-
-	ff := NewStatsClientFromFlags(
-		"app",
-		fs.Scope("pfix", ""),
-		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
-	)
-	assert.NonNil(t, ff)
-
-	fs.Parse([]string{
-		"-pfix.batch=false",
-	})
-
-	ffImpl := ff.(*statsClientFromFlags)
-	assert.False(t, ffImpl.useBatching)
-	assert.Equal(t, ffImpl.maxBatchDelay, DefaultMaxBatchDelay)
-	assert.Equal(t, ffImpl.maxBatchSize, DefaultMaxBatchSize)
-
-	statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
-	assert.NonNil(t, statsClient)
-	assert.Nil(t, err)
-
-	expectedErr := errors.New("no endpoints for you")
-	apiConfigFromFlags.EXPECT().
-		MakeEndpoint().
-		Return(apihttp.Endpoint{}, expectedErr)
-
-	fs = tbnflag.NewTestFlagSet()
-	ff = NewStatsClientFromFlags(
-		"app",
-		fs.Scope("pfix", ""),
-		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
-	)
-	assert.NonNil(t, ff)
-
-	statsClient, err = ff.Make(mockExec, log.NewNoopLogger())
-	assert.Nil(t, statsClient)
-	assert.NonNil(t, err)
-}
-
-func TestStatsClientFromFlagsCachesClient(t *testing.T) {
-	ctrl := gomock.NewController(assert.Tracing(t))
-	defer ctrl.Finish()
-
-	pfs := tbnflag.NewTestFlagSet().Scope("pfix", "")
-
-	mockExec := executor.NewMockExecutor(ctrl)
-	otherMockExec := executor.NewMockExecutor(ctrl)
-
-	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
-	assert.Nil(t, err)
-	assert.NonNil(t, endpoint)
-
-	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
-	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
-	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
-
-	ff := NewStatsClientFromFlags(
-		"app",
-		pfs,
-		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
-	)
-	assert.NonNil(t, ff)
-
-	statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
-	assert.NonNil(t, statsClient)
-	assert.Nil(t, err)
-
-	statsClient2, err := ff.Make(otherMockExec, log.NewNoopLogger())
-	assert.NonNil(t, statsClient2)
-	assert.Nil(t, err)
-
-	assert.SameInstance(t, statsClient2, statsClient)
-}
-
-func TestStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
-	ctrl := gomock.NewController(assert.Tracing(t))
-	defer ctrl.Finish()
-
-	fs := tbnflag.NewTestFlagSet()
-
-	mockExec := executor.NewMockExecutor(ctrl)
-
-	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
-	assert.Nil(t, err)
-	assert.NonNil(t, endpoint)
-
-	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
-	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
-	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
-
-	ff := NewStatsClientFromFlags(
-		"app",
-		fs.Scope("pfix", ""),
-		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
-	)
-	assert.NonNil(t, ff)
-
-	fs.Parse([]string{
-		"-pfix.max-batch-delay=5s",
-		"-pfix.max-batch-size=99",
-	})
-
-	ffImpl := ff.(*statsClientFromFlags)
-	assert.True(t, ffImpl.useBatching)
-	assert.Equal(t, ffImpl.maxBatchDelay, 5*time.Second)
-	assert.Equal(t, ffImpl.maxBatchSize, 99)
-
-	statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
-	assert.NonNil(t, statsClient)
-	assert.Nil(t, err)
-}
-
 func TestStatsClientFromFlagsValidatesBatchingClient(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
@@ -223,4 +96,181 @@ func TestStatsClientFromFlagsValidatesBatchingClient(t *testing.T) {
 
 	apiConfigFromFlags.EXPECT().Validate().Return(nil)
 	assert.Nil(t, ff.Validate())
+}
+
+func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 bool) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	fs := tbnflag.NewTestFlagSet()
+
+	mockExec := executor.NewMockExecutor(ctrl)
+
+	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
+	assert.Nil(t, err)
+	assert.NonNil(t, endpoint)
+
+	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
+	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
+	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
+
+	ff := NewStatsClientFromFlags(
+		"app",
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
+	assert.NonNil(t, ff)
+
+	fs.Parse([]string{
+		"-pfix.batch=false",
+	})
+
+	ffImpl := ff.(*statsClientFromFlags)
+	assert.False(t, ffImpl.useBatching)
+	assert.Equal(t, ffImpl.maxBatchDelay, DefaultMaxBatchDelay)
+	assert.Equal(t, ffImpl.maxBatchSize, DefaultMaxBatchSize)
+
+	if useV2 {
+		statsClient, err := ff.MakeV2(mockExec, log.NewNoopLogger())
+		assert.NonNil(t, statsClient)
+		assert.Nil(t, err)
+	} else {
+		statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
+		assert.NonNil(t, statsClient)
+		assert.Nil(t, err)
+	}
+	expectedErr := errors.New("no endpoints for you")
+	apiConfigFromFlags.EXPECT().
+		MakeEndpoint().
+		Return(apihttp.Endpoint{}, expectedErr)
+
+	fs = tbnflag.NewTestFlagSet()
+	ff = NewStatsClientFromFlags(
+		"app",
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
+	assert.NonNil(t, ff)
+
+	if useV2 {
+		statsClient, err := ff.MakeV2(mockExec, log.NewNoopLogger())
+		assert.Nil(t, statsClient)
+		assert.NonNil(t, err)
+	} else {
+		statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
+		assert.Nil(t, statsClient)
+		assert.NonNil(t, err)
+	}
+}
+
+func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
+	testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t, false)
+}
+
+func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlagsV2(t *testing.T) {
+	testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t, true)
+}
+
+func testStatsClientFromFlagsCachesClient(t *testing.T, useV2 bool) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	pfs := tbnflag.NewTestFlagSet().Scope("pfix", "")
+
+	mockExec := executor.NewMockExecutor(ctrl)
+	otherMockExec := executor.NewMockExecutor(ctrl)
+
+	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
+	assert.Nil(t, err)
+	assert.NonNil(t, endpoint)
+
+	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
+	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
+	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
+
+	ff := NewStatsClientFromFlags(
+		"app",
+		pfs,
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
+	assert.NonNil(t, ff)
+
+	var statsClient, statsClient2 interface{}
+	if useV2 {
+		statsClient, err = ff.MakeV2(mockExec, log.NewNoopLogger())
+	} else {
+		statsClient, err = ff.Make(mockExec, log.NewNoopLogger())
+	}
+	assert.NonNil(t, statsClient)
+	assert.Nil(t, err)
+
+	if useV2 {
+		statsClient2, err = ff.MakeV2(otherMockExec, log.NewNoopLogger())
+	} else {
+		statsClient2, err = ff.Make(otherMockExec, log.NewNoopLogger())
+	}
+	assert.NonNil(t, statsClient2)
+	assert.Nil(t, err)
+
+	assert.SameInstance(t, statsClient2, statsClient)
+}
+
+func TestStatsClientFromFlagsCachesClient(t *testing.T) {
+	testStatsClientFromFlagsCachesClient(t, false)
+}
+
+func TestStatsClientFromFlagsCachesClientV2(t *testing.T) {
+	testStatsClientFromFlagsCachesClient(t, true)
+}
+
+func testStatsClientFromFlagsCreatesBatchingClient(t *testing.T, useV2 bool) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	fs := tbnflag.NewTestFlagSet()
+
+	mockExec := executor.NewMockExecutor(ctrl)
+
+	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
+	assert.Nil(t, err)
+	assert.NonNil(t, endpoint)
+
+	apiConfigFromFlags := NewMockAPIConfigFromFlags(ctrl)
+	apiConfigFromFlags.EXPECT().MakeEndpoint().Return(endpoint, nil)
+	apiConfigFromFlags.EXPECT().APIKey().Return("OTAY")
+
+	ff := NewStatsClientFromFlags(
+		"app",
+		fs.Scope("pfix", ""),
+		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+	)
+	assert.NonNil(t, ff)
+
+	fs.Parse([]string{
+		"-pfix.max-batch-delay=5s",
+		"-pfix.max-batch-size=99",
+	})
+
+	ffImpl := ff.(*statsClientFromFlags)
+	assert.True(t, ffImpl.useBatching)
+	assert.Equal(t, ffImpl.maxBatchDelay, 5*time.Second)
+	assert.Equal(t, ffImpl.maxBatchSize, 99)
+
+	if useV2 {
+		statsClient, err := ff.MakeV2(mockExec, log.NewNoopLogger())
+		assert.NonNil(t, statsClient)
+		assert.Nil(t, err)
+	} else {
+		statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
+		assert.NonNil(t, statsClient)
+		assert.Nil(t, err)
+	}
+}
+
+func TestStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
+	testStatsClientFromFlagsCreatesBatchingClient(t, false)
+}
+
+func TestStatsClientFromFlagsCreatesBatchingClientV2(t *testing.T) {
+	testStatsClientFromFlagsCreatesBatchingClient(t, true)
 }

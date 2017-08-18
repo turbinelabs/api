@@ -41,7 +41,7 @@ type httpBatchingStatsV1 struct {
 }
 
 // NewBatchingStatsClient returns a non-blocking implementation of
-// StatsClient. Each invocation of Forward accepts a single
+// StatsService. Each invocation of Forward accepts a single
 // Payload. The client will return immediately, reporting that all
 // stats were successfully sent. Internally, the stats are buffered
 // until the buffer contains at least maxSize stats or maxDelay time
@@ -66,7 +66,7 @@ func NewBatchingStatsClient(
 		return nil, errors.New("max size must be at least 1")
 	}
 
-	underlyingStatsClient, err := newInternalStatsClient(dest, apiKey, clientApp, exec)
+	underlyingStatsClient, err := newInternalStatsClient(dest, v1ForwardPath, apiKey, clientApp, exec)
 	if err != nil {
 		return nil, err
 	}
@@ -85,33 +85,23 @@ func (hs *httpBatchingStatsV1) getBatcher(source string) *payloadBatcher {
 	hs.mutex.RLock()
 	defer hs.mutex.RUnlock()
 
-	return hs.batchers[source]
-}
-
-func (hs *httpBatchingStatsV1) newBatcher(source string) *payloadBatcher {
-	hs.mutex.Lock()
-	defer hs.mutex.Unlock()
-
-	batcher, ok := hs.batchers[source]
-	if !ok {
-		batcher = &payloadBatcher{
-			client: hs,
-			source: source,
-			ch:     make(chan *statsapi.Payload, 10),
-		}
-
-		hs.batchers[source] = batcher
-		batcher.start()
+	if batcher, ok := hs.batchers[source]; ok {
+		return batcher
 	}
 
+	batcher := &payloadBatcher{
+		client: hs,
+		source: source,
+		ch:     make(chan *statsapi.Payload, 10),
+	}
+
+	hs.batchers[source] = batcher
+	batcher.start()
 	return batcher
 }
 
 func (hs *httpBatchingStatsV1) Forward(payload *statsapi.Payload) (*statsapi.ForwardResult, error) {
 	batcher := hs.getBatcher(payload.Source)
-	if batcher == nil {
-		batcher = hs.newBatcher(payload.Source)
-	}
 
 	batcher.ch <- payload
 

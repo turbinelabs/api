@@ -62,7 +62,7 @@ func (_mr *_MockInternalStatsClientRecorder) Close() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Close")
 }
 
-func (_m *mockInternalStatsClient) ForwardWithCallback(_param0 *stats.Payload, _param1 executor.CallbackFunc) error {
+func (_m *mockInternalStatsClient) ForwardWithCallback(_param0 interface{}, _param1 executor.CallbackFunc) error {
 	ret := _m.ctrl.Call(_m, "ForwardWithCallback", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
