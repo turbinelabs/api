@@ -52,16 +52,79 @@ paths:
       summary: Returns the user object for the account authorized and making this request.
       description: Request the user object for an authorized requesting account.
       tags:
-        - User
-     responses:
-       200:
-         description: The authorized user.
-         schema:
-           $ref: '#/definitions/User'
-       default:
-         description: Unexpected error.
-         schema:
-           $ref: '#/definitions/Error'
+        - User Management
+      responses:
+        200:
+          description: The authorized user.
+          schema:
+            $ref: '#/definitions/User'
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/Error'
+
+  /admin/user/self/access_tokens:
+    get:
+      summary: Lists Access Tokens that are configured for the authenticated user.
+      tags:
+        - User Management
+      responses:
+        200:
+          description: A list of Access Tokens defined for the authenticated user.
+          schema:
+            $ref: '#/definitions/MultiAccessTokens'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: Creates a new Access Token and associates it with the authenticated user.
+      tags:
+        - User Management
+      consumes:
+        - application/json
+      parameters:
+        - name: description
+          in: body
+          description: A short string (<255 characters) describing the expected use of the token.
+          required: true
+          schema:
+            $ref: '#/definitions/AccessTokenDescription'
+      responses:
+        200:
+          description: The new Access Token that was created.
+          schema:
+            $ref: '#/definitions/AccessToken'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+  /admin/user/self/access_token/{access-token-key}:
+    delete:
+      summary: Delete the specified access token.
+      tags:
+        - User Management
+      parameters:
+        - name: access-token-key
+          in: path
+          description: the key of the Access Token that should be deleted
+          required: true
+          type: string
+          x-example: 9cd24183-f848-48f8-6f55-0f0724070000
+        - name: checksum
+          in: query
+          description: the current checksum of the user to be modified
+          required: true
+          type: string
+          x-example: 9cd24183-f848-48f8-6f55-0f07240700b9
+      responses:
+        200:
+          description: An empty result if the API key deletion was successful.
+        default:
+          description: An error; may be unexpected or validation error if the last API was removed.
+          schema:
+            $ref: '#/definitions/Error'
 
   /changelog/adhoc:
     get:
@@ -1002,26 +1065,6 @@ definitions:
       fields:
         type: string
 
-  User:
-    type: object
-    required:
-      - user_key
-      - login_email
-      - checksum
-    properties:
-      user_key:
-        type: string
-      login_email:
-        type: string
-      deleted_at:
-        description: |
-          If a user is marked inactive this field will be set to the time when
-          it was done. It is formated as '%Y-%m-%dT%H:%M:%S.%sZ' and is UTC.
-        x-example: 2017-08-14T17:29:11.986438Z
-        type: string
-      checksum:
-        type: string
-
   Zone:
     type: object
     required:
@@ -1567,8 +1610,10 @@ definitions:
     required:
       - name
       - zone_key
-      - cluster_constraints
+      - default
     properties:
+      name:
+        type: string
       shared_rules_key:
         type: string
       zone_key:
@@ -1959,3 +2004,65 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/FilterProducts'
+
+  User:
+    type: object
+    required:
+      - user_key
+      - login_email
+      - checksum
+    properties:
+      user_key:
+        type: string
+      login_email:
+        type: string
+      deleted_at:
+        type: string
+        description: |
+          A timestamp that marks when a user was deleted. It is in the format
+          yyyy-mm-ddThh:mm:ss.SZ. The timezone will always be UTC.
+        x-example: 2017-08-14T17:29:11.986438Z
+      checksum:
+        type: string
+
+  MultiAccessTokens:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          $ref: '#/definitions/AccessToken'
+  AccessToken:
+    type: object
+    required:
+      - access_token_key
+      - description
+      - user_key
+      - created_at
+      - checksum
+    properties:
+      access_token_key:
+        type: string
+      description:
+        type: string
+      user_key:
+        type: string
+      created_at:
+        type: string
+        description: |
+          A timestamp that marks when a user was deleted. It is in the format
+          yyyy-mm-ddThh:mm:ss.SZ. The timezone will always be UTC.
+      checksum:
+        type: string
+      signed_token:
+        type: string
+        description: |
+          This will be set only when an AccessToken is initially created
+
+  AccessTokenDescription:
+    type: object
+    required:
+      - description
+    properties:
+      description:
+        type: string

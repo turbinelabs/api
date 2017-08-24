@@ -33,6 +33,10 @@ import (
 */
 type Admin interface {
 	User() User
+
+	// AccessToken returns an interface to interact with the access tokens
+	// for the user who is making an authenticated request.
+	AccessToken() AccessToken
 }
 
 type User interface {
@@ -177,9 +181,6 @@ type AccessToken interface {
 	// caller will have to save this value. An AccessToken may be revoked by calling
 	// Delete below.
 	Create(token api.AccessToken) (api.AccessToken, error)
-
-	// UpdateDescription modifies description on the specified AccessToken.
-	UpdateDescription(key api.AccessTokenKey, newDescription string, oldChecksum api.Checksum) (api.AccessToken, error)
 
 	// DELETE /v1.0/admin/user/self/access_token/<string:AccessTokenKey>?checksum=<checksum>
 	//

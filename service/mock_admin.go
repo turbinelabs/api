@@ -39,6 +39,16 @@ func (_mr *_MockAdminRecorder) User() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "User")
 }
 
+func (_m *MockAdmin) AccessToken() AccessToken {
+	ret := _m.ctrl.Call(_m, "AccessToken")
+	ret0, _ := ret[0].(AccessToken)
+	return ret0
+}
+
+func (_mr *_MockAdminRecorder) AccessToken() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AccessToken")
+}
+
 // Mock of User interface
 type MockUser struct {
 	ctrl     *gomock.Controller
@@ -253,17 +263,6 @@ func (_m *MockAccessToken) Create(token api.AccessToken) (api.AccessToken, error
 
 func (_mr *_MockAccessTokenRecorder) Create(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Create", arg0)
-}
-
-func (_m *MockAccessToken) UpdateDescription(key api.AccessTokenKey, newDescription string, oldChecksum api.Checksum) (api.AccessToken, error) {
-	ret := _m.ctrl.Call(_m, "UpdateDescription", key, newDescription, oldChecksum)
-	ret0, _ := ret[0].(api.AccessToken)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-func (_mr *_MockAccessTokenRecorder) UpdateDescription(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateDescription", arg0, arg1, arg2)
 }
 
 func (_m *MockAccessToken) Delete(key api.AccessTokenKey, checksum api.Checksum) error {

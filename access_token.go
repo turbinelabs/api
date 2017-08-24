@@ -40,7 +40,7 @@ type AccessToken struct {
 	// SignedToken is a field that is set only once when the token is created and
 	// may be passed by a request to authorize it. This may be revoked and should
 	// be treated as carefully as a password.
-	SignedToken string `json:"signed_token"`
+	SignedToken string `json:"signed_token,omitempty"`
 
 	UserKey   UserKey    `json:"user_key"`
 	OrgKey    OrgKey     `json:"-"`

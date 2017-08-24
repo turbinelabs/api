@@ -26,3 +26,4 @@ package client
 // admin-rooted objects
 
 //go:generate genny -in object.genny -out gen_user.go gen "__type__=user __Type__=User __snake__=user __Coll__=Users __root__=/admin"
+// access token not generated because it doesn't expose a general Modify endpoint

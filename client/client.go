@@ -125,8 +125,12 @@ func NewAdmin(
 	if err != nil {
 		return nil, err
 	}
+	at, err := NewAccessTokenV1(dest)
+	if err != nil {
+		return nil, err
+	}
 
-	httpAdmin := httpAdminV1{u}
+	httpAdmin := httpAdminV1{u, at}
 
 	return &httpAdmin, nil
 }
@@ -194,10 +198,15 @@ func (hs *httpServiceV1) History() service.History {
 // v1 http-backed service that implements Admin via HTTP calls to some
 // backend. For the implementation of each sub interface see in gen_XYZ.go
 type httpAdminV1 struct {
-	userV1 *httpUserV1
+	userV1        *httpUserV1
+	accessTokenV1 *httpAccessTokenV1
 }
 
 // Returns an implementation of service.User.
 func (as *httpAdminV1) User() service.User {
 	return as.userV1
+}
+
+func (as *httpAdminV1) AccessToken() service.AccessToken {
+	return as.accessTokenV1
 }
