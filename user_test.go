@@ -155,7 +155,7 @@ func TestUserIsValidNoAuthKey(t *testing.T) {
 	u := getUser()
 	u.APIAuthKey = ""
 
-	assert.NonNil(t, u.IsValid())
+	assert.Nil(t, u.IsValid())
 }
 
 func TestUserIsValidDelegatedAuthKey(t *testing.T) {

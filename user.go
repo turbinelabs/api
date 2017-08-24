@@ -31,7 +31,7 @@ type APIAuthKey string
 type User struct {
 	UserKey    UserKey    `json:"user_key"`
 	LoginEmail string     `json:"login_email"`
-	APIAuthKey APIAuthKey `json:"api_auth_key"`
+	APIAuthKey APIAuthKey `json:"api_auth_key,omitempty"`
 	OrgKey     OrgKey     `json:"org_key"`
 	DeletedAt  *time.Time `json:"deleted_at,omitempty"`
 	Checksum
@@ -56,9 +56,11 @@ func (u User) IsValid() *ValidationError {
 		errs.AddNew(ErrorCase{scope("login_email"), "may not be empty"})
 	}
 
-	// can't check for key because alternative auth systems may have a different
-	// approach to auth key generation than a simple UUID
-	errCheckIndex(string(u.APIAuthKey), errs, scope("api_auth_key"))
+	if u.APIAuthKey != "" {
+		// can't check for key because alternative auth systems may have a different
+		// approach to auth key generation than a simple UUID
+		errCheckIndex(string(u.APIAuthKey), errs, scope("api_auth_key"))
+	}
 	errCheckKey(string(u.OrgKey), errs, scope("org_key"))
 
 	return errs.OrNil()
