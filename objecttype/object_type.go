@@ -69,6 +69,7 @@ var (
 	Route       = ObjectType{"route", 6}
 	Cluster     = ObjectType{"cluster", 7}
 	SharedRules = ObjectType{"shared_rules", 8}
+	AccessToken = ObjectType{"access_token", 9}
 )
 
 func (ot ObjectType) ID() int64 {
@@ -97,6 +98,8 @@ func FromName(s string) (ObjectType, error) {
 		return Cluster, nil
 	case SharedRules.Name:
 		return SharedRules, nil
+	case AccessToken.Name:
+		return AccessToken, nil
 	}
 
 	return ObjectType{}, UnrecognizedObjectTypeError
@@ -120,6 +123,8 @@ func FromID(i int) (ObjectType, error) {
 		return Cluster, nil
 	case SharedRules.id:
 		return SharedRules, nil
+	case AccessToken.id:
+		return AccessToken, nil
 	}
 
 	return ObjectType{}, UnrecognizedObjectTypeError

@@ -112,7 +112,7 @@ type Org interface {
 
 	// GET /v1.0/admin/org/<string:orgKey>[?include_deleted]
 	//
-	// Get returns a Org for the given OrgKey. If the Org does not
+	// Get returns an Org for the given OrgKey. If the Org does not
 	// exist, an error is returned.
 	Get(orgKey api.OrgKey) (api.Org, error)
 
@@ -149,4 +149,42 @@ func (of OrgFilter) IsNil() bool {
 
 func (of OrgFilter) Equals(o OrgFilter) bool {
 	return of == o
+}
+
+type AccessToken interface {
+	// GET /v1.0/admin/user/self/access_token
+	//
+	// Index returns all AccessTokens to which the given filters apply. All non-empty
+	// fields in a filter must apply for the filter to apply. Any AccessToken to which
+	// any filter applies is included in the result.
+	//
+	// If no filters are supplied, all AccessTokens are returned.
+	Index(filters ...AccessTokenFilter) (api.AccessTokens, error)
+
+	// GET /v1.0/admin/user/self/access_token/<string:AccessTokenKey>
+	//
+	// Get returns an AccessToken for the given AccessTokenKey. If the AccessToken
+	// does not exist, an error is returned.
+	Get(key api.AccessTokenKey) (api.AccessToken, error)
+
+	// POST /v1.0/admin/user/self/access_token
+	//
+	// Create creates the given AccessToken. AccessToken description should explain
+	// the intended use of the key that will be issued. Any fields other than
+	// Description specified in the POSTed AccessToken are ignored.
+	//
+	// The response will have the SignedToken field populated and is the only chance a
+	// caller will have to save this value. An AccessToken may be revoked by calling
+	// Delete below.
+	Create(token api.AccessToken) (api.AccessToken, error)
+
+	// UpdateDescription modifies description on the specified AccessToken.
+	UpdateDescription(key api.AccessTokenKey, newDescription string, oldChecksum api.Checksum) (api.AccessToken, error)
+
+	// DELETE /v1.0/admin/user/self/access_token/<string:AccessTokenKey>?checksum=<checksum>
+	//
+	// Delete completely removes the AccessToken data from the database.
+	// If the checksum does not match no action is taken and an error
+	// is returned.
+	Delete(key api.AccessTokenKey, checksum api.Checksum) error
 }

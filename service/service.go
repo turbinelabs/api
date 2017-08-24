@@ -21,8 +21,10 @@ package service
 
 import (
 	"strings"
+	"time"
 
 	"github.com/turbinelabs/api"
+	tbntime "github.com/turbinelabs/nonstdlib/time"
 )
 
 /*
@@ -480,4 +482,26 @@ func (z ZoneFilter) IsNil() bool {
 
 func (z ZoneFilter) Equals(o ZoneFilter) bool {
 	return z == o
+}
+
+type AccessTokenFilter struct {
+	Description    string             `json:"description"`
+	AccessTokenKey api.AccessTokenKey `json:"access_token_key"`
+	UserKey        api.UserKey        `json:"user_key"`
+	OrgKey         api.OrgKey         `json:"org_key"`
+	CreatedAfter   *time.Time         `json:"created_after"`
+	CreatedBefore  *time.Time         `json:"created_before"`
+}
+
+func (of AccessTokenFilter) IsNil() bool {
+	return of.Equals(AccessTokenFilter{})
+}
+
+func (of AccessTokenFilter) Equals(o AccessTokenFilter) bool {
+	return of.Description == o.Description &&
+		of.AccessTokenKey == o.AccessTokenKey &&
+		of.UserKey == o.UserKey &&
+		of.OrgKey == o.OrgKey &&
+		tbntime.Equal(of.CreatedAfter, o.CreatedAfter) &&
+		tbntime.Equal(of.CreatedBefore, o.CreatedBefore)
 }

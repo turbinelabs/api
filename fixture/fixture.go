@@ -187,6 +187,25 @@ type DataFixturesT struct {
 	SharedRules2             api.SharedRules
 	SharedRulesSlice         api.SharedRulesSlice
 	PublicSharedRulesSlice   api.SharedRulesSlice
+
+	AccessToken1            api.AccessToken
+	AccessTokenKey1         api.AccessTokenKey
+	AccessTokenDescription1 string
+	AccessTokenUserKey1     api.UserKey
+	AccessTokenOrgKey1      api.OrgKey
+	AccessTokenCreatedAt1   *time.Time
+	AccessTokenChecksum1    api.Checksum
+
+	AccessToken2            api.AccessToken
+	AccessTokenKey2         api.AccessTokenKey
+	AccessTokenDescription2 string
+	AccessTokenUserKey2     api.UserKey
+	AccessTokenOrgKey2      api.OrgKey
+	AccessTokenCreatedAt2   *time.Time
+	AccessTokenChecksum2    api.Checksum
+
+	AccessTokenSlice api.AccessTokens
+	AccessTokenZone2 api.ZoneKey
 }
 
 // Provides access to key data within the store; simple values are set here
@@ -318,6 +337,20 @@ func New() DataFixturesT {
 		SharedRulesCohortSeed2: nil,
 		SharedRulesOrgKey2:     "1",
 		SharedRulesChecksum2:   api.Checksum{"shared-rules-cs-2"},
+
+		AccessTokenKey1:         "access-token-key-1",
+		AccessTokenDescription1: "access-token-descirption-1",
+		AccessTokenUserKey1:     "access-token-user-key-1",
+		AccessTokenOrgKey1:      "access-token-org-key-1",
+		AccessTokenCreatedAt1:   nil,
+		AccessTokenChecksum1:    api.Checksum{"access-token-cs-1"},
+
+		AccessTokenKey2:         "access-token-key-2",
+		AccessTokenDescription2: "access-token-descirption-2",
+		AccessTokenUserKey2:     "access-token-user-key-2",
+		AccessTokenOrgKey2:      "access-token-org-key-2",
+		AccessTokenCreatedAt2:   nil,
+		AccessTokenChecksum2:    api.Checksum{"access-token-cs-2"},
 	}
 
 	df.Org1 = api.Org{
@@ -679,6 +712,35 @@ func New() DataFixturesT {
 	for i, r := range df.SharedRulesSlice {
 		r.OrgKey = ""
 		df.PublicSharedRulesSlice[i] = r
+	}
+
+	now := time.Now()
+	df.AccessTokenCreatedAt1 = &now
+	df.AccessTokenCreatedAt2 = &now
+
+	df.AccessToken1 = api.AccessToken{
+		df.AccessTokenKey1,
+		df.AccessTokenDescription1,
+		"",
+		df.AccessTokenUserKey1,
+		df.AccessTokenOrgKey1,
+		df.AccessTokenCreatedAt1,
+		df.AccessTokenChecksum1,
+	}
+
+	df.AccessToken2 = api.AccessToken{
+		df.AccessTokenKey2,
+		df.AccessTokenDescription2,
+		"",
+		df.AccessTokenUserKey2,
+		df.AccessTokenOrgKey2,
+		df.AccessTokenCreatedAt2,
+		df.AccessTokenChecksum2,
+	}
+
+	df.AccessTokenSlice = api.AccessTokens{
+		df.AccessToken1,
+		df.AccessToken2,
 	}
 
 	return df

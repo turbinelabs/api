@@ -196,3 +196,82 @@ func (_m *MockOrg) Delete(orgKey api.OrgKey, checksum api.Checksum) error {
 func (_mr *_MockOrgRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Delete", arg0, arg1)
 }
+
+// Mock of AccessToken interface
+type MockAccessToken struct {
+	ctrl     *gomock.Controller
+	recorder *_MockAccessTokenRecorder
+}
+
+// Recorder for MockAccessToken (not exported)
+type _MockAccessTokenRecorder struct {
+	mock *MockAccessToken
+}
+
+func NewMockAccessToken(ctrl *gomock.Controller) *MockAccessToken {
+	mock := &MockAccessToken{ctrl: ctrl}
+	mock.recorder = &_MockAccessTokenRecorder{mock}
+	return mock
+}
+
+func (_m *MockAccessToken) EXPECT() *_MockAccessTokenRecorder {
+	return _m.recorder
+}
+
+func (_m *MockAccessToken) Index(filters ...AccessTokenFilter) (api.AccessTokens, error) {
+	_s := []interface{}{}
+	for _, _x := range filters {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "Index", _s...)
+	ret0, _ := ret[0].(api.AccessTokens)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockAccessTokenRecorder) Index(arg0 ...interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Index", arg0...)
+}
+
+func (_m *MockAccessToken) Get(key api.AccessTokenKey) (api.AccessToken, error) {
+	ret := _m.ctrl.Call(_m, "Get", key)
+	ret0, _ := ret[0].(api.AccessToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockAccessTokenRecorder) Get(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Get", arg0)
+}
+
+func (_m *MockAccessToken) Create(token api.AccessToken) (api.AccessToken, error) {
+	ret := _m.ctrl.Call(_m, "Create", token)
+	ret0, _ := ret[0].(api.AccessToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockAccessTokenRecorder) Create(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Create", arg0)
+}
+
+func (_m *MockAccessToken) UpdateDescription(key api.AccessTokenKey, newDescription string, oldChecksum api.Checksum) (api.AccessToken, error) {
+	ret := _m.ctrl.Call(_m, "UpdateDescription", key, newDescription, oldChecksum)
+	ret0, _ := ret[0].(api.AccessToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockAccessTokenRecorder) UpdateDescription(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateDescription", arg0, arg1, arg2)
+}
+
+func (_m *MockAccessToken) Delete(key api.AccessTokenKey, checksum api.Checksum) error {
+	ret := _m.ctrl.Call(_m, "Delete", key, checksum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockAccessTokenRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Delete", arg0, arg1)
+}

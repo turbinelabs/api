@@ -47,6 +47,22 @@ produces:
   - application/json
 paths:
 
+  /admin/user/self:
+    get:
+      summary: Returns the user object for the account authorized and making this request.
+      description: Request the user object for an authorized requesting account.
+      tags:
+        - User
+     responses:
+       200:
+         description: The authorized user.
+         schema:
+           $ref: '#/definitions/User'
+       default:
+         description: Unexpected error.
+         schema:
+           $ref: '#/definitions/Error'
+
   /changelog/adhoc:
     get:
       summary: Allows an arbitrary filter to be specified and applied to the org's change log.
@@ -985,6 +1001,27 @@ definitions:
         type: string
       fields:
         type: string
+
+  User:
+    type: object
+    required:
+      - user_key
+      - login_email
+      - checksum
+    properties:
+      user_key:
+        type: string
+      login_email:
+        type: string
+      deleted_at:
+        description: |
+          If a user is marked inactive this field will be set to the time when
+          it was done. It is formated as '%Y-%m-%dT%H:%M:%S.%sZ' and is UTC.
+        x-example: 2017-08-14T17:29:11.986438Z
+        type: string
+      checksum:
+        type: string
+
   Zone:
     type: object
     required:
@@ -998,6 +1035,7 @@ definitions:
         type: string
       name:
         type: string
+
   ZoneCreate:
     type: object
     required:
@@ -1005,6 +1043,7 @@ definitions:
     properties:
       name:
         type: string
+
   MultiZoneResult:
     type: object
     properties:
@@ -1012,11 +1051,13 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Zone'
+
   ZoneResult:
     type: object
     properties:
       result:
         $ref: "#/definitions/Zone"
+
   Domain:
     type: object
     required:
@@ -1054,6 +1095,7 @@ definitions:
           type: array
           items:
             type: string
+
   Redirect:
     description: |
       Specifies how a URL within a domain should be rewritten when requested.
@@ -1083,6 +1125,7 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/HeaderConstraint"
+
   HeaderConstraint:
     description: |
       Indicates that a request's headers should meet some requirement before being
@@ -1108,6 +1151,7 @@ definitions:
         description: |
           If set, the header constraint will succeed if the match described faile.
         type: boolean
+
   SSLConfig:
     description: |
       Experimental: Specifies whether a domain should support SSL/TLS
