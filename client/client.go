@@ -31,6 +31,10 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
+
+	jose "gopkg.in/square/go-jose.v2"
+
 	"github.com/turbinelabs/api"
 	apihttp "github.com/turbinelabs/api/http"
 	apiheader "github.com/turbinelabs/api/http/header"
@@ -140,7 +144,13 @@ func configureEndpoint(dest apihttp.Endpoint, apiKey string, clientApp App) apih
 	// headers.
 	dest = dest.Copy()
 	if apiKey != "" {
-		dest.AddHeader(apiheader.Authorization, apiKey)
+		hdrValue := apiKey
+
+		jws, err := jose.ParseSigned(apiKey)
+		if err == nil && jws != nil {
+			hdrValue = fmt.Sprintf("Token %s", apiKey)
+		}
+		dest.AddHeader(apiheader.Authorization, hdrValue)
 	}
 	dest.AddHeader(apiheader.ClientType, clientType)
 	dest.AddHeader(apiheader.ClientVersion, api.TbnPublicVersion)
