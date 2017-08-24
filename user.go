@@ -33,7 +33,7 @@ type User struct {
 	LoginEmail string     `json:"login_email"`
 	APIAuthKey APIAuthKey `json:"api_auth_key"`
 	OrgKey     OrgKey     `json:"org_key"`
-	DeletedAt  *time.Time `json:"deleted_at"`
+	DeletedAt  *time.Time `json:"deleted_at,omitempty"`
 	Checksum
 }
 
