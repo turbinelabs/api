@@ -151,10 +151,10 @@ func (hs *httpStats) ForwardWithCallback(
 	// TODO: remove type check and revert signature to struct pointer when v1 is removed.
 	if hs.isV2 {
 		if _, ok := payload.(*statsapi.PayloadV2); !ok {
-			return fmt.Errorf("invalid payload type: %T", payload)
+			return fmt.Errorf("invalid payload type: %T, expected *PayloadV2", payload)
 		}
 	} else if _, ok := payload.(*statsapi.Payload); !ok {
-		return fmt.Errorf("invalid payload type: %T", payload)
+		return fmt.Errorf("invalid payload type: %T, expected *Payload", payload)
 	}
 
 	encoded, err := encodePayload(payload)

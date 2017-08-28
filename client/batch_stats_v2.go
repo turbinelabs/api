@@ -74,6 +74,7 @@ func NewBatchingStatsV2Client(
 	if err != nil {
 		return nil, err
 	}
+	underlyingStatsClient.isV2 = true
 
 	return &httpBatchingStatsV2{
 		internalStatsClient: underlyingStatsClient,

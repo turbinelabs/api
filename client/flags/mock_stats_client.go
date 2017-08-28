@@ -6,7 +6,6 @@ package flags
 import (
 	gomock "github.com/golang/mock/gomock"
 	stats "github.com/turbinelabs/api/service/stats"
-	executor "github.com/turbinelabs/nonstdlib/executor"
 	log "log"
 )
 
@@ -41,26 +40,26 @@ func (_mr *_MockStatsClientFromFlagsRecorder) Validate() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Validate")
 }
 
-func (_m *MockStatsClientFromFlags) Make(_param0 executor.Executor, _param1 *log.Logger) (stats.StatsService, error) {
-	ret := _m.ctrl.Call(_m, "Make", _param0, _param1)
+func (_m *MockStatsClientFromFlags) Make(_param0 *log.Logger) (stats.StatsService, error) {
+	ret := _m.ctrl.Call(_m, "Make", _param0)
 	ret0, _ := ret[0].(stats.StatsService)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockStatsClientFromFlagsRecorder) Make(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Make", arg0, arg1)
+func (_mr *_MockStatsClientFromFlagsRecorder) Make(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Make", arg0)
 }
 
-func (_m *MockStatsClientFromFlags) MakeV2(_param0 executor.Executor, _param1 *log.Logger) (stats.StatsServiceV2, error) {
-	ret := _m.ctrl.Call(_m, "MakeV2", _param0, _param1)
+func (_m *MockStatsClientFromFlags) MakeV2(_param0 *log.Logger) (stats.StatsServiceV2, error) {
+	ret := _m.ctrl.Call(_m, "MakeV2", _param0)
 	ret0, _ := ret[0].(stats.StatsServiceV2)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockStatsClientFromFlagsRecorder) MakeV2(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "MakeV2", arg0, arg1)
+func (_mr *_MockStatsClientFromFlagsRecorder) MakeV2(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "MakeV2", arg0)
 }
 
 func (_m *MockStatsClientFromFlags) APIKey() string {

@@ -106,6 +106,9 @@ func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 b
 
 	mockExec := executor.NewMockExecutor(ctrl)
 
+	mockExecFromFlags := executor.NewMockFromFlags(ctrl)
+	mockExecFromFlags.EXPECT().Make(gomock.Any()).Return(mockExec)
+
 	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
 	assert.Nil(t, err)
 	assert.NonNil(t, endpoint)
@@ -118,6 +121,7 @@ func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 b
 		"app",
 		fs.Scope("pfix", ""),
 		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+		StatsClientWithExecutorFromFlags(mockExecFromFlags),
 	)
 	assert.NonNil(t, ff)
 
@@ -131,11 +135,11 @@ func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 b
 	assert.Equal(t, ffImpl.maxBatchSize, DefaultMaxBatchSize)
 
 	if useV2 {
-		statsClient, err := ff.MakeV2(mockExec, log.NewNoopLogger())
+		statsClient, err := ff.MakeV2(log.NewNoopLogger())
 		assert.NonNil(t, statsClient)
 		assert.Nil(t, err)
 	} else {
-		statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
+		statsClient, err := ff.Make(log.NewNoopLogger())
 		assert.NonNil(t, statsClient)
 		assert.Nil(t, err)
 	}
@@ -153,11 +157,11 @@ func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 b
 	assert.NonNil(t, ff)
 
 	if useV2 {
-		statsClient, err := ff.MakeV2(mockExec, log.NewNoopLogger())
+		statsClient, err := ff.MakeV2(log.NewNoopLogger())
 		assert.Nil(t, statsClient)
 		assert.NonNil(t, err)
 	} else {
-		statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
+		statsClient, err := ff.Make(log.NewNoopLogger())
 		assert.Nil(t, statsClient)
 		assert.NonNil(t, err)
 	}
@@ -178,7 +182,9 @@ func testStatsClientFromFlagsCachesClient(t *testing.T, useV2 bool) {
 	pfs := tbnflag.NewTestFlagSet().Scope("pfix", "")
 
 	mockExec := executor.NewMockExecutor(ctrl)
-	otherMockExec := executor.NewMockExecutor(ctrl)
+
+	mockExecFromFlags := executor.NewMockFromFlags(ctrl)
+	mockExecFromFlags.EXPECT().Make(gomock.Any()).AnyTimes().Return(mockExec)
 
 	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
 	assert.Nil(t, err)
@@ -197,17 +203,17 @@ func testStatsClientFromFlagsCachesClient(t *testing.T, useV2 bool) {
 
 	var statsClient, statsClient2 interface{}
 	if useV2 {
-		statsClient, err = ff.MakeV2(mockExec, log.NewNoopLogger())
+		statsClient, err = ff.MakeV2(log.NewNoopLogger())
 	} else {
-		statsClient, err = ff.Make(mockExec, log.NewNoopLogger())
+		statsClient, err = ff.Make(log.NewNoopLogger())
 	}
 	assert.NonNil(t, statsClient)
 	assert.Nil(t, err)
 
 	if useV2 {
-		statsClient2, err = ff.MakeV2(otherMockExec, log.NewNoopLogger())
+		statsClient2, err = ff.MakeV2(log.NewNoopLogger())
 	} else {
-		statsClient2, err = ff.Make(otherMockExec, log.NewNoopLogger())
+		statsClient2, err = ff.Make(log.NewNoopLogger())
 	}
 	assert.NonNil(t, statsClient2)
 	assert.Nil(t, err)
@@ -231,6 +237,9 @@ func testStatsClientFromFlagsCreatesBatchingClient(t *testing.T, useV2 bool) {
 
 	mockExec := executor.NewMockExecutor(ctrl)
 
+	mockExecFromFlags := executor.NewMockFromFlags(ctrl)
+	mockExecFromFlags.EXPECT().Make(gomock.Any()).Return(mockExec)
+
 	endpoint, err := apihttp.NewEndpoint(apihttp.HTTPS, "example.com:538")
 	assert.Nil(t, err)
 	assert.NonNil(t, endpoint)
@@ -243,6 +252,7 @@ func testStatsClientFromFlagsCreatesBatchingClient(t *testing.T, useV2 bool) {
 		"app",
 		fs.Scope("pfix", ""),
 		StatsClientWithAPIConfigFromFlags(apiConfigFromFlags),
+		StatsClientWithExecutorFromFlags(mockExecFromFlags),
 	)
 	assert.NonNil(t, ff)
 
@@ -257,11 +267,11 @@ func testStatsClientFromFlagsCreatesBatchingClient(t *testing.T, useV2 bool) {
 	assert.Equal(t, ffImpl.maxBatchSize, 99)
 
 	if useV2 {
-		statsClient, err := ff.MakeV2(mockExec, log.NewNoopLogger())
+		statsClient, err := ff.MakeV2(log.NewNoopLogger())
 		assert.NonNil(t, statsClient)
 		assert.Nil(t, err)
 	} else {
-		statsClient, err := ff.Make(mockExec, log.NewNoopLogger())
+		statsClient, err := ff.Make(log.NewNoopLogger())
 		assert.NonNil(t, statsClient)
 		assert.Nil(t, err)
 	}

@@ -39,11 +39,11 @@ const (
 type StatsClientFromFlags interface {
 	Validate() error
 
-	// Make constructs a statsapi.StatsService using the given Executor and Logger.
-	Make(executor.Executor, *log.Logger) (statsapi.StatsService, error)
+	// Make constructs a statsapi.StatsService using the given Logger.
+	Make(*log.Logger) (statsapi.StatsService, error)
 
-	// Make constructs a statsapi.StatsServiceV2 using the given Executor and Logger.
-	MakeV2(executor.Executor, *log.Logger) (statsapi.StatsServiceV2, error)
+	// Make constructs a statsapi.StatsServiceV2 using the given Logger.
+	MakeV2(*log.Logger) (statsapi.StatsServiceV2, error)
 
 	// APIKey returns the API Key used to construct the statsapi.StatsService.
 	APIKey() string
@@ -61,6 +61,14 @@ func StatsClientWithAPIConfigFromFlags(apiConfigFromFlags APIConfigFromFlags) St
 	}
 }
 
+// StatsClientWithExecutorFromFlags configures NewStatsClientFromFlags
+// to use a shared executor.FromFlags rather than creating its own.
+func StatsClientWithExecutorFromFlags(execFromFlags executor.FromFlags) StatsClientOption {
+	return func(ff *statsClientFromFlags) {
+		ff.execFromFlags = execFromFlags
+	}
+}
+
 func NewStatsClientFromFlags(
 	clientApp client.App,
 	pfs tbnflag.FlagSet,
@@ -74,6 +82,10 @@ func NewStatsClientFromFlags(
 
 	if ff.apiConfigFromFlags == nil {
 		ff.apiConfigFromFlags = NewAPIConfigFromFlags(pfs)
+	}
+
+	if ff.execFromFlags == nil {
+		ff.execFromFlags = executor.NewFromFlags(pfs)
 	}
 
 	pfs.BoolVar(
@@ -104,6 +116,7 @@ func NewStatsClientFromFlags(
 type statsClientFromFlags struct {
 	clientApp          client.App
 	apiConfigFromFlags APIConfigFromFlags
+	execFromFlags      executor.FromFlags
 	useBatching        bool
 	maxBatchDelay      time.Duration
 	maxBatchSize       int
@@ -131,7 +144,6 @@ func (ff *statsClientFromFlags) Validate() error {
 }
 
 func (ff *statsClientFromFlags) Make(
-	exec executor.Executor,
 	logger *log.Logger,
 ) (statsapi.StatsService, error) {
 	if ff.cachedClient != nil {
@@ -142,6 +154,8 @@ func (ff *statsClientFromFlags) Make(
 	if err != nil {
 		return nil, err
 	}
+
+	exec := ff.execFromFlags.Make(logger)
 
 	var stats statsapi.StatsService
 	if ff.useBatching {
@@ -173,7 +187,6 @@ func (ff *statsClientFromFlags) Make(
 }
 
 func (ff *statsClientFromFlags) MakeV2(
-	exec executor.Executor,
 	logger *log.Logger,
 ) (statsapi.StatsServiceV2, error) {
 	if ff.cachedV2Client != nil {
@@ -184,6 +197,8 @@ func (ff *statsClientFromFlags) MakeV2(
 	if err != nil {
 		return nil, err
 	}
+
+	exec := ff.execFromFlags.Make(logger)
 
 	var stats statsapi.StatsServiceV2
 	if ff.useBatching {
