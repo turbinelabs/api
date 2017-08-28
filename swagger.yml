@@ -6,7 +6,7 @@ info:
   description: Turbine Labs Public REST API
   version: '1.0'
 security:
-  - tokenAuth: []
+  - TokenAuth: []
 tags:
   - name: Zone
     description: >-
@@ -2282,6 +2282,6 @@ components:
         description:
           type: string
   securitySchemes:
-    tokenAuth:
+    TokenAuth:
       type: http
       scheme: token
