@@ -72,6 +72,7 @@ func TestIndex(t *testing.T) {
 	}
 
 	srv := httptest.NewServer(verifier)
+	defer srv.Close()
 	svc := getAllInterface(srv)
 	cds, err := svc.History().Index(filter, time.Time{}, time.Time{})
 	assert.Nil(t, err)
@@ -106,6 +107,7 @@ func TestIndexWithTimes(t *testing.T) {
 	}
 
 	srv := httptest.NewServer(verifier)
+	defer srv.Close()
 	svc := getAllInterface(srv)
 	cds, err := svc.History().Index(filter, startT, endT)
 	assert.Nil(t, err)
@@ -190,6 +192,7 @@ func TestGraph(t *testing.T) {
 					}
 
 					srv := httptest.NewServer(verifying)
+					defer srv.Close()
 					svc := getAllInterface(srv)
 					cds, err := mkCall(svc)
 					assert.Nil(t, err)
