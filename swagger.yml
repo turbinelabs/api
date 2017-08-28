@@ -5,8 +5,6 @@ info:
   title: Turbine Labs API
   description: Turbine Labs Public REST API
   version: '1.0'
-security:
-  - tokenAuth: []
 tags:
   - name: Zone
     description: >-
@@ -1227,10 +1225,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 components:
-  securitySchemas:
-    tokenAuth:
-      type: http
-      scheme: token
   schemas:
     Error:
       type: object
@@ -2286,10 +2280,9 @@ components:
         description:
           type: string
   securitySchemes:
-    api_key:
-      type: apiKey
-      name: X-Turbine-API-Key
-      in: header
+    tokenAuth:
+      type: http
+      scheme: token
 
 security:
   - tokenAuth: []
