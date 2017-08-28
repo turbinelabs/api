@@ -2284,4 +2284,4 @@ components:
   securitySchemes:
     TokenAuth:
       type: http
-      scheme: token
+      scheme: basic
