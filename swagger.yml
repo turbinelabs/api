@@ -9,10 +9,9 @@ host: api.turbinelabs.io
 schemes:
   - https
 securityDefinitions:
-  api_key:
-    type: apiKey
-    name: X-Turbine-API-Key
-    in: header
+  tokenAuth:
+      type: http
+      scheme: token
 
 security:
   - api_key: []
