@@ -8,13 +8,14 @@ host: api.turbinelabs.io
 # array of all schemes that your API supports
 schemes:
   - https
-securityDefinitions:
-  tokenAuth:
+components:
+  securitySchemas:
+    tokenAuth:
       type: http
       scheme: token
 
 security:
-  - api_key: []
+  - tokenAuth: []
 
 tags:
   - name: Zone
