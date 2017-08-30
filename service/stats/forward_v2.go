@@ -26,8 +26,8 @@ const (
 	UpstreamResponses = "us_responses"
 	UpstreamLatency   = "us_latency"
 
-	InvalidConfig = "invalid_config"
-	PollSuccess   = "poll_success"
+	Poll   = "poll"
+	Config = "config"
 )
 
 // Valid tag names.
@@ -40,6 +40,14 @@ const (
 	Upstream   = "upstream"    // "
 	Instance   = "instance"    // "
 	StatusCode = "status_code" // valid for Responses and UpstreamResponses only
+
+	PollResult        = "result" // valid for Poll only
+	PollSuccessResult = "success"
+	PollErrorResult   = "error"
+
+	ConfigState   = "state" // valid for Config only
+	ConfigValid   = "valid"
+	ConfigInvalid = "invalid"
 )
 
 // DefaultLimitName specifies the name of the default limits. See
