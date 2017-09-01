@@ -55,6 +55,31 @@ func TestClusterConstraintsEqualsSuccess(t *testing.T) {
 	assert.True(t, slice1.Equals(slice2))
 }
 
+func TestClusterConstraintsEqualsDiffernetOrder(t *testing.T) {
+	cc1 := ClusterConstraint{
+		"cckey1",
+		"ckey1",
+		Metadata{{"key", "value"}, {"key2", "value2"}},
+		Metadata{{"state", "released"}},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		1234,
+	}
+	cc2 := ClusterConstraint{
+		"cckey2",
+		"ckey2",
+		Metadata{{"key-2", "value-2"}},
+		Metadata{{"stata", "testing"}},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		1234,
+	}
+
+	slice1 := ClusterConstraints{cc1, cc2}
+	slice2 := ClusterConstraints{cc2, cc1}
+
+	assert.True(t, slice2.Equals(slice1))
+	assert.True(t, slice1.Equals(slice2))
+}
+
 func TestClusterConstraintsEqualsFailureMetadata(t *testing.T) {
 	cc1 := ClusterConstraint{"cckey1", "ckey1", Metadata{{"key", "value"}, {"key2", "value2"}}, nil, ResponseData{}, 1234}
 	cc2a := ClusterConstraint{"cckey2", "ckey2", Metadata{}, nil, ResponseData{}, 1234}

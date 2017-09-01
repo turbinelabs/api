@@ -114,18 +114,17 @@ type AllConstraints struct {
 
 type ClusterConstraints []ClusterConstraint
 
-// Check the Equality of two ClusterConstraint slices. They are (currently)
-// equal iff each of the elements of a slice is equal to the corresponding
-// element in the other slice. That is: order of the contents matters.
-//
-// TODO: make this call order agnostic - https://github.com/turbinelabs/tbn/issues/188
+// Check the Equality of two ClusterConstraint slices. Order agnostic.
 func (ccs ClusterConstraints) Equals(o ClusterConstraints) bool {
 	if len(ccs) != len(o) {
 		return false
 	}
 
-	for i, cc := range ccs {
-		if !o[i].Equals(cc) {
+	ccMap := ccs.AsMap()
+	oMap := o.AsMap()
+
+	for k, v := range ccMap {
+		if ov, ok := oMap[k]; !ok || !ov.Equals(v) {
 			return false
 		}
 	}
