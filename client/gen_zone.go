@@ -56,7 +56,7 @@ func (hc *httpZoneV1) path(p string) string {
 // Construct a request to the associated zone Endpoint with a specified
 // method, path, query params, and body.
 func (hc *httpZoneV1) request(
-	method httpMethod,
+	method string,
 	path string,
 	params apihttp.Params,
 	body string,
@@ -72,7 +72,7 @@ func (hc *httpZoneV1) request(
 }
 
 func (hc *httpZoneV1) get(path string, params apihttp.Params) (*http.Request, error) {
-	return hc.request(mGET, path, params, "")
+	return hc.request(http.MethodGet, path, params, "")
 }
 
 func (hc *httpZoneV1) post(
@@ -80,7 +80,7 @@ func (hc *httpZoneV1) post(
 	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
-	return hc.request(mPOST, path, params, body)
+	return hc.request(http.MethodPost, path, params, body)
 }
 
 func (hc *httpZoneV1) put(
@@ -88,11 +88,11 @@ func (hc *httpZoneV1) put(
 	params apihttp.Params,
 	body string,
 ) (*http.Request, error) {
-	return hc.request(mPUT, path, params, body)
+	return hc.request(http.MethodPut, path, params, body)
 }
 
 func (hc *httpZoneV1) delete(path string, params apihttp.Params) (*http.Request, error) {
-	return hc.request(mDELETE, path, params, "")
+	return hc.request(http.MethodDelete, path, params, "")
 }
 
 func (hc *httpZoneV1) Index(filters ...service.ZoneFilter) (api.Zones, error) {

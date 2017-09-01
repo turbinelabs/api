@@ -242,7 +242,7 @@ func (hs *httpStats) Query(query *statsapi.Query) (*statsapi.QueryResult, error)
 
 	response := &statsapi.QueryResult{}
 	reqFn := func() (*http.Request, error) {
-		return hs.dest.NewRequest(string(mGET), v1QueryPath, params, nil)
+		return hs.dest.NewRequest(http.MethodGet, v1QueryPath, params, nil)
 	}
 
 	if err := hs.requestHandler.Do(reqFn, response); err != nil {

@@ -41,17 +41,8 @@ import (
 	"github.com/turbinelabs/api/service"
 )
 
-type httpMethod string
-
 // App is passed in the X-Tbn-Client-App header in API calls
 type App string
-
-const (
-	mGET    httpMethod = "GET"
-	mPUT               = "PUT"
-	mPOST              = "POST"
-	mDELETE            = "DELETE"
-)
 
 // clientType is the value sent for the X-Tbn-Client-Type header
 const clientType = "github.com/turbinelabs/api/client"

@@ -56,7 +56,7 @@ func (hh *httpHistoryV1) path(p string) string {
 // Construct a request to the associated cluster Endpoint with a specified
 // method, path, query params, and body.
 func (hh *httpHistoryV1) request(
-	method httpMethod,
+	method string,
 	path string,
 	params apihttp.Params,
 	body string,
@@ -72,7 +72,7 @@ func (hh *httpHistoryV1) request(
 }
 
 func (hh *httpHistoryV1) get(path string, params apihttp.Params) (*http.Request, error) {
-	return hh.request(mGET, path, params, "")
+	return hh.request(http.MethodGet, path, params, "")
 }
 
 func (hh *httpHistoryV1) Index(
