@@ -44,28 +44,21 @@ func (metadata *Metadata) Map() map[string]string {
 	return result
 }
 
-func metadataCommonEquals(m1, m2 Metadata) bool {
-	if len(m1) != len(m2) {
+func (m Metadata) Equals(o Metadata) bool {
+	if len(m) != len(o) {
 		return false
 	}
 
-	m1Map := m1.Map()
+	mMap := m.Map()
+	oMap := o.Map()
 
-	for _, v := range m2 {
-		if m2V, m2OK := m1Map[v.Key]; !m2OK || m2V != v.Value {
+	for k, v := range mMap {
+		if ov, ok := oMap[k]; !ok || ov != v {
 			return false
 		}
 	}
 
 	return true
-}
-
-func (m Metadata) Equals(o Metadata) bool {
-	return metadataCommonEquals(m, o)
-}
-
-func (m Metadata) Equivalent(o Metadata) bool {
-	return metadataCommonEquals(m, o)
 }
 
 // A Metadatum a key/value pair.
@@ -100,24 +93,14 @@ func MetadataValid(
 	return errs.OrNil()
 }
 
-func datumCommonEquals(m1, m2 Metadatum) bool {
-	return m1.Key == m2.Key && m1.Value == m2.Value
-}
-
-// Checks for equality between two Metadatum structs. They will be considered
-// equal if the key and value both match.
-func (m Metadatum) Equals(o Metadatum) bool {
-	return datumCommonEquals(m, o)
-}
-
-// Checks for semantic equality between two Metadatum structs. They will be
+// Equals checks for equality between two Metadatum structs. They will be
 // considered equal if the key and value both match.
-func (m Metadatum) Equivalent(o Metadatum) bool {
-	return datumCommonEquals(m, o)
+func (m Metadatum) Equals(o Metadatum) bool {
+	return m.Key == o.Key && m.Value == o.Value
 }
 
-// Sort a Metadata by Metadatum Key.
-// Eg: sort.Sort(MetadataByKey(metadata))
+// MetadataByKey implements sort.Interface to allow sorting of Metadata by
+// Metadatum Key. Eg: sort.Sort(MetadataByKey(metadata))
 type MetadataByKey Metadata
 
 var _ sort.Interface = MetadataByKey{}

@@ -53,8 +53,6 @@ func TestDomainEqualsSuccess(t *testing.T) {
 
 	assert.True(t, d2.Equals(d1))
 	assert.True(t, d1.Equals(d2))
-	assert.True(t, d2.Equivalent(d1))
-	assert.True(t, d1.Equivalent(d2))
 }
 
 func TestDomainEqualsOrgKeyVaries(t *testing.T) {
@@ -63,8 +61,6 @@ func TestDomainEqualsOrgKeyVaries(t *testing.T) {
 
 	assert.False(t, d2.Equals(d1))
 	assert.False(t, d1.Equals(d2))
-	assert.False(t, d2.Equivalent(d1))
-	assert.False(t, d1.Equivalent(d2))
 }
 
 func TestDomainEqualsRedirctChanged(t *testing.T) {
@@ -106,17 +102,6 @@ func TestDomainEqualsCorsConfigChanges(t *testing.T) {
 
 	assert.False(t, d2.Equals(d1))
 	assert.False(t, d1.Equals(d2))
-}
-
-func TestDomainEquivalentVsEquals(t *testing.T) {
-	d1, d2 := getDomains()
-	d2.DomainKey = "dkey2"
-	d2.Checksum = Checksum{"aoeu"}
-
-	assert.False(t, d2.Equals(d1))
-	assert.False(t, d1.Equals(d2))
-	assert.True(t, d2.Equivalent(d1))
-	assert.True(t, d1.Equivalent(d2))
 }
 
 func TestDomainNotEqualsKeyVaries(t *testing.T) {

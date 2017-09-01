@@ -37,7 +37,7 @@ var hostPattern = regexp.MustCompile(HostPatternString)
 // Instances is a slice of Instance
 type Instances []Instance
 
-func (i Instances) equality(o Instances, checkfn func(Instance, Instance) bool) bool {
+func (i Instances) Equals(o Instances) bool {
 	if len(i) != len(o) {
 		return false
 	}
@@ -51,28 +51,12 @@ func (i Instances) equality(o Instances, checkfn func(Instance, Instance) bool) 
 	for _, iInst := range i {
 		if oInst, oOK := oMap[iInst.Key()]; !oOK {
 			return false
-		} else if !checkfn(iInst, oInst) {
+		} else if !iInst.Equals(oInst) {
 			return false
 		}
 	}
 
 	return true
-}
-
-var equalsFnAdapter func(Instance, Instance) bool = func(i1, i2 Instance) bool {
-	return i1.Equals(i2)
-}
-
-func (i Instances) Equals(o Instances) bool {
-	return i.equality(o, equalsFnAdapter)
-}
-
-var equivFnAdapter func(Instance, Instance) bool = func(i1, i2 Instance) bool {
-	return i1.Equivalent(i2)
-}
-
-func (i Instances) Equivalent(o Instances) bool {
-	return i.equality(o, equivFnAdapter)
 }
 
 // Checks a collection of instances to ensure all are valid
@@ -114,12 +98,6 @@ func (i Instance) hostPortCheck(i2 Instance) bool {
 // equal as well as its metadata.
 func (i Instance) Equals(o Instance) bool {
 	return i.hostPortCheck(o) && i.Metadata.Equals(o.Metadata)
-}
-
-// Checks for approximate object equivalence. This requires Instance host and port are
-// the same and its metadata should be equivalent as well.
-func (i Instance) Equivalent(o Instance) bool {
-	return i.hostPortCheck(o) && i.Metadata.Equivalent(o.Metadata)
 }
 
 // checks for host and port data as both are required for an instance to be

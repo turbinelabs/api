@@ -183,16 +183,6 @@ func (d Domain) Equals(o Domain) bool {
 		ccEq
 }
 
-// Check for semantic equality between this Domain an another. Domains must
-// have the same Name, Zone, and Port to be considered equivalent. Key and
-// Checksum are explicitly excluded from requirements for equivalence.
-func (d Domain) Equivalent(o Domain) bool {
-	return d.ZoneKey == o.ZoneKey &&
-		d.Name == o.Name &&
-		d.Port == o.Port &&
-		d.OrgKey == o.OrgKey
-}
-
 // Checks for exact contents parity between two Domains. This requires
 // that each Domain with the same Key be Equal to each other.
 func (ds Domains) Equals(o Domains) bool {

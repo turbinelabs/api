@@ -31,8 +31,6 @@ func TestInstanceMetadataVaries(t *testing.T) {
 
 	assert.False(t, i1.Equals(i2))
 	assert.False(t, i2.Equals(i1))
-	assert.False(t, i1.Equivalent(i2))
-	assert.False(t, i2.Equivalent(i1))
 }
 
 func TestInstanceMetadataZeroNil(t *testing.T) {
@@ -41,8 +39,6 @@ func TestInstanceMetadataZeroNil(t *testing.T) {
 
 	assert.True(t, i2.Equals(i1))
 	assert.True(t, i1.Equals(i2))
-	assert.True(t, i2.Equivalent(i1))
-	assert.True(t, i1.Equivalent(i2))
 }
 
 func TestHostVaries(t *testing.T) {
@@ -51,8 +47,6 @@ func TestHostVaries(t *testing.T) {
 
 	assert.False(t, i2.Equals(i1))
 	assert.False(t, i1.Equals(i2))
-	assert.False(t, i2.Equivalent(i1))
-	assert.False(t, i1.Equivalent(i2))
 }
 
 func TestPortVaries(t *testing.T) {
@@ -61,8 +55,6 @@ func TestPortVaries(t *testing.T) {
 
 	assert.False(t, i2.Equals(i1))
 	assert.False(t, i1.Equals(i2))
-	assert.False(t, i2.Equivalent(i1))
-	assert.False(t, i1.Equivalent(i2))
 }
 
 func TestInstanceMatches(t *testing.T) {
@@ -73,8 +65,6 @@ func TestInstanceMatches(t *testing.T) {
 
 	assert.True(t, i2.Equals(i1))
 	assert.True(t, i1.Equals(i1))
-	assert.True(t, i2.Equivalent(i1))
-	assert.True(t, i1.Equivalent(i1))
 }
 
 // Instances
@@ -84,8 +74,6 @@ func TestInstancesZeroNil(t *testing.T) {
 
 	assert.True(t, i1.Equals(i2))
 	assert.True(t, i2.Equals(i1))
-	assert.True(t, i1.Equivalent(i2))
-	assert.True(t, i2.Equivalent(i1))
 }
 
 func TestInstancesZeroZero(t *testing.T) {
@@ -94,8 +82,6 @@ func TestInstancesZeroZero(t *testing.T) {
 
 	assert.True(t, i1.Equals(i2))
 	assert.True(t, i2.Equals(i1))
-	assert.True(t, i1.Equivalent(i2))
-	assert.True(t, i2.Equivalent(i1))
 }
 
 func TestInstancesOutOfOrder(t *testing.T) {
@@ -106,8 +92,6 @@ func TestInstancesOutOfOrder(t *testing.T) {
 
 	assert.True(t, i1.Equals(i2))
 	assert.True(t, i2.Equals(i1))
-	assert.True(t, i1.Equivalent(i2))
-	assert.True(t, i2.Equivalent(i1))
 }
 
 func TestInstancesExtraElement(t *testing.T) {
@@ -119,8 +103,6 @@ func TestInstancesExtraElement(t *testing.T) {
 
 	assert.False(t, i1.Equals(i2))
 	assert.False(t, i2.Equals(i1))
-	assert.False(t, i1.Equivalent(i2))
-	assert.False(t, i2.Equivalent(i1))
 }
 
 func mkTestI() Instance {

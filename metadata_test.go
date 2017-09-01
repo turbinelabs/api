@@ -39,8 +39,6 @@ func TestMetadatumEqualsTrue(t *testing.T) {
 
 	assert.True(t, m2.Equals(m1))
 	assert.True(t, m1.Equals(m2))
-	assert.True(t, m2.Equivalent(m1))
-	assert.True(t, m1.Equivalent(m2))
 }
 
 func TestMetadatumValueChanged(t *testing.T) {
@@ -49,8 +47,6 @@ func TestMetadatumValueChanged(t *testing.T) {
 
 	assert.False(t, m1.Equals(m2))
 	assert.False(t, m2.Equals(m1))
-	assert.False(t, m1.Equivalent(m2))
-	assert.False(t, m2.Equivalent(m1))
 }
 
 func TestMetadatumKeyChanged(t *testing.T) {
@@ -59,8 +55,6 @@ func TestMetadatumKeyChanged(t *testing.T) {
 
 	assert.False(t, m1.Equals(m2))
 	assert.False(t, m2.Equals(m1))
-	assert.False(t, m1.Equivalent(m2))
-	assert.False(t, m2.Equivalent(m1))
 }
 
 // Metadata
@@ -70,16 +64,12 @@ func TestMetadataZeroNil(t *testing.T) {
 
 	assert.True(t, m1.Equals(m2))
 	assert.True(t, m2.Equals(m1))
-	assert.True(t, m1.Equivalent(m2))
-	assert.True(t, m2.Equivalent(m1))
 }
 
 func TestMetadataEqualsNilNil(t *testing.T) {
 	var m1, m2 Metadata
 	assert.True(t, m1.Equals(m2))
 	assert.True(t, m2.Equals(m1))
-	assert.True(t, m1.Equivalent(m2))
-	assert.True(t, m2.Equivalent(m1))
 }
 
 func TestMetadataZeroZero(t *testing.T) {
@@ -88,8 +78,6 @@ func TestMetadataZeroZero(t *testing.T) {
 
 	assert.True(t, m1.Equals(m2))
 	assert.True(t, m2.Equals(m1))
-	assert.True(t, m1.Equivalent(m2))
-	assert.True(t, m2.Equivalent(m1))
 }
 
 func TestMetadataOutOfOrder(t *testing.T) {
@@ -100,8 +88,6 @@ func TestMetadataOutOfOrder(t *testing.T) {
 
 	assert.True(t, m1.Equals(m2))
 	assert.True(t, m2.Equals(m1))
-	assert.True(t, m1.Equivalent(m2))
-	assert.True(t, m2.Equivalent(m1))
 }
 
 func TestMetadataExtraElement(t *testing.T) {
@@ -113,8 +99,6 @@ func TestMetadataExtraElement(t *testing.T) {
 
 	assert.False(t, m1.Equals(m2))
 	assert.False(t, m2.Equals(m1))
-	assert.False(t, m1.Equivalent(m2))
-	assert.False(t, m2.Equivalent(m1))
 }
 
 func TestMetadataFromMap(t *testing.T) {
