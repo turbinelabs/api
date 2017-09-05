@@ -20,6 +20,7 @@ import (
 	"errors"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	apihttp "github.com/turbinelabs/api/http"
@@ -36,6 +37,8 @@ type httpBatchingStatsV2 struct {
 
 	batchers map[string]*payloadV2Batcher
 	mutex    *sync.RWMutex
+
+	inFlight int32
 
 	logger *log.Logger
 }
@@ -126,7 +129,7 @@ func (hs *httpBatchingStatsV2) ForwardV2(payload *statsapi.PayloadV2) (*statsapi
 	return &statsapi.ForwardResult{NumAccepted: len(payload.Stats)}, nil
 }
 
-func (hs *httpBatchingStatsV2) Close() error {
+func (hs *httpBatchingStatsV2) closeBatchers() {
 	hs.mutex.Lock()
 	defer hs.mutex.Unlock()
 
@@ -134,7 +137,21 @@ func (hs *httpBatchingStatsV2) Close() error {
 		close(batcher.ch)
 	}
 	hs.batchers = map[string]*payloadV2Batcher{}
-	return nil
+}
+
+func (hs *httpBatchingStatsV2) Close() error {
+	hs.closeBatchers()
+
+	hs.logger.Print("waiting for final requests to complete")
+	start := time.Now()
+	for time.Since(start) < 15*time.Second {
+		time.Sleep(100 * time.Millisecond)
+		if atomic.LoadInt32(&hs.inFlight) == 0 {
+			return nil
+		}
+	}
+
+	return errors.New("timed out waiting for final requests to complete")
 }
 
 type payloadV2Batcher struct {
@@ -276,9 +293,12 @@ func (b *payloadV2Batcher) flush() {
 }
 
 func (b *payloadV2Batcher) forward(payload *statsapi.PayloadV2) {
+	atomic.AddInt32(&b.client.inFlight, 1)
+
 	err := b.client.ForwardWithCallback(
 		payload,
 		func(try executor.Try) {
+			atomic.AddInt32(&b.client.inFlight, -1)
 			if try.IsError() {
 				b.client.logger.Printf(
 					"Failed to forward payload: %+v: %s",
@@ -289,6 +309,8 @@ func (b *payloadV2Batcher) forward(payload *statsapi.PayloadV2) {
 		},
 	)
 	if err != nil {
+		atomic.AddInt32(&b.client.inFlight, -1)
+
 		b.client.logger.Printf(
 			"Failed to enqueue request: %+v: %s",
 			payload,

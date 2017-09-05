@@ -19,6 +19,7 @@ package client
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 	"github.com/turbinelabs/test/assert"
 	"github.com/turbinelabs/test/log"
+	"github.com/turbinelabs/test/matcher"
 )
 
 func payloadV2OfSize(s int) *statsapi.PayloadV2 {
@@ -259,6 +261,7 @@ func TestHttpBatchingStatsV2Close(t *testing.T) {
 	client := &httpBatchingStatsV2{
 		batchers: map[string]*payloadV2Batcher{},
 		mutex:    &sync.RWMutex{},
+		logger:   log.NewNoopLogger(),
 	}
 
 	client.getBatcher(&statsapi.PayloadV2{Source: "this-source", Zone: "zone"})
@@ -284,6 +287,27 @@ func TestHttpBatchingStatsV2Close(t *testing.T) {
 	default:
 		assert.Failed(t, "expected closed channel ch2, saw empty channel")
 	}
+}
+
+func TestHttpBatchingStatsV2CloseWaitForInFlightRequests(t *testing.T) {
+	client := &httpBatchingStatsV2{
+		batchers: map[string]*payloadV2Batcher{},
+		mutex:    &sync.RWMutex{},
+		inFlight: 1,
+		logger:   log.NewNoopLogger(),
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		assert.Nil(t, client.Close())
+		assert.Equal(t, client.inFlight, int32(0))
+		wg.Done()
+	}()
+
+	atomic.AddInt32(&client.inFlight, -1)
+	wg.Wait()
 }
 
 func TestPayloadV2BatcherRunSendsBatchBySize(t *testing.T) {
@@ -638,6 +662,35 @@ func TestPayloadV2BatcherRunSendsOnClose(t *testing.T) {
 			)
 		},
 	}.run(t)
+}
+
+func TestPayloadV2BatcherCountsInFlightRequests(t *testing.T) {
+	ctrl := gomock.NewController(assert.Tracing(t))
+	defer ctrl.Finish()
+
+	mockUnderlyingStatsClient := newMockInternalStatsClient(ctrl)
+
+	batcher := &payloadV2Batcher{
+		client: &httpBatchingStatsV2{
+			internalStatsClient: mockUnderlyingStatsClient,
+			logger:              log.NewNoopLogger(),
+		},
+	}
+
+	payload := &statsapi.PayloadV2{}
+	captor := matcher.CaptureAny()
+
+	mockUnderlyingStatsClient.EXPECT().ForwardWithCallback(payload, captor).Return(nil)
+	batcher.forward(payload)
+
+	assert.Equal(t, batcher.client.inFlight, int32(1))
+	cb := captor.V.(executor.CallbackFunc)
+	cb(executor.NewError(errors.New("fail")))
+	assert.Equal(t, batcher.client.inFlight, int32(0))
+
+	mockUnderlyingStatsClient.EXPECT().ForwardWithCallback(payload, captor).Return(errors.New("x"))
+	batcher.forward(payload)
+	assert.Equal(t, batcher.client.inFlight, int32(0))
 }
 
 func TestBatchingStatsV2ClientQuery(t *testing.T) {
