@@ -22,7 +22,7 @@ import (
 	"github.com/turbinelabs/nonstdlib/ptr"
 )
 
-// A Stat is a named, timestamped, and tagged data point or histogram
+// A Stat is a named, timestamped, and tagged data point or histogram. Deprecated, see StatV2.
 type Stat struct {
 	Name string `json:"name"`
 
@@ -54,7 +54,7 @@ func (s Stat) String() string {
 	)
 }
 
-// A Histogram is a distribution of values into ranges.
+// A Histogram is a distribution of values into ranges. Deprecated, see HistogramV2.
 type Histogram struct {
 	Buckets [][2]float64 `json:"buckets"` // array of [limit, count]
 	Count   int64        `json:"count"`
@@ -67,14 +67,8 @@ type Histogram struct {
 	Maximum float64 `json:"max"`
 }
 
-// Payload is the payload of a stats update call.
+// Payload is the payload of a stats update call. Deprecated, see PayloadV2.
 type Payload struct {
 	Source string `json:"source"`
 	Stats  []Stat `json:"stats"`
-}
-
-// ForwardResult is a JSON-encodable struct that encapsulates the result of
-// forwarding metrics.
-type ForwardResult struct {
-	NumAccepted int `json:"numAccepted"`
 }

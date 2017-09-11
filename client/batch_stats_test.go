@@ -34,6 +34,8 @@ import (
 	"github.com/turbinelabs/test/matcher"
 )
 
+const sourceString1 = "the-source"
+
 func payloadV2OfSize(s int) *statsapi.PayloadV2 {
 	switch s {
 	case 0:

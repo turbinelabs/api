@@ -9,67 +9,6 @@ import (
 	reflect "reflect"
 )
 
-// MockStatsService is a mock of StatsService interface
-type MockStatsService struct {
-	ctrl     *gomock.Controller
-	recorder *MockStatsServiceMockRecorder
-}
-
-// MockStatsServiceMockRecorder is the mock recorder for MockStatsService
-type MockStatsServiceMockRecorder struct {
-	mock *MockStatsService
-}
-
-// NewMockStatsService creates a new mock instance
-func NewMockStatsService(ctrl *gomock.Controller) *MockStatsService {
-	mock := &MockStatsService{ctrl: ctrl}
-	mock.recorder = &MockStatsServiceMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockStatsService) EXPECT() *MockStatsServiceMockRecorder {
-	return m.recorder
-}
-
-// Forward mocks base method
-func (m *MockStatsService) Forward(arg0 *Payload) (*ForwardResult, error) {
-	ret := m.ctrl.Call(m, "Forward", arg0)
-	ret0, _ := ret[0].(*ForwardResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Forward indicates an expected call of Forward
-func (mr *MockStatsServiceMockRecorder) Forward(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Forward", reflect.TypeOf((*MockStatsService)(nil).Forward), arg0)
-}
-
-// Query mocks base method
-func (m *MockStatsService) Query(arg0 *Query) (*QueryResult, error) {
-	ret := m.ctrl.Call(m, "Query", arg0)
-	ret0, _ := ret[0].(*QueryResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Query indicates an expected call of Query
-func (mr *MockStatsServiceMockRecorder) Query(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockStatsService)(nil).Query), arg0)
-}
-
-// Close mocks base method
-func (m *MockStatsService) Close() error {
-	ret := m.ctrl.Call(m, "Close")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Close indicates an expected call of Close
-func (mr *MockStatsServiceMockRecorder) Close() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockStatsService)(nil).Close))
-}
-
 // MockStatsServiceV2 is a mock of StatsServiceV2 interface
 type MockStatsServiceV2 struct {
 	ctrl     *gomock.Controller

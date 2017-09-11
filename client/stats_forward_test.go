@@ -42,30 +42,35 @@ import (
 	"github.com/turbinelabs/test/assert"
 )
 
-const metricName1 = "group.metric"
+const (
+	zoneString1 = "zone"
+	metricName1 = "group.metric"
+)
 
 var (
-	when1Micros = tbntime.ToUnixMicro(time.Now())
+	when1Millis = tbntime.ToUnixMilli(time.Now())
 
-	payload = &statsapi.Payload{
+	payloadV2 = &statsapi.PayloadV2{
 		Source: sourceString1,
-		Stats: []statsapi.Stat{
+		Zone:   zoneString1,
+		Stats: []statsapi.StatV2{
 			{
 				Name:      metricName1,
-				Value:     ptr.Float64(1.41421),
-				Timestamp: when1Micros,
+				Gauge:     ptr.Float64(1.41421),
+				Timestamp: when1Millis,
 				Tags:      map[string]string{"tag": "tag-value"},
 			},
 		},
 	}
 
-	badPayload = &statsapi.Payload{
+	badPayloadV2 = &statsapi.PayloadV2{
 		Source: sourceString1,
-		Stats: []statsapi.Stat{
+		Zone:   zoneString1,
+		Stats: []statsapi.StatV2{
 			{
 				Name:      metricName1,
-				Value:     ptr.Float64(math.Inf(1)),
-				Timestamp: when1Micros,
+				Gauge:     ptr.Float64(math.Inf(1)),
+				Timestamp: when1Millis,
 				Tags:      map[string]string{},
 			},
 		},
@@ -74,14 +79,15 @@ var (
 	endpoint, _ = apihttp.NewEndpoint(apihttp.HTTP, "example.com:8080")
 )
 
-func TestEncodePayload(t *testing.T) {
+func TestEncodePayloadV2(t *testing.T) {
 	expectedJson :=
 		fmt.Sprintf(
-			`{"source":"%s","stats":[{"name":"%s","value":%g,"timestamp":%d,"tags":{"%s":"%s"}}]}`+"\n",
+			`{"source":"%s","zone":"%s","stats":[{"name":"%s","gauge":%g,"timestamp":%d,"tags":{"%s":"%s"}}]}`+"\n",
 			sourceString1,
+			zoneString1,
 			metricName1,
 			1.41421,
-			when1Micros,
+			when1Millis,
 			"tag",
 			"tag-value",
 		)
@@ -90,13 +96,13 @@ func TestEncodePayload(t *testing.T) {
 	gw.Write([]byte(expectedJson))
 	gw.Close()
 
-	json, err := encodePayload(payload)
+	json, err := encodePayload(payloadV2)
 	assert.Nil(t, err)
 	assert.DeepEqual(t, json, expectedBytes.Bytes())
 }
 
-func TestEncodePayloadError(t *testing.T) {
-	json, err := encodePayload(badPayload)
+func TestEncodePayloadV2Error(t *testing.T) {
+	json, err := encodePayload(badPayloadV2)
 	assert.Nil(t, json)
 	assert.NonNil(t, err)
 }
@@ -106,19 +112,19 @@ type forwardResult struct {
 	err    error
 }
 
-type resultFunc func() (*statsapi.ForwardResult, error)
-type requestFunc func(statsapi.StatsService) (*statsapi.ForwardResult, error)
-type newStatsFunc func(
+type resultV2Func func() (*statsapi.ForwardResult, error)
+type requestV2Func func(statsapi.StatsServiceV2) (*statsapi.ForwardResult, error)
+type newStatsV2Func func(
 	apihttp.Endpoint,
 	string,
 	executor.Executor,
-) (statsapi.StatsService, error)
+) (statsapi.StatsServiceV2, error)
 
-func prepareStatsClientTest(
+func prepareStatsV2ClientTest(
 	t *testing.T,
 	e apihttp.Endpoint,
-	reqFunc requestFunc,
-) (executor.Func, executor.CallbackFunc, resultFunc) {
+	reqFunc requestV2Func,
+) (executor.Func, executor.CallbackFunc, resultV2Func) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 
 	funcChan := make(chan executor.Func, 1)
@@ -134,7 +140,7 @@ func prepareStatsClientTest(
 			},
 		)
 
-	client, err := NewStatsClient(e, clientTestAPIKey, clientTestApp, mockExec)
+	client, err := NewStatsV2Client(e, clientTestAPIKey, clientTestApp, mockExec)
 	assert.Nil(t, err)
 
 	rvChan := make(chan forwardResult, 1)
@@ -154,16 +160,18 @@ func prepareStatsClientTest(
 	}
 }
 
-func payloadForward(p *statsapi.Payload) func(client statsapi.StatsService) (*statsapi.ForwardResult, error) {
-	return func(client statsapi.StatsService) (*statsapi.ForwardResult, error) {
-		return client.Forward(p)
+func payloadV2Forward(
+	p *statsapi.PayloadV2,
+) func(client statsapi.StatsServiceV2) (*statsapi.ForwardResult, error) {
+	return func(client statsapi.StatsServiceV2) (*statsapi.ForwardResult, error) {
+		return client.ForwardV2(p)
 	}
 }
 
-var simpleForward = payloadForward(payload)
+var simpleForwardV2 = payloadV2Forward(payloadV2)
 
-func TestStatsClientForward(t *testing.T) {
-	_, cb, getResult := prepareStatsClientTest(t, endpoint, simpleForward)
+func TestStatsV2ClientForward(t *testing.T) {
+	_, cb, getResult := prepareStatsV2ClientTest(t, endpoint, simpleForwardV2)
 
 	expectedResult := &statsapi.ForwardResult{NumAccepted: 1}
 	cb(executor.NewReturn(expectedResult))
@@ -173,8 +181,8 @@ func TestStatsClientForward(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestStatsClientForwardFailure(t *testing.T) {
-	_, cb, getResult := prepareStatsClientTest(t, endpoint, simpleForward)
+func TestStatsV2ClientForwardV2Failure(t *testing.T) {
+	_, cb, getResult := prepareStatsV2ClientTest(t, endpoint, simpleForwardV2)
 
 	expectedErr := errors.New("failure")
 	cb(executor.NewError(expectedErr))
@@ -184,27 +192,14 @@ func TestStatsClientForwardFailure(t *testing.T) {
 	assert.SameInstance(t, err, expectedErr)
 }
 
-func TestStatsClientForwardWrongVersion(t *testing.T) {
-	ctrl := gomock.NewController(assert.Tracing(t))
-
-	mockExec := executor.NewMockExecutor(ctrl)
-
-	client, err := NewStatsClient(endpoint, clientTestAPIKey, clientTestApp, mockExec)
-	assert.Nil(t, err)
-
-	result, err := client.(statsapi.StatsServiceV2).ForwardV2(nil)
-	assert.Nil(t, result)
-	assert.ErrorContains(t, err, "cannot use ForwardV2 on v1 client")
-}
-
-type testHandler struct {
+type testHandlerV2 struct {
 	t               *testing.T
-	requestPayload  *statsapi.Payload
+	requestPayload  *statsapi.PayloadV2
 	responsePayload *statsapi.ForwardResult
 	responseError   *httperr.Error
 }
 
-func (h *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (h *testHandlerV2) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	handler := verifyingHandler{
 		fn: func(rr apihttp.RichRequest) {
 			body := rr.Underlying().Body
@@ -217,7 +212,7 @@ func (h *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			defer gzipReader.Close()
 			assert.Nil(h.t, err)
 
-			stats := &statsapi.Payload{}
+			stats := &statsapi.PayloadV2{}
 			err = json.Unmarshal(bytes, stats)
 			assert.Nil(h.t, err)
 			h.requestPayload = stats
@@ -229,20 +224,20 @@ func (h *testHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	handler.ServeHTTP(resp, req)
 }
 
-func runStatsClientFuncTest(
+func runStatsV2ClientFuncTest(
 	t *testing.T,
-	requestPayload *statsapi.Payload,
+	requestPayload *statsapi.PayloadV2,
 	responsePayload *statsapi.ForwardResult,
 	httpErr *httperr.Error,
-) (*statsapi.Payload, *statsapi.ForwardResult, error) {
-	handler := &testHandler{responsePayload: responsePayload, responseError: httpErr}
+) (*statsapi.PayloadV2, *statsapi.ForwardResult, error) {
+	handler := &testHandlerV2{responsePayload: responsePayload, responseError: httpErr}
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
 	endpoint, err := apihttp.NewEndpoint(apihttp.HTTP, server.Listener.Addr().String())
 	assert.Nil(t, err)
 
-	f, cb, _ := prepareStatsClientTest(t, endpoint, payloadForward(requestPayload))
+	f, cb, _ := prepareStatsV2ClientTest(t, endpoint, payloadV2Forward(requestPayload))
 	cb(executor.NewError(errors.New("don't care about this")))
 
 	ctxt := context.Background()
@@ -254,20 +249,20 @@ func runStatsClientFuncTest(
 	return handler.requestPayload, response.(*statsapi.ForwardResult), err
 }
 
-func TestStatsClientForwardExecFunc(t *testing.T) {
+func TestStatsV2ClientForwardExecFunc(t *testing.T) {
 	expectedResult := &statsapi.ForwardResult{NumAccepted: 12}
 
-	gotPayload, result, err := runStatsClientFuncTest(t, payload, expectedResult, nil)
-	assert.DeepEqual(t, gotPayload, payload)
+	gotPayload, result, err := runStatsV2ClientFuncTest(t, payloadV2, expectedResult, nil)
+	assert.DeepEqual(t, gotPayload, payloadV2)
 	assert.DeepEqual(t, result, expectedResult)
 	assert.Nil(t, err)
 }
 
-func TestStatsClientForwardExecFuncFailure(t *testing.T) {
+func TestStatsV2ClientForwardExecFuncFailure(t *testing.T) {
 	expectedErr := httperr.AuthorizationError()
 
-	gotPayload, result, err := runStatsClientFuncTest(t, payload, nil, expectedErr)
-	assert.DeepEqual(t, gotPayload, payload)
+	gotPayload, result, err := runStatsV2ClientFuncTest(t, payloadV2, nil, expectedErr)
+	assert.DeepEqual(t, gotPayload, payloadV2)
 	assert.Nil(t, result)
 	assert.Equal(t, err.Error(), expectedErr.Error())
 }

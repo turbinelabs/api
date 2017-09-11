@@ -50,7 +50,7 @@ func TestStatsClientQuerySuccess(t *testing.T) {
 	defer server.Close()
 
 	endpoint := newTestEndpointFromServer(server)
-	client, _ := NewStatsClient(endpoint, clientTestAPIKey, clientTestApp, nil)
+	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
 
 	got, gotErr := client.Query(&statsapi.Query{})
 	assert.Nil(t, gotErr)
@@ -78,7 +78,7 @@ func TestStatsClientQueryError(t *testing.T) {
 	defer server.Close()
 
 	endpoint := newTestEndpointFromServer(server)
-	client, _ := NewStatsClient(endpoint, clientTestAPIKey, clientTestApp, nil)
+	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
 
 	got, gotErr := client.Query(&statsapi.Query{})
 	assert.DeepEqual(t, gotErr, wantErr)
@@ -94,7 +94,7 @@ func TestNewInternalStatsClientCopiesEndpoint(t *testing.T) {
 
 	client, err := newInternalStatsClient(
 		endpoint,
-		v1ForwardPath,
+		v2ForwardPath,
 		clientTestAPIKey,
 		clientTestApp,
 		nil,

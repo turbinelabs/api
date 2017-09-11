@@ -23,7 +23,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -36,46 +35,27 @@ import (
 )
 
 const (
-	v1ForwardPath = "/v1.0/stats/forward"
 	v2ForwardPath = "/v2.0/stats/forward"
 	v1QueryPath   = "/v1.0/stats/query"
 
 	queryArg = "query"
 )
 
-var (
-	methodNotAllowedV1Err = errors.New("cannot use ForwardV2 on v1 client")
-	methodNotAllowedV2Err = errors.New("cannot use Forward on v2 client")
-)
-
 // internalStatsClient is an internal interface for issuing forwarding
 // requests with a callback
 type internalStatsClient interface {
-	statsapi.StatsService
+	statsapi.StatsServiceV2
 
 	// Issues a forwarding request for the given payload with the
 	// given executor.CallbackFunc.
-	ForwardWithCallback(interface{}, executor.CallbackFunc) error
+	ForwardWithCallback(*statsapi.PayloadV2, executor.CallbackFunc) error
 }
 
 type httpStats struct {
-	isV2           bool
 	dest           apihttp.Endpoint
 	forwardPath    string
 	requestHandler apihttp.RequestHandler
 	exec           executor.Executor
-}
-
-// NewStatsClient returns a blocking implementation of StatsService. Each
-// invocation of Forward accepts a single Payload, issues a forwarding
-// request to a remote stats-server and awaits a response.
-func NewStatsClient(
-	dest apihttp.Endpoint,
-	apiKey string,
-	clientApp App,
-	exec executor.Executor,
-) (statsapi.StatsService, error) {
-	return newInternalStatsClient(dest, v1ForwardPath, apiKey, clientApp, exec)
 }
 
 // NewStatsV2Client returns a blocking implementation of StatsServiceV2. Each
@@ -87,11 +67,7 @@ func NewStatsV2Client(
 	clientApp App,
 	exec executor.Executor,
 ) (statsapi.StatsServiceV2, error) {
-	client, err := newInternalStatsClient(dest, v2ForwardPath, apiKey, clientApp, exec)
-	if client != nil {
-		client.isV2 = true
-	}
-	return client, err
+	return newInternalStatsClient(dest, v2ForwardPath, apiKey, clientApp, exec)
 }
 
 func newInternalStatsClient(
@@ -122,7 +98,7 @@ func newInternalStatsClient(
 	}, nil
 }
 
-func encodePayload(payload interface{}) ([]byte, error) {
+func encodePayload(payload *statsapi.PayloadV2) ([]byte, error) {
 	var buffer bytes.Buffer
 	gzip := gzip.NewWriter(&buffer)
 	encoder := json.NewEncoder(gzip)
@@ -145,18 +121,9 @@ func encodePayload(payload interface{}) ([]byte, error) {
 }
 
 func (hs *httpStats) ForwardWithCallback(
-	payload interface{},
+	payload *statsapi.PayloadV2,
 	cb executor.CallbackFunc,
 ) error {
-	// TODO: remove type check and revert signature to struct pointer when v1 is removed.
-	if hs.isV2 {
-		if _, ok := payload.(*statsapi.PayloadV2); !ok {
-			return fmt.Errorf("invalid payload type: %T, expected *PayloadV2", payload)
-		}
-	} else if _, ok := payload.(*statsapi.Payload); !ok {
-		return fmt.Errorf("invalid payload type: %T, expected *Payload", payload)
-	}
-
 	encoded, err := encodePayload(payload)
 	if err != nil {
 		return err
@@ -186,7 +153,7 @@ func (hs *httpStats) ForwardWithCallback(
 	return nil
 }
 
-func (hs *httpStats) doForward(payload interface{}) (*statsapi.ForwardResult, error) {
+func (hs *httpStats) ForwardV2(payload *statsapi.PayloadV2) (*statsapi.ForwardResult, error) {
 	responseChan := make(chan executor.Try, 1)
 	defer close(responseChan)
 
@@ -205,20 +172,6 @@ func (hs *httpStats) doForward(payload interface{}) (*statsapi.ForwardResult, er
 		return nil, try.Error()
 	}
 	return try.Get().(*statsapi.ForwardResult), nil
-}
-
-func (hs *httpStats) Forward(payload *statsapi.Payload) (*statsapi.ForwardResult, error) {
-	if hs.isV2 {
-		return nil, methodNotAllowedV2Err
-	}
-	return hs.doForward(payload)
-}
-
-func (hs *httpStats) ForwardV2(payload *statsapi.PayloadV2) (*statsapi.ForwardResult, error) {
-	if !hs.isV2 {
-		return nil, methodNotAllowedV1Err
-	}
-	return hs.doForward(payload)
 }
 
 func (hs *httpStats) Close() error {

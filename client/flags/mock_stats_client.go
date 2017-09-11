@@ -47,9 +47,9 @@ func (mr *MockStatsClientFromFlagsMockRecorder) Validate() *gomock.Call {
 }
 
 // Make mocks base method
-func (m *MockStatsClientFromFlags) Make(arg0 *log.Logger) (stats.StatsService, error) {
+func (m *MockStatsClientFromFlags) Make(arg0 *log.Logger) (stats.StatsServiceV2, error) {
 	ret := m.ctrl.Call(m, "Make", arg0)
-	ret0, _ := ret[0].(stats.StatsService)
+	ret0, _ := ret[0].(stats.StatsServiceV2)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -57,19 +57,6 @@ func (m *MockStatsClientFromFlags) Make(arg0 *log.Logger) (stats.StatsService, e
 // Make indicates an expected call of Make
 func (mr *MockStatsClientFromFlagsMockRecorder) Make(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Make", reflect.TypeOf((*MockStatsClientFromFlags)(nil).Make), arg0)
-}
-
-// MakeV2 mocks base method
-func (m *MockStatsClientFromFlags) MakeV2(arg0 *log.Logger) (stats.StatsServiceV2, error) {
-	ret := m.ctrl.Call(m, "MakeV2", arg0)
-	ret0, _ := ret[0].(stats.StatsServiceV2)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// MakeV2 indicates an expected call of MakeV2
-func (mr *MockStatsClientFromFlagsMockRecorder) MakeV2(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeV2", reflect.TypeOf((*MockStatsClientFromFlags)(nil).MakeV2), arg0)
 }
 
 // APIKey mocks base method

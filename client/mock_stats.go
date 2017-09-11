@@ -34,17 +34,17 @@ func (m *mockInternalStatsClient) EXPECT() *mockInternalStatsClientMockRecorder 
 	return m.recorder
 }
 
-// Forward mocks base method
-func (m *mockInternalStatsClient) Forward(arg0 *stats.Payload) (*stats.ForwardResult, error) {
-	ret := m.ctrl.Call(m, "Forward", arg0)
+// ForwardV2 mocks base method
+func (m *mockInternalStatsClient) ForwardV2(arg0 *stats.PayloadV2) (*stats.ForwardResult, error) {
+	ret := m.ctrl.Call(m, "ForwardV2", arg0)
 	ret0, _ := ret[0].(*stats.ForwardResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Forward indicates an expected call of Forward
-func (mr *mockInternalStatsClientMockRecorder) Forward(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Forward", reflect.TypeOf((*mockInternalStatsClient)(nil).Forward), arg0)
+// ForwardV2 indicates an expected call of ForwardV2
+func (mr *mockInternalStatsClientMockRecorder) ForwardV2(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardV2", reflect.TypeOf((*mockInternalStatsClient)(nil).ForwardV2), arg0)
 }
 
 // Query mocks base method
@@ -73,7 +73,7 @@ func (mr *mockInternalStatsClientMockRecorder) Close() *gomock.Call {
 }
 
 // ForwardWithCallback mocks base method
-func (m *mockInternalStatsClient) ForwardWithCallback(arg0 interface{}, arg1 executor.CallbackFunc) error {
+func (m *mockInternalStatsClient) ForwardWithCallback(arg0 *stats.PayloadV2, arg1 executor.CallbackFunc) error {
 	ret := m.ctrl.Call(m, "ForwardWithCallback", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0

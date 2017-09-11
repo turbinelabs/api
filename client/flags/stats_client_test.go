@@ -98,7 +98,7 @@ func TestStatsClientFromFlagsValidatesBatchingClient(t *testing.T) {
 	assert.Nil(t, ff.Validate())
 }
 
-func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 bool) {
+func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
@@ -134,15 +134,9 @@ func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 b
 	assert.Equal(t, ffImpl.maxBatchDelay, DefaultMaxBatchDelay)
 	assert.Equal(t, ffImpl.maxBatchSize, DefaultMaxBatchSize)
 
-	if useV2 {
-		statsClient, err := ff.MakeV2(log.NewNoopLogger())
-		assert.NonNil(t, statsClient)
-		assert.Nil(t, err)
-	} else {
-		statsClient, err := ff.Make(log.NewNoopLogger())
-		assert.NonNil(t, statsClient)
-		assert.Nil(t, err)
-	}
+	statsClient, err := ff.Make(log.NewNoopLogger())
+	assert.NonNil(t, statsClient)
+	assert.Nil(t, err)
 	expectedErr := errors.New("no endpoints for you")
 	apiConfigFromFlags.EXPECT().
 		MakeEndpoint().
@@ -156,26 +150,16 @@ func testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T, useV2 b
 	)
 	assert.NonNil(t, ff)
 
-	if useV2 {
-		statsClient, err := ff.MakeV2(log.NewNoopLogger())
-		assert.Nil(t, statsClient)
-		assert.NonNil(t, err)
-	} else {
-		statsClient, err := ff.Make(log.NewNoopLogger())
-		assert.Nil(t, statsClient)
-		assert.NonNil(t, err)
-	}
+	statsClient, err = ff.Make(log.NewNoopLogger())
+	assert.Nil(t, statsClient)
+	assert.NonNil(t, err)
 }
 
 func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t *testing.T) {
-	testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t, false)
+	testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t)
 }
 
-func TestStatsClientFromFlagsDelegatesToAPIConfigFromFlagsV2(t *testing.T) {
-	testStatsClientFromFlagsDelegatesToAPIConfigFromFlags(t, true)
-}
-
-func testStatsClientFromFlagsCachesClient(t *testing.T, useV2 bool) {
+func testStatsClientFromFlagsCachesClient(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
@@ -202,19 +186,11 @@ func testStatsClientFromFlagsCachesClient(t *testing.T, useV2 bool) {
 	assert.NonNil(t, ff)
 
 	var statsClient, statsClient2 interface{}
-	if useV2 {
-		statsClient, err = ff.MakeV2(log.NewNoopLogger())
-	} else {
-		statsClient, err = ff.Make(log.NewNoopLogger())
-	}
+	statsClient, err = ff.Make(log.NewNoopLogger())
 	assert.NonNil(t, statsClient)
 	assert.Nil(t, err)
 
-	if useV2 {
-		statsClient2, err = ff.MakeV2(log.NewNoopLogger())
-	} else {
-		statsClient2, err = ff.Make(log.NewNoopLogger())
-	}
+	statsClient2, err = ff.Make(log.NewNoopLogger())
 	assert.NonNil(t, statsClient2)
 	assert.Nil(t, err)
 
@@ -222,14 +198,10 @@ func testStatsClientFromFlagsCachesClient(t *testing.T, useV2 bool) {
 }
 
 func TestStatsClientFromFlagsCachesClient(t *testing.T) {
-	testStatsClientFromFlagsCachesClient(t, false)
+	testStatsClientFromFlagsCachesClient(t)
 }
 
-func TestStatsClientFromFlagsCachesClientV2(t *testing.T) {
-	testStatsClientFromFlagsCachesClient(t, true)
-}
-
-func testStatsClientFromFlagsCreatesBatchingClient(t *testing.T, useV2 bool) {
+func testStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
@@ -266,21 +238,11 @@ func testStatsClientFromFlagsCreatesBatchingClient(t *testing.T, useV2 bool) {
 	assert.Equal(t, ffImpl.maxBatchDelay, 5*time.Second)
 	assert.Equal(t, ffImpl.maxBatchSize, 99)
 
-	if useV2 {
-		statsClient, err := ff.MakeV2(log.NewNoopLogger())
-		assert.NonNil(t, statsClient)
-		assert.Nil(t, err)
-	} else {
-		statsClient, err := ff.Make(log.NewNoopLogger())
-		assert.NonNil(t, statsClient)
-		assert.Nil(t, err)
-	}
+	statsClient, err := ff.Make(log.NewNoopLogger())
+	assert.NonNil(t, statsClient)
+	assert.Nil(t, err)
 }
 
 func TestStatsClientFromFlagsCreatesBatchingClient(t *testing.T) {
-	testStatsClientFromFlagsCreatesBatchingClient(t, false)
-}
-
-func TestStatsClientFromFlagsCreatesBatchingClientV2(t *testing.T) {
-	testStatsClientFromFlagsCreatesBatchingClient(t, true)
+	testStatsClientFromFlagsCreatesBatchingClient(t)
 }

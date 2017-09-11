@@ -39,11 +39,8 @@ const (
 type StatsClientFromFlags interface {
 	Validate() error
 
-	// Make constructs a statsapi.StatsService using the given Logger.
-	Make(*log.Logger) (statsapi.StatsService, error)
-
 	// Make constructs a statsapi.StatsServiceV2 using the given Logger.
-	MakeV2(*log.Logger) (statsapi.StatsServiceV2, error)
+	Make(*log.Logger) (statsapi.StatsServiceV2, error)
 
 	// APIKey returns the API Key used to construct the statsapi.StatsService.
 	APIKey() string
@@ -121,8 +118,7 @@ type statsClientFromFlags struct {
 	maxBatchDelay      time.Duration
 	maxBatchSize       int
 
-	cachedClient   statsapi.StatsService
-	cachedV2Client statsapi.StatsServiceV2
+	cachedClient statsapi.StatsServiceV2
 }
 
 func (ff *statsClientFromFlags) Validate() error {
@@ -145,52 +141,9 @@ func (ff *statsClientFromFlags) Validate() error {
 
 func (ff *statsClientFromFlags) Make(
 	logger *log.Logger,
-) (statsapi.StatsService, error) {
+) (statsapi.StatsServiceV2, error) {
 	if ff.cachedClient != nil {
 		return ff.cachedClient, nil
-	}
-
-	endpoint, err := ff.apiConfigFromFlags.MakeEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	exec := ff.execFromFlags.Make(logger)
-
-	var stats statsapi.StatsService
-	if ff.useBatching {
-		stats, err = client.NewBatchingStatsClient(
-			ff.maxBatchDelay,
-			ff.maxBatchSize,
-			endpoint,
-			ff.apiConfigFromFlags.APIKey(),
-			ff.clientApp,
-			exec,
-			logger,
-		)
-	} else {
-		stats, err = client.NewStatsClient(
-			endpoint,
-			ff.apiConfigFromFlags.APIKey(),
-			ff.clientApp,
-			exec,
-		)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	ff.cachedClient = stats
-
-	return stats, nil
-}
-
-func (ff *statsClientFromFlags) MakeV2(
-	logger *log.Logger,
-) (statsapi.StatsServiceV2, error) {
-	if ff.cachedV2Client != nil {
-		return ff.cachedV2Client, nil
 	}
 
 	endpoint, err := ff.apiConfigFromFlags.MakeEndpoint()
@@ -224,7 +177,7 @@ func (ff *statsClientFromFlags) MakeV2(
 		return nil, err
 	}
 
-	ff.cachedV2Client = stats
+	ff.cachedClient = stats
 
 	return stats, nil
 }

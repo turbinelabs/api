@@ -20,16 +20,10 @@ package stats
 
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
-// StatsService forwards stats data to a remote stats-server.
-type StatsService interface {
-	// Forward the given stats payload.
-	Forward(*Payload) (*ForwardResult, error)
-
-	// Query for stats
-	Query(*Query) (*QueryResult, error)
-
-	// Closes the client and releases any resources it created.
-	Close() error
+// ForwardResult is a JSON-encodable struct that encapsulates the result of
+// forwarding metrics.
+type ForwardResult struct {
+	NumAccepted int `json:"numAccepted"`
 }
 
 // StatsServiceV2 forwards stats data to a remote stats-server using
