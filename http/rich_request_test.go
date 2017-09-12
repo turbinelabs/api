@@ -149,6 +149,13 @@ func TestGetBodyObjectBrokenJSON(t *testing.T) {
 	err := rr.GetBodyObject(&got)
 
 	assert.DeepEqual(t, got, want)
-	wantErr := httperr.New400("error handling JSON content: "+jsonSrc, httperr.UnknownDecodingCode)
+	wantErr := httperr.NewDetailed400(
+		"error handling JSON content",
+		httperr.UnknownDecodingCode,
+		map[string]string{
+			"error":   "invalid character 'o' in literal null (expecting 'u')",
+			"content": jsonSrc,
+		},
+	)
 	assert.DeepEqual(t, err, wantErr)
 }

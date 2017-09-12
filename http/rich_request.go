@@ -18,6 +18,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -123,9 +124,14 @@ func (rr *richRequest) GetBodyObject(resp interface{}) error {
 
 	e = json.Unmarshal(b, resp)
 	if e != nil {
-		return httperr.New400(
-			"error handling JSON content: "+string(b),
-			httperr.UnknownDecodingCode)
+		return httperr.NewDetailed400(
+			"error handling JSON content",
+			httperr.UnknownDecodingCode,
+			map[string]string{
+				"error":   fmt.Sprintf("%v", e),
+				"content": string(b),
+			},
+		)
 	}
 
 	return nil

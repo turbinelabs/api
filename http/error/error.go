@@ -126,5 +126,6 @@ func FromError(err error, code ErrorCode) *Error {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("{Message: %s, Code: %s}", e.Message, e.Code)
+	hd := e.Details != nil
+	return fmt.Sprintf("{Message: %s, Code: %s, Detailed: %v}", e.Message, e.Code, hd)
 }
