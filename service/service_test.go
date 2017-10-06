@@ -56,6 +56,7 @@ func getSharedRulesFilterTestSharedRules() api.SharedRules {
 		rules,
 		api.ResponseData{},
 		nil,
+		api.Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
 		"123",
 		api.Checksum{"cs-1"},
 	}

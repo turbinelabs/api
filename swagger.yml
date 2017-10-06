@@ -1602,6 +1602,8 @@ definitions:
           specified here.
       cohort_seed:
         $ref: '#/definitions/CohortSeed'
+      properties:
+        $ref: "#/definitions/Metadata"
       checksum:
         type: string
 

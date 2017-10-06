@@ -172,6 +172,7 @@ type DataFixturesT struct {
 	SharedRulesRules1        api.Rules
 	SharedRulesResponseData1 api.ResponseData
 	SharedRulesCohortSeed1   *api.CohortSeed
+	SharedRulesProperties1   api.Metadata
 	SharedRulesChecksum1     api.Checksum
 	SharedRulesOrgKey1       api.OrgKey
 	SharedRulesKey2          api.SharedRulesKey
@@ -181,6 +182,7 @@ type DataFixturesT struct {
 	SharedRulesRules2        api.Rules
 	SharedRulesResponseData2 api.ResponseData
 	SharedRulesCohortSeed2   *api.CohortSeed
+	SharedRulesProperties2   api.Metadata
 	SharedRulesChecksum2     api.Checksum
 	SharedRulesOrgKey2       api.OrgKey
 	SharedRules1             api.SharedRules
@@ -329,12 +331,14 @@ func New() DataFixturesT {
 		SharedRulesName1:       "shared-rules-name-1",
 		SharedRulesZone1:       "shared-rules-zone-1",
 		SharedRulesCohortSeed1: &api.CohortSeed{api.CohortSeedHeader, "x-cohort-data", true},
+		SharedRulesProperties1: api.Metadata{{"pk1", "pv1"}, {"pk12", "pv12"}},
 		SharedRulesOrgKey1:     "1",
 		SharedRulesChecksum1:   api.Checksum{"shared-rules-cs-1"},
 		SharedRulesKey2:        "shared-rules-key-2",
 		SharedRulesName2:       "shared-rules-name-2",
 		SharedRulesZone2:       "shared-rules-zone-2",
 		SharedRulesCohortSeed2: nil,
+		SharedRulesProperties2: api.Metadata{{"pk2", "pv2"}, {"pk22", "pv22"}},
 		SharedRulesOrgKey2:     "1",
 		SharedRulesChecksum2:   api.Checksum{"shared-rules-cs-2"},
 
@@ -691,6 +695,7 @@ func New() DataFixturesT {
 		df.SharedRulesRules1,
 		df.SharedRulesResponseData1,
 		df.SharedRulesCohortSeed1,
+		df.SharedRulesProperties1,
 		df.SharedRulesOrgKey1,
 		df.SharedRulesChecksum1,
 	}
@@ -703,6 +708,7 @@ func New() DataFixturesT {
 		df.SharedRulesRules2,
 		df.SharedRulesResponseData2,
 		df.SharedRulesCohortSeed2,
+		df.SharedRulesProperties2,
 		df.SharedRulesOrgKey2,
 		df.SharedRulesChecksum2,
 	}

@@ -44,6 +44,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		rules,
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
+		Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -56,6 +57,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		rules,
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
+		Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -107,6 +109,14 @@ func TestSharedRulesEqualsCohortSeedVaries(t *testing.T) {
 func TestSharedRulesEqualsResponseDataVaries(t *testing.T) {
 	r1, r2 := getSharedRulesDefaults()
 	r1.ResponseData.Headers[0].Value += "-new"
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsPropertiesVaries(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.Properties[1].Value = "asdasd"
 
 	assert.False(t, r1.Equals(r2))
 	assert.False(t, r2.Equals(r1))
@@ -261,6 +271,20 @@ func TestSharedRulesIsValidBadCohort(t *testing.T) {
 	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
 		{"shared_rules.cohort_seed.name", "may not be empty"},
 	}})
+}
+
+func TestSharedRulesIsValidBadProperty(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.Properties[0].Key = ""
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.properties[].key", "must not be empty"},
+	}})
+}
+
+func TestSharedRulesIsValidNoMetadataNoProperty(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.Properties = nil
+	assert.Nil(t, r.IsValid())
 }
 
 func TestSharedRulesIsValidBadRules(t *testing.T) {

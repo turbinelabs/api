@@ -126,16 +126,14 @@ func (i Instance) IsValid() *ValidationError {
 	return errs.OrNil()
 }
 
+// InstanceMetadataIsValid produces an error if any key fails to match
+// AllowedIndexPattern
 func InstanceMetadataIsValid(md Metadata) *ValidationError {
-	return MetadataValid("metadata", md, func(kv Metadatum) *ValidationError {
-		if !AllowedIndexPattern.MatchString(kv.Key) {
-			return &ValidationError{
-				[]ErrorCase{{"key", AllowedIndexPatternMatchFailure}},
-			}
-		}
-
-		return nil
-	})
+	return MetadataValid(
+		"metadata",
+		md,
+		MetadataCheckKeysMatchPattern(AllowedIndexPattern, AllowedIndexPatternMatchFailure),
+	)
 }
 
 // Sort a Instancds by Host and Port.

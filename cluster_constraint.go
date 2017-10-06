@@ -58,35 +58,16 @@ func (cc ClusterConstraint) IsValid() *ValidationError {
 	return errs.OrNil()
 }
 
+// ConstraintMetadataValid ensures that the metadata has no duplicate keys or
+// or empty keys or values.
 func ConstraintMetadataValid(m Metadata) *ValidationError {
-	return MetadataValid("metadata", m, func(kv Metadatum) *ValidationError {
-		ecase := func(f, msg string) ErrorCase {
-			return ErrorCase{f, msg}
-		}
-
-		errs := &ValidationError{}
-
-		if kv.Key == "" {
-			errs.AddNew(ecase("key", "must not be empty"))
-		}
-		if kv.Value == "" {
-			errs.AddNew(ecase("value", "must not be empty"))
-		}
-
-		return errs.OrNil()
-	})
+	return MetadataValid("metadata", m, MetadataCheckNonEmptyKeys, MetadataCheckNonEmptyValues)
 }
 
+// ConstraintPropertiesValid ensures that the metadata has no duplicate
+// or empty keys.
 func ConstraintPropertiesValid(m Metadata) *ValidationError {
-	return MetadataValid("properties", m, func(kv Metadatum) *ValidationError {
-		if kv.Key != "" {
-			return nil
-		}
-
-		err := &ValidationError{}
-		err.AddNew(ErrorCase{"key", "must not be empty"})
-		return err
-	})
+	return MetadataValid("properties", m, MetadataCheckNonEmptyKeys)
 }
 
 /*

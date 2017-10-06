@@ -47,6 +47,7 @@ type SharedRules struct {
 	Rules          Rules          `json:"rules"`
 	ResponseData   ResponseData   `json:"response_data"`
 	CohortSeed     *CohortSeed    `json:"cohort_seed"`
+	Properties     Metadata       `json:"properties"`
 	OrgKey         OrgKey         `json:"-"`
 	Checksum
 }
@@ -74,9 +75,10 @@ func (r SharedRules) Equals(o SharedRules) bool {
 		eqOrg  = r.OrgKey == o.OrgKey
 		eqRd   = r.ResponseData.Equals(o.ResponseData)
 		eqCs   = CohortSeedPtrEquals(r.CohortSeed, o.CohortSeed)
+		eqPr   = r.Properties.Equals(o.Properties)
 	)
 
-	if !(eqKey && eqName && eqZone && eqCS && eqOrg && eqRd && eqCs) {
+	if !(eqKey && eqName && eqZone && eqCS && eqOrg && eqRd && eqCs && eqPr) {
 		return false
 	}
 
@@ -100,6 +102,13 @@ func (r SharedRules) IsValid() *ValidationError {
 	if r.CohortSeed != nil {
 		errs.MergePrefixed(r.CohortSeed.IsValid(), "shared_rules")
 	}
+	errs.MergePrefixed(SharedRulesPropertiesValid(r.Properties), "shared_rules")
 
 	return errs.OrNil()
+}
+
+// SharedRulesPropertiesValid ensures that the metadata has no duplicate
+// or empty keys.
+func SharedRulesPropertiesValid(m Metadata) *ValidationError {
+	return MetadataValid("properties", m, MetadataCheckNonEmptyKeys)
 }

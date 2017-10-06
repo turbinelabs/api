@@ -18,6 +18,7 @@ package api
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 )
 
@@ -67,13 +68,15 @@ type Metadatum struct {
 	Value string `json:"value"`
 }
 
+type MetadataCheck func(Metadatum) *ValidationError
+
 // MetadataValid provides a way to check for validity of all Metadatum contained
-// within a Metadata. It returns an aggregated list of errors, or nil if none
-// were found
+// within a Metadata, for various definitions of validity. It returns an
+// aggregated list of errors from all checks, or nil if none were found.
 func MetadataValid(
 	container string,
 	md Metadata,
-	check func(Metadatum) *ValidationError,
+	checks ...MetadataCheck,
 ) *ValidationError {
 	errs := &ValidationError{}
 
@@ -85,12 +88,51 @@ func MetadataValid(
 				fmt.Sprintf("duplicate %v key '%v'", container, e.Key),
 			})
 		}
-
-		errs.MergePrefixed(check(e), fmt.Sprintf("%s[%v]", container, e.Key))
 		seenKey[e.Key] = true
+
+		for _, check := range checks {
+			errs.MergePrefixed(check(e), fmt.Sprintf("%s[%v]", container, e.Key))
+		}
 	}
 
 	return errs.OrNil()
+}
+
+var (
+	// MetadataCheckNonEmptyKeys produces an error if the Metadatum has an empty
+	// Key
+	MetadataCheckNonEmptyKeys = MetadataCheck(func(kv Metadatum) *ValidationError {
+		if kv.Key == "" {
+			return &ValidationError{
+				[]ErrorCase{{"key", "must not be empty"}},
+			}
+		}
+		return nil
+	})
+
+	// MetadataCheckNonEmptyKeys produces an error if the Metadatum has an empty
+	// Value
+	MetadataCheckNonEmptyValues = MetadataCheck(func(kv Metadatum) *ValidationError {
+		if kv.Value == "" {
+			return &ValidationError{
+				[]ErrorCase{{"value", "must not be empty"}},
+			}
+		}
+		return nil
+	})
+)
+
+// MetadataCheckAllKeysMatchPattern produces an error with the given error
+// string, if the Metadatum fails to match the given pattern.
+func MetadataCheckKeysMatchPattern(pattern *regexp.Regexp, errStr string) MetadataCheck {
+	return func(kv Metadatum) *ValidationError {
+		if !pattern.MatchString(kv.Key) {
+			return &ValidationError{
+				[]ErrorCase{{"key", errStr}},
+			}
+		}
+		return nil
+	}
 }
 
 // Equals checks for equality between two Metadatum structs. They will be
