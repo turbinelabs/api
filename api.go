@@ -26,7 +26,7 @@ import (
 
 // TbnPublicVersion is the currently released version of open-sourced Turbine
 // Labs projects
-const TbnPublicVersion = "0.12.4"
+const TbnPublicVersion = "0.13.0"
 
 const (
 	// AllowedIndexPatternStr is a regexp pattern describing the acceptable
