@@ -1,32 +1,38 @@
 package api
 
-// WalkClusterKeysFromSharedRules applies the vistior function to all the
-// ClusterKeys referenced by the given SharedRules
-func WalkClusterKeysFromSharedRules(sr SharedRules, visit func(ClusterKey)) {
-	WalkClustersFromAllConstraints(sr.Default, visit)
-	WalkClusterKeysFromRules(sr.Rules, visit)
+// ConstraintVisitor is a function that operates on a ClusterConstraint, and
+// the enclosing Rule, if any.
+type ConstraintVisitor func(ClusterConstraint, *Rule)
+
+// WalkConstraintsFromSharedRules applies the vistior function to all the
+// ClusterConstraints referenced by the given SharedRules
+func WalkConstraintsFromSharedRules(sr SharedRules, visit ConstraintVisitor) {
+	WalkConstraintsFromAllConstraints(sr.Default, nil, visit)
+	WalkConstraintsFromRules(sr.Rules, visit)
 }
 
-// WalkClusterKeysFromRules applies the vistior function to all the ClusterKeys
-// referenced by the given Rules
-func WalkClusterKeysFromRules(rs Rules, visit func(ClusterKey)) {
+// WalkConstraintsFromRules applies the vistior function to all the
+// ClusterConstraints, along with the enclosing rule, referenced by the given
+// Rules.
+func WalkConstraintsFromRules(rs Rules, visit ConstraintVisitor) {
 	for _, r := range rs {
-		WalkClustersFromAllConstraints(r.Constraints, visit)
+		WalkConstraintsFromAllConstraints(r.Constraints, &r, visit)
 	}
 }
 
-// WalkClustersFromAllConstraints applies the vistior function to all
-// ClusterKeys referenced by the given AllConstraints
-func WalkClustersFromAllConstraints(ac AllConstraints, visit func(ClusterKey)) {
-	WalkClustersFromConstraints(ac.Light, visit)
-	WalkClustersFromConstraints(ac.Dark, visit)
-	WalkClustersFromConstraints(ac.Tap, visit)
+// WalkConstraintsFromAllConstraints applies the vistior function to all the
+// constraints referenced by the given ClusterConstraints, and the given rule
+// pointer.
+func WalkConstraintsFromAllConstraints(ac AllConstraints, rule *Rule, visit ConstraintVisitor) {
+	WalkConstraints(ac.Light, rule, visit)
+	WalkConstraints(ac.Dark, rule, visit)
+	WalkConstraints(ac.Tap, rule, visit)
 }
 
-// WalkClustersFromConstraints applies the vistior function to all the
-// ClusterKeys referenced by the given ClusterConstraints
-func WalkClustersFromConstraints(ccf ClusterConstraints, visit func(ClusterKey)) {
+// WalkConstraints applies the vistior function to all the elements referenced
+// by the given ClusterConstraints, and the given rule pointer.
+func WalkConstraints(ccf ClusterConstraints, rule *Rule, visit ConstraintVisitor) {
 	for _, cc := range ccf {
-		visit(cc.ClusterKey)
+		visit(cc, rule)
 	}
 }
