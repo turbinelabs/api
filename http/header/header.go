@@ -45,3 +45,8 @@ var (
 		ClientVersion,
 	}
 )
+
+// Headers returns the list of headers used for the API.
+func Headers() []string {
+	return headers
+}

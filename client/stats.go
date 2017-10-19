@@ -26,10 +26,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/turbinelabs/api"
 	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
-	apiheader "github.com/turbinelabs/api/http/header"
 	statsapi "github.com/turbinelabs/api/service/stats"
 	"github.com/turbinelabs/nonstdlib/executor"
 )
@@ -77,14 +75,7 @@ func newInternalStatsClient(
 	clientApp App,
 	exec executor.Executor,
 ) (*httpStats, error) {
-	// Copy the Endpoint to avoid polluting the original with our
-	// headers.
-	dest = dest.Copy()
-
-	dest.AddHeader(apiheader.Authorization, apiKey)
-	dest.AddHeader(apiheader.ClientType, clientType)
-	dest.AddHeader(apiheader.ClientVersion, api.TbnPublicVersion)
-	dest.AddHeader(apiheader.ClientApp, string(clientApp))
+	dest = configureEndpoint(dest, apiKey, clientApp)
 
 	// see encodePayload; payloads are sent as gzipped json
 	dest.AddHeader("Content-Type", "application/json")
