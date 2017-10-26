@@ -82,7 +82,8 @@ func NewStatsClientFromFlags(
 	}
 
 	if ff.execFromFlags == nil {
-		ff.execFromFlags = executor.NewFromFlags(pfs)
+		efs := pfs.Scope("exec", "API request executor")
+		ff.execFromFlags = executor.NewFromFlags(efs)
 	}
 
 	pfs.BoolVar(
