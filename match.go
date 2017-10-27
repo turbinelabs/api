@@ -39,7 +39,7 @@ func MatchKindFromString(s string) (MatchKind, error) {
 }
 
 /*
-	A Match is represents a mapping of a Metadatum from a MatchKind-typed
+	A Match represents a mapping of a Metadatum from a MatchKind-typed
 	request parameter to another Metadatum.
 
 	Example:

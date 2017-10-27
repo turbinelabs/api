@@ -110,7 +110,7 @@ var (
 		return nil
 	})
 
-	// MetadataCheckNonEmptyKeys produces an error if the Metadatum has an empty
+	// MetadataCheckNonEmptyValues produces an error if the Metadatum has an empty
 	// Value
 	MetadataCheckNonEmptyValues = MetadataCheck(func(kv Metadatum) *ValidationError {
 		if kv.Value == "" {
