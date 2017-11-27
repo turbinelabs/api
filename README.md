@@ -13,7 +13,7 @@
 
 # turbinelabs/api
 
-[![Apache 2.0](https://img.shields.io/hexpm/l/plug.svg)](LICENSE)
+[![Apache 2.0](https://img.shields.io/badge/license-apache%202.0-blue.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/turbinelabs/api?status.svg)](https://godoc.org/github.com/turbinelabs/api)
 [![CircleCI](https://circleci.com/gh/turbinelabs/api.svg?style=shield)](https://circleci.com/gh/turbinelabs/api)
 [![Go Report Card](https://goreportcard.com/badge/github.com/turbinelabs/api)](https://goreportcard.com/report/github.com/turbinelabs/api)
