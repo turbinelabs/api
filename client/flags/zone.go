@@ -25,7 +25,7 @@ import (
 )
 
 // ZoneFromFlags represents command-line flags for specifying a
-// Turbine Labs API zone name, which is used to resolves a zone.
+// Turbine Labs API zone name, which is used to resolve a zone.
 type ZoneFromFlags interface {
 	Name() string
 	Ref() service.ZoneRef

@@ -19,6 +19,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/turbinelabs/api"
 )
@@ -36,9 +37,9 @@ type ProxyRef interface {
 }
 
 type proxyRef struct {
-	p    *api.Proxy
-	name string
-	zRef ZoneRef
+	p       *api.Proxy
+	name    string
+	zoneRef ZoneRef
 }
 
 func (r *proxyRef) set(p *api.Proxy) {
@@ -53,7 +54,7 @@ func (r *proxyRef) Get(svc All) (api.Proxy, error) {
 	if r.name == "" {
 		return api.Proxy{}, errors.New("proxyName must be non-empty")
 	}
-	z, err := r.zRef.Get(svc)
+	z, err := r.zoneRef.Get(svc)
 	if err != nil {
 		return api.Proxy{}, err
 	}
@@ -69,12 +70,12 @@ func (r *proxyRef) Get(svc All) (api.Proxy, error) {
 }
 
 func (r *proxyRef) MapKey() string {
-	return fmt.Sprintf("%s:proxy_name=%s", r.zRef.MapKey(), r.name)
+	return fmt.Sprintf("%s:proxy_name=%s", r.zoneRef.MapKey(), encodeName(r.name))
 }
 
 // NewProxyRef produces a ProxyRef from an api.Proxy and an api.Zone
 func NewProxyRef(p api.Proxy, z api.Zone) ProxyRef {
-	r := &proxyRef{zRef: NewZoneRef(z)}
+	r := &proxyRef{zoneRef: NewZoneRef(z)}
 	r.set(&p)
 	return r
 }
@@ -83,12 +84,12 @@ func NewProxyRef(p api.Proxy, z api.Zone) ProxyRef {
 // ZoneRef
 func NewProxyNameProxyRef(name string, zRef ZoneRef) ProxyRef {
 	return &proxyRef{
-		name: name,
-		zRef: zRef,
+		name:    name,
+		zoneRef: zRef,
 	}
 }
 
-// ZoneRef is encapsulates a lookup of a Zone by Name
+// ZoneRef encapsulates a lookup of a Zone by Name
 type ZoneRef interface {
 	Get(All) (api.Zone, error)
 
@@ -139,5 +140,9 @@ func (r *zoneRef) Get(svc All) (api.Zone, error) {
 }
 
 func (r *zoneRef) MapKey() string {
-	return "zone_name=" + r.name
+	return "zone_name=" + encodeName(r.name)
+}
+
+func encodeName(name string) string {
+	return strings.Replace(strings.Replace(name, ":", `\:`, -1), "=", `\=`, -1)
 }

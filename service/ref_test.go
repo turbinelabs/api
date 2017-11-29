@@ -33,6 +33,14 @@ func TestRefNameMapKeys(t *testing.T) {
 	assert.Equal(t, pNameRef.MapKey(), "zone_name=that-zone-name:proxy_name=that-proxy-name")
 }
 
+func TestRefNameMapKeysWithColonsAndEquals(t *testing.T) {
+	zNameRef := NewZoneNameZoneRef("that:zone=name")
+	assert.Equal(t, zNameRef.MapKey(), `zone_name=that\:zone\=name`)
+
+	pNameRef := NewProxyNameProxyRef("that:proxy=name", zNameRef)
+	assert.Equal(t, pNameRef.MapKey(), `zone_name=that\:zone\=name:proxy_name=that\:proxy\=name`)
+}
+
 func TestRefMapKeys(t *testing.T) {
 	z := api.Zone{Name: "that-zone-name"}
 	p := api.Proxy{Name: "that-proxy-name"}
