@@ -28,7 +28,10 @@ import (
 
 // ProxyRef encapsulates a lookup of a Proxy by Name and Zone Name
 type ProxyRef interface {
+	// Get returns the Proxy corresponding to the ProxyRef. The lookup is memoized.
 	Get(All) (api.Proxy, error)
+	Name() string
+	ZoneRef() ZoneRef
 
 	// MapKey returns a string suitable for keying the ProxyRef
 	// in a map. ProxyRefs with the same MapKey refer to the same
@@ -69,6 +72,14 @@ func (r *proxyRef) Get(svc All) (api.Proxy, error) {
 	return ps[0], nil
 }
 
+func (r *proxyRef) Name() string {
+	return r.name
+}
+
+func (r *proxyRef) ZoneRef() ZoneRef {
+	return r.zoneRef
+}
+
 func (r *proxyRef) MapKey() string {
 	return fmt.Sprintf("%s:proxy_name=%s", r.zoneRef.MapKey(), encodeName(r.name))
 }
@@ -91,7 +102,10 @@ func NewProxyNameProxyRef(name string, zRef ZoneRef) ProxyRef {
 
 // ZoneRef encapsulates a lookup of a Zone by Name
 type ZoneRef interface {
+	// Get returns the Zone corresponding to the ZoneRef. The lookup is memoized.
 	Get(All) (api.Zone, error)
+
+	Name() string
 
 	// MapKey returns a string suitable for keying the ZoneRef
 	// in a map. ZoneRefs with the same MapKey refer to the same
@@ -137,6 +151,10 @@ func (r *zoneRef) Get(svc All) (api.Zone, error) {
 	}
 	r.set(&zs[0])
 	return zs[0], nil
+}
+
+func (r *zoneRef) Name() string {
+	return r.name
 }
 
 func (r *zoneRef) MapKey() string {

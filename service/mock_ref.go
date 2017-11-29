@@ -46,6 +46,30 @@ func (mr *MockProxyRefMockRecorder) Get(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockProxyRef)(nil).Get), arg0)
 }
 
+// Name mocks base method
+func (m *MockProxyRef) Name() string {
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name
+func (mr *MockProxyRefMockRecorder) Name() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockProxyRef)(nil).Name))
+}
+
+// ZoneRef mocks base method
+func (m *MockProxyRef) ZoneRef() ZoneRef {
+	ret := m.ctrl.Call(m, "ZoneRef")
+	ret0, _ := ret[0].(ZoneRef)
+	return ret0
+}
+
+// ZoneRef indicates an expected call of ZoneRef
+func (mr *MockProxyRefMockRecorder) ZoneRef() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ZoneRef", reflect.TypeOf((*MockProxyRef)(nil).ZoneRef))
+}
+
 // MapKey mocks base method
 func (m *MockProxyRef) MapKey() string {
 	ret := m.ctrl.Call(m, "MapKey")
@@ -92,6 +116,18 @@ func (m *MockZoneRef) Get(arg0 All) (api.Zone, error) {
 // Get indicates an expected call of Get
 func (mr *MockZoneRefMockRecorder) Get(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockZoneRef)(nil).Get), arg0)
+}
+
+// Name mocks base method
+func (m *MockZoneRef) Name() string {
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name
+func (mr *MockZoneRefMockRecorder) Name() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockZoneRef)(nil).Name))
 }
 
 // MapKey mocks base method
