@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -70,6 +71,85 @@ func TestMetadataEqualsNilNil(t *testing.T) {
 	var m1, m2 Metadata
 	assert.True(t, m1.Equals(m2))
 	assert.True(t, m2.Equals(m1))
+}
+
+func TestMetadataCompare(t *testing.T) {
+	type testcase struct {
+		mda  Metadata
+		mdb  Metadata
+		want int
+	}
+
+	for _, tc := range []testcase{
+		{want: 0},
+		{mda: Metadata{}, want: 0},
+		{mdb: Metadata{}, want: 0},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}},
+			want: 1,
+		},
+		{
+			mdb:  Metadata{{Key: "a", Value: "b"}},
+			want: -1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}},
+			mdb:  Metadata{{Key: "a", Value: "b"}},
+			want: 0,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}},
+			mdb:  Metadata{{Key: "a", Value: "c"}},
+			want: -1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "c"}},
+			mdb:  Metadata{{Key: "a", Value: "b"}},
+			want: 1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "d"}},
+			mdb:  Metadata{{Key: "c", Value: "d"}, {Key: "a", Value: "b"}},
+			want: 0,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "d"}},
+			mdb:  Metadata{{Key: "a", Value: "b"}},
+			want: 1,
+		},
+		{
+			mda:  Metadata{{Key: "e", Value: "f"}},
+			mdb:  Metadata{{Key: "c", Value: "d"}, {Key: "a", Value: "b"}},
+			want: -1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "d"}},
+			mdb:  Metadata{{Key: "e", Value: "f"}},
+			want: 1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}},
+			mdb:  Metadata{{Key: "c", Value: "d"}, {Key: "a", Value: "b"}},
+			want: -1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "d"}},
+			mdb:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "e"}},
+			want: -1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "e"}},
+			mdb:  Metadata{{Key: "c", Value: "d"}, {Key: "a", Value: "b"}},
+			want: 1,
+		},
+	} {
+		got := tc.mda.Compare(tc.mdb)
+		if got != tc.want {
+			assert.Failed(t, fmt.Sprintf(
+				"Compare(%#v, %#v): want %d, got %d", tc.mda, tc.mdb, got, tc.want,
+			))
+		}
+	}
 }
 
 func TestMetadataZeroZero(t *testing.T) {

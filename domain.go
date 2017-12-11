@@ -62,6 +62,8 @@ type Domain struct {
 	Checksum
 }
 
+// Addr returns the domain host/port, colon-delimited
+func (d Domain) Addr() string          { return fmt.Sprintf("%s:%d", d.Name, d.Port) }
 func (o Domain) GetZoneKey() ZoneKey   { return o.ZoneKey }
 func (o Domain) GetOrgKey() OrgKey     { return o.OrgKey }
 func (o Domain) Key() string           { return string(o.DomainKey) }

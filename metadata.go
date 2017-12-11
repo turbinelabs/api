@@ -35,16 +35,17 @@ func MetadataFromMap(m map[string]string) Metadata {
 	return meta
 }
 
-// Produce a string/string Map from Metadata.
-func (metadata *Metadata) Map() map[string]string {
-	result := make(map[string]string)
-	for _, metadatum := range *metadata {
+// Map produces a string/string Map from Metadata.
+func (m Metadata) Map() map[string]string {
+	result := map[string]string{}
+	for _, metadatum := range m {
 		result[metadatum.Key] = metadatum.Value
 	}
 
 	return result
 }
 
+// Equals checks equality with another Metadata
 func (m Metadata) Equals(o Metadata) bool {
 	if len(m) != len(o) {
 		return false
@@ -60,6 +61,39 @@ func (m Metadata) Equals(o Metadata) bool {
 	}
 
 	return true
+}
+
+// Compare compares the receiver to another Metadata.
+// It returns a value > 0 if the receiver is greater,
+// < 0 if the receiver is lessor, and 0 if they are equal.
+// Both receiver and target are sorted by key as a side
+// effect.
+func (m Metadata) Compare(o Metadata) int {
+	sort.Sort(MetadataByKey(m))
+	sort.Sort(MetadataByKey(o))
+
+	if len(m) > len(o) {
+		return 1
+	}
+	if len(m) < len(o) {
+		return -1
+	}
+	for idx := range m {
+		if m[idx].Key > o[idx].Key {
+			return 1
+		}
+		if m[idx].Key < o[idx].Key {
+			return -1
+		}
+
+		if m[idx].Value > o[idx].Value {
+			return 1
+		}
+		if m[idx].Value < o[idx].Value {
+			return -1
+		}
+	}
+	return 0
 }
 
 // A Metadatum a key/value pair.
@@ -122,7 +156,7 @@ var (
 	})
 )
 
-// MetadataCheckAllKeysMatchPattern produces an error with the given error
+// MetadataCheckKeysMatchPattern produces an error with the given error
 // string, if the Metadatum fails to match the given pattern.
 func MetadataCheckKeysMatchPattern(pattern *regexp.Regexp, errStr string) MetadataCheck {
 	return func(kv Metadatum) *ValidationError {
