@@ -65,34 +65,48 @@ func (m Metadata) Equals(o Metadata) bool {
 
 // Compare compares the receiver to another Metadata.
 // It returns a value > 0 if the receiver is greater,
-// < 0 if the receiver is lessor, and 0 if they are equal.
+// < 0 if the receiver is lesser, and 0 if they are equal.
 // Both receiver and target are sorted by key as a side
 // effect.
 func (m Metadata) Compare(o Metadata) int {
 	sort.Sort(MetadataByKey(m))
 	sort.Sort(MetadataByKey(o))
 
-	if len(m) > len(o) {
-		return 1
-	}
+	var length int
 	if len(m) < len(o) {
-		return -1
+		length = len(m)
+	} else {
+		length = len(o)
 	}
-	for idx := range m {
-		if m[idx].Key > o[idx].Key {
+
+	i := 0
+	for i < length {
+		if m[i].Key > o[i].Key {
 			return 1
 		}
-		if m[idx].Key < o[idx].Key {
+		if m[i].Key < o[i].Key {
 			return -1
 		}
 
-		if m[idx].Value > o[idx].Value {
+		if m[i].Value > o[i].Value {
 			return 1
 		}
-		if m[idx].Value < o[idx].Value {
+		if m[i].Value < o[i].Value {
 			return -1
 		}
+		i++
 	}
+
+	if i < len(m) {
+		// o is shorter
+		return 1
+	}
+
+	if i < len(o) {
+		// m is shorter
+		return -1
+	}
+
 	return 0
 }
 

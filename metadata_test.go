@@ -118,14 +118,19 @@ func TestMetadataCompare(t *testing.T) {
 			want: 1,
 		},
 		{
-			mda:  Metadata{{Key: "e", Value: "f"}},
+			mda:  Metadata{{Key: "a", Value: "b"}},
 			mdb:  Metadata{{Key: "c", Value: "d"}, {Key: "a", Value: "b"}},
 			want: -1,
 		},
 		{
+			mda:  Metadata{{Key: "e", Value: "f"}},
+			mdb:  Metadata{{Key: "c", Value: "d"}, {Key: "a", Value: "b"}},
+			want: 1,
+		},
+		{
 			mda:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "d"}},
 			mdb:  Metadata{{Key: "e", Value: "f"}},
-			want: 1,
+			want: -1,
 		},
 		{
 			mda:  Metadata{{Key: "a", Value: "b"}},
@@ -140,6 +145,11 @@ func TestMetadataCompare(t *testing.T) {
 		{
 			mda:  Metadata{{Key: "a", Value: "b"}, {Key: "c", Value: "e"}},
 			mdb:  Metadata{{Key: "c", Value: "d"}, {Key: "a", Value: "b"}},
+			want: 1,
+		},
+		{
+			mda:  Metadata{{Key: "a", Value: "a"}, {Key: "b", Value: "b"}, {Key: "x", Value: "x"}},
+			mdb:  Metadata{{Key: "a", Value: "a"}, {Key: "b", Value: "b"}, {Key: "c", Value: "c"}, {Key: "d", Value: "d"}},
 			want: 1,
 		},
 	} {
