@@ -174,6 +174,10 @@ var (
 // string, if the Metadatum fails to match the given pattern.
 func MetadataCheckKeysMatchPattern(pattern *regexp.Regexp, errStr string) MetadataCheck {
 	return func(kv Metadatum) *ValidationError {
+		if kv.Key == "" {
+			return &ValidationError{[]ErrorCase{{"key", "must not be empty"}}}
+		}
+
 		if !pattern.MatchString(kv.Key) {
 			return &ValidationError{
 				[]ErrorCase{{"key", errStr}},

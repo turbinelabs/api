@@ -103,10 +103,8 @@ func (i Instance) Equals(o Instance) bool {
 // checks for host and port data as both are required for an instance to be
 // well defined
 func (i Instance) IsValid() *ValidationError {
-	iscope := fmt.Sprintf("instances[%s]", i.Key())
-
 	ecase := func(f, m string) ErrorCase {
-		return ErrorCase{iscope + "." + f, m}
+		return ErrorCase{f, m}
 	}
 
 	errs := &ValidationError{}
@@ -121,7 +119,7 @@ func (i Instance) IsValid() *ValidationError {
 		errs.AddNew(ecase("port", "must be non-zero"))
 	}
 
-	errs.MergePrefixed(InstanceMetadataIsValid(i.Metadata), iscope)
+	errs.Merge(InstanceMetadataIsValid(i.Metadata))
 
 	return errs.OrNil()
 }
