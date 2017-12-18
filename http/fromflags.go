@@ -21,7 +21,6 @@ package http
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 
@@ -43,10 +42,10 @@ func NewFromFlags(defaultHostPort string, flagset tbnflag.FlagSet) FromFlags {
 		headers: tbnflag.NewStrings(),
 	}
 
-	flagset.StringVar(
+	flagset.HostPortVar(
 		&ff.hostPort,
 		"host",
-		defaultHostPort,
+		ff.initialHostPort(defaultHostPort),
 		"The address (`host:port`) for {{NAME}} requests. If no port is given, it defaults to port 443 if --{{PREFIX}}ssl is true and port 80 otherwise.",
 	)
 	flagset.BoolVar(&ff.ssl, "ssl", true, "If true, use SSL for {{NAME}} requests")
@@ -78,7 +77,7 @@ func (h header) split() (string, string, error) {
 }
 
 type fromFlags struct {
-	hostPort string
+	hostPort tbnflag.HostPort
 	ssl      bool
 	insecure bool
 	headers  tbnflag.Strings
@@ -95,50 +94,7 @@ func (ff *fromFlags) makeClient() *http.Client {
 	return cl
 }
 
-func checkHostPort(hostPort string, ssl bool) (string, error) {
-	host, port, err := net.SplitHostPort(hostPort)
-	if err != nil {
-		origErr := err
-		// If the address is just missing a port, this will
-		// succeed returning an empty port.
-		host, port, err = net.SplitHostPort(hostPort + ":")
-		if err != nil || port != "" {
-			return "", origErr
-		}
-	}
-
-	if host == "" {
-		return "", fmt.Errorf("address %s: missing hostname or address", hostPort)
-	}
-
-	if port == "" {
-		// e.g. hostPort was just a hostname or address.
-		if hostPort[0] == '[' {
-			// Replace the brackets that SplitHostPort stripped.
-			host = fmt.Sprintf("[%s]", host)
-		}
-
-		if ssl {
-			return fmt.Sprintf("%s:443", host), nil
-		}
-
-		return fmt.Sprintf("%s:80", host), nil
-	}
-
-	if _, err := net.LookupPort("tcp", port); err != nil {
-		return "", fmt.Errorf("address %s: invalid port", hostPort)
-	}
-
-	return hostPort, nil
-}
-
 func (ff *fromFlags) Validate() error {
-	hostPort, err := checkHostPort(ff.hostPort, ff.ssl)
-	if err != nil {
-		return err
-	}
-	ff.hostPort = hostPort
-
 	for _, hs := range ff.headers.Strings {
 		if _, _, err := header(hs).split(); err != nil {
 			return err
@@ -156,7 +112,7 @@ func (ff *fromFlags) MakeEndpoint() (Endpoint, error) {
 		protocol = HTTP
 	}
 
-	e, err := NewEndpoint(protocol, ff.hostPort)
+	e, err := NewEndpoint(protocol, ff.hostPort.Addr())
 	if err != nil {
 		return e, err
 	}
@@ -173,4 +129,15 @@ func (ff *fromFlags) MakeEndpoint() (Endpoint, error) {
 	}
 
 	return e, nil
+}
+
+func (ff *fromFlags) initialHostPort(defaultHostPort string) tbnflag.HostPort {
+	defaultPortFunc := func() int {
+		if ff.ssl {
+			return 443
+		}
+		return 80
+
+	}
+	return tbnflag.NewHostPortWithDefaultPort(defaultHostPort, defaultPortFunc)
 }

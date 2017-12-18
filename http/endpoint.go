@@ -42,7 +42,7 @@ type Params map[string]string
 //	  specifies whether we should be using HTTP or HTTPS there is currently no
 // 	  special configuration for HTTPS (certificate pinning, custom root CAs,
 //	  etc.)
-//	hostPost - host:port for the service we should connect to
+//	hostPort - host:port for the service we should connect to
 //
 // Returns a new Endpoint object and an error if there was a problem. Currently
 // the only error possible is the result of a failed call to url.Parse which
