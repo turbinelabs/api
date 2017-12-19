@@ -19,6 +19,7 @@ package flags
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=../../http/fromflags.go"
 
 import (
+	"errors"
 	"fmt"
 
 	"golang.org/x/net/context"
@@ -128,7 +129,11 @@ func (ff *apiConfigFromFlags) Validate() error {
 	}
 
 	if ff.mayUseAuthToken && ff.APIKey() != "" {
-		console.Info().Println("Preferring API Key for authentication")
+		console.Info().Println("Preferring --api.key for authentication")
+	}
+
+	if ff.cachePath == nil && ff.APIKey() == "" {
+		return errors.New("No --api.key specified, and no cached login could be found")
 	}
 
 	return nil

@@ -31,22 +31,38 @@ type ZoneFromFlags interface {
 	Ref() service.ZoneRef
 }
 
+// ZoneFromFlagsFlagOptions lets you add various options to NewFromFlags
+type ZoneFromFlagsFlagOptions func(*zoneFromFlags) *zoneFromFlags
+
+// ZoneFromFlagsNameOptional allows the caller to specify that the
+// zone-name flag is optional
+func ZoneFromFlagsNameOptional() ZoneFromFlagsFlagOptions {
+	return func(ff *zoneFromFlags) *zoneFromFlags {
+		ff.optional = true
+		return ff
+	}
+}
+
 // NewZoneFromFlags configures the necessary command line flags to
 // retrieve a zone by zone name.
-func NewZoneFromFlags(flagset tbnflag.FlagSet) ZoneFromFlags {
+func NewZoneFromFlags(flagset tbnflag.FlagSet, opts ...ZoneFromFlagsFlagOptions) ZoneFromFlags {
 	ff := &zoneFromFlags{}
 
-	flagset.StringVar(
-		&ff.zoneName,
-		"zone-name",
-		"",
-		usage.Required("The name of the API Zone for {{NAME}} requests."),
-	)
+	for _, fn := range opts {
+		ff = fn(ff)
+	}
+
+	u := "The name of the API Zone for {{NAME}} requests."
+	if !ff.optional {
+		u = usage.Required(u)
+	}
+	flagset.StringVar(&ff.zoneName, "zone-name", "", u)
 
 	return ff
 }
 
 type zoneFromFlags struct {
+	optional bool
 	zoneName string
 }
 
