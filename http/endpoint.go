@@ -23,19 +23,22 @@ import (
 	"net/url"
 )
 
-// Indicates which transport we should use for communicating with our service.
+// Protocol indicates which transport we should use for communicating with our service.
 type Protocol string
 
 const (
-	HTTP  Protocol = "http"
+	// HTTP is the Protocol constant for HTTP requests
+	HTTP Protocol = "http"
+
+	// HTTPS is the Protocol constant for HTTP requests
 	HTTPS Protocol = "https"
 )
 
-// Holds URL query arg name -> value mappings
+// Params holds URL query arg name -> value mappings
 type Params map[string]string
 
-// Constructs a new HTTP Endpoint. This is used to configure the HTTP service
-// implementation.
+// NewEndpoint constructs a new HTTP Endpoint. This is used to configure the
+// HTTP service implementation.
 //
 // Parameters:
 // 	protocol
@@ -67,6 +70,8 @@ func NewEndpoint(protocol Protocol, hostPort string) (Endpoint, error) {
 	}, nil
 }
 
+// Endpoint is a effectively a net/http.Request factory, which configures
+// the common concerns of requests to a given HTTP service.
 type Endpoint struct {
 	hostPort string
 	protocol Protocol
@@ -76,7 +81,7 @@ type Endpoint struct {
 	urlBase *url.URL // computed at construction
 }
 
-// Makes a copy of the Endpoint. Insures that modifications to custom
+// Copy makes a copy of the Endpoint. Insures that modifications to custom
 // headers of the new Endpoint are not made to the original Endpoint
 // and vice versa.
 func (e *Endpoint) Copy() Endpoint {
@@ -92,51 +97,50 @@ func (e *Endpoint) Copy() Endpoint {
 	return newE
 }
 
-// Returns the net/http.Client for this Endpoint.
+// Client returns the net/http.Client for this Endpoint.
 func (e *Endpoint) Client() *http.Client {
 	return e.client
 }
 
-// Sets an alternative net/http.Client for this Endpoint.
+// SetClient sets an alternative net/http.Client for this Endpoint.
 func (e *Endpoint) SetClient(c *http.Client) {
 	e.client = c
 }
 
-// Adds a header to be added to all requests created via NewRequest.
-// These headers are meant to be constant across all requests (e.g. a
-// client identifier). Headers specific to a particular request should
-// be added directly to the net/http.Request.
+// AddHeader adds a header to be added to all requests created via NewRequest.
+// These headers are meant to be constant across all requests (e.g. a client
+// identifier). Headers specific to a particular request should be added
+// directly to the net/http.Request.
 func (e *Endpoint) AddHeader(header, value string) {
 	e.header.Add(header, value)
 }
 
-// Construct a URL to this turbine Endpoint.
-func (e *Endpoint) Url(path string, queryParams Params) string {
-	newUrl := *e.urlBase
-	newUrl.Path = path
+// URL constructs a URL to this turbine Endpoint.
+func (e *Endpoint) URL(path string, queryParams Params) string {
+	newURL := *e.urlBase
+	newURL.Path = path
 
 	if len(queryParams) != 0 {
-		q := newUrl.Query()
+		q := newURL.Query()
 		for k, v := range queryParams {
 			q.Set(k, v)
 		}
-		newUrl.RawQuery = q.Encode()
+		newURL.RawQuery = q.Encode()
 	}
 
-	return newUrl.String()
+	return newURL.String()
 }
 
-// Construct a net/http.Request for this turbine Endpoint with the
-// given method, path, (optional) query parameters and (optional)
-// body. Headers previously configured via AddHeader are added
-// automatically.
+// NewRequest constructs a net/http.Request for this turbine Endpoint with the
+// given method, path, (optional) query parameters and (optional) body. Headers
+// previously configured via AddHeader are added automatically.
 func (e *Endpoint) NewRequest(
 	method string,
 	path string,
 	queryParams Params,
 	body io.Reader,
 ) (*http.Request, error) {
-	url := e.Url(path, queryParams)
+	url := e.URL(path, queryParams)
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
@@ -144,6 +148,10 @@ func (e *Endpoint) NewRequest(
 
 	for header, values := range e.header {
 		for _, value := range values {
+			// header values are normalized when added
+			if header == "Host" {
+				request.Host = value
+			}
 			request.Header.Add(header, value)
 		}
 	}

@@ -74,12 +74,12 @@ func TestEndpointAddHeader(t *testing.T) {
 	assert.ArrayEqual(t, e.header["Bar"], []string{"3"})
 }
 
-func TestEndpointUrl(t *testing.T) {
+func TestEndpointURL(t *testing.T) {
 	e, _ := NewEndpoint(HTTP, "example.com:80")
-	u := e.Url("/admin/user", Params{})
+	u := e.URL("/admin/user", Params{})
 	assert.Equal(t, u, "http://example.com:80/admin/user")
 
-	u2 := e.Url("/admin/user", Params{"q": "encode me!"})
+	u2 := e.URL("/admin/user", Params{"q": "encode me!"})
 	assert.Equal(t, u2, "http://example.com:80/admin/user?q=encode+me%21")
 }
 
@@ -90,7 +90,7 @@ func TestEndpointNewRequestWithParams(t *testing.T) {
 	r, err := e.NewRequest("GET", "/admin/user", params, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, r.Method, "GET")
-	assert.Equal(t, r.URL.String(), e.Url("/admin/user", params))
+	assert.Equal(t, r.URL.String(), e.URL("/admin/user", params))
 	assert.Nil(t, r.Body)
 	assert.Equal(t, len(r.Header), 0)
 }
@@ -98,11 +98,13 @@ func TestEndpointNewRequestWithParams(t *testing.T) {
 func TestEndpointNewRequestWithHeader(t *testing.T) {
 	e, _ := NewEndpoint(HTTP, "example.com:80")
 	e.AddHeader("my-header", "my-value")
+	e.AddHeader("host", "other.example.com")
 
 	r, err := e.NewRequest("GET", "/admin/user", Params{}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, r.Method, "GET")
-	assert.Equal(t, r.URL.String(), e.Url("/admin/user", Params{}))
+	assert.Equal(t, r.Host, "other.example.com")
+	assert.Equal(t, r.URL.String(), e.URL("/admin/user", Params{}))
 	assert.Nil(t, r.Body)
 	assert.Equal(t, r.Header.Get(http.CanonicalHeaderKey("my-header")), "my-value")
 }
@@ -116,7 +118,7 @@ func TestEndpointNewRequestWithBody(t *testing.T) {
 	r, err := e.NewRequest("POST", "/admin/user", Params{}, body)
 	assert.Nil(t, err)
 	assert.Equal(t, r.Method, "POST")
-	assert.Equal(t, r.URL.String(), e.Url("/admin/user", Params{}))
+	assert.Equal(t, r.URL.String(), e.URL("/admin/user", Params{}))
 	assert.SameInstance(t, r.Body, body)
 	assert.Equal(t, len(r.Header), 0)
 }
@@ -124,10 +126,10 @@ func TestEndpointNewRequestWithBody(t *testing.T) {
 func TestEndpointNewRequestError(t *testing.T) {
 	e, _ := NewEndpoint(HTTP, "example.com:80")
 
-	newUrlBase := *e.urlBase
-	newUrlBase.Host = "not a domain, hoss"
+	newURLBase := *e.urlBase
+	newURLBase.Host = "not a domain, hoss"
 
-	e.urlBase = &newUrlBase
+	e.urlBase = &newURLBase
 
 	r, err := e.NewRequest("GET", "/", Params{}, nil)
 	assert.Nil(t, r)
