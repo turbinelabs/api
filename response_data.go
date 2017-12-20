@@ -84,6 +84,9 @@ func (rd ResponseData) Equals(o ResponseData) bool {
 	return true
 }
 
+// IsValid verifies that each header and each cookie is unique within
+// the ResponseData. Header names are not case sensitive. Cookie names
+// are case sensitive.
 func (rd ResponseData) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
@@ -120,8 +123,67 @@ func (rd ResponseData) IsValid() *ValidationError {
 	return errs.OrNil()
 }
 
+// Len returns the total number of ResponseData headers and cookies.
 func (rd ResponseData) Len() int {
 	return len(rd.Headers) + len(rd.Cookies)
+}
+
+// MergeFrom combines two ResponseData objects into a single, new
+// ResponseData. The headers and cookies in the given ResponseData
+// override (by name) those in the receiver ResponseData, keeping the
+// original ResponseData's ordering. Additional ResponseData from the
+// overrides are appended, also maintaining their order. Both source
+// ResponseData objects are assumed to be valid.
+func (rd ResponseData) MergeFrom(overrides ResponseData) ResponseData {
+	merged := ResponseData{}
+
+	// Remember where the overrides are by name.
+	overrideIndexes := map[string]int{}
+	for idx, header := range overrides.Headers {
+		overrideIndexes[strings.ToLower(header.Name)] = idx
+	}
+
+	// For each header in the receiver, copy it to the result unless
+	// the overrides have a header with the same name.
+	for _, header := range rd.Headers {
+		name := strings.ToLower(header.Name)
+		headerToMerge := header
+		if idx, found := overrideIndexes[name]; found {
+			headerToMerge = overrides.Headers[idx]
+			delete(overrideIndexes, name)
+		}
+		merged.Headers = append(merged.Headers, headerToMerge)
+	}
+
+	// Copy remaining override headers into result.
+	for _, header := range overrides.Headers {
+		if _, remains := overrideIndexes[strings.ToLower(header.Name)]; remains {
+			merged.Headers = append(merged.Headers, header)
+		}
+	}
+
+	// Repeat with cookies (which have case sensitive names).
+	overrideIndexes = map[string]int{}
+	for idx, cookie := range overrides.Cookies {
+		overrideIndexes[cookie.Name] = idx
+	}
+
+	for _, cookie := range rd.Cookies {
+		cookieToMerge := cookie
+		if idx, found := overrideIndexes[cookie.Name]; found {
+			cookieToMerge = overrides.Cookies[idx]
+			delete(overrideIndexes, cookie.Name)
+		}
+		merged.Cookies = append(merged.Cookies, cookieToMerge)
+	}
+
+	for _, cookie := range overrides.Cookies {
+		if _, remains := overrideIndexes[cookie.Name]; remains {
+			merged.Cookies = append(merged.Cookies, cookie)
+		}
+	}
+
+	return merged
 }
 
 // ResponseDatum represents the set of information necessary to determine
@@ -135,7 +197,7 @@ type ResponseDatum struct {
 	// that handles a request.
 	Value string `json:"value"`
 
-	// ValueIsLiteral, if set, menas that Value will be treated as a literal
+	// ValueIsLiteral, if set, means that Value will be treated as a literal
 	// instead of a reference to be resolved as the key of a metadatum set on
 	// the server handling a request.
 	ValueIsLiteral bool `json:"value_is_literal,omitempty"`

@@ -425,3 +425,72 @@ func TestResponseDataIsValidEmpty(t *testing.T) {
 	rd := ResponseData{}
 	assert.Nil(t, rd.IsValid())
 }
+
+func TestResponseDataMergeFromTrivial(t *testing.T) {
+	rd := mkRD()
+	rd2 := mkRD()
+
+	assert.DeepEqual(t, rd.MergeFrom(rd2), mkRD())
+}
+
+func TestResponseDataMergeFromHeaders(t *testing.T) {
+	recv := ResponseData{
+		Headers: []HeaderDatum{
+			{ResponseDatum{Name: "x-a", Value: "v"}},
+			{ResponseDatum{Name: "x-b", Value: "v"}},
+			{ResponseDatum{Name: "x-c", Value: "v"}},
+		},
+	}
+
+	over := ResponseData{
+		Headers: []HeaderDatum{
+			{ResponseDatum{Name: "X-0", Value: "v-override"}},
+			{ResponseDatum{Name: "X-B", Value: "v-override"}},
+			{ResponseDatum{Name: "X-D", Value: "v-override"}},
+		},
+	}
+
+	expected := ResponseData{
+		Headers: []HeaderDatum{
+			{ResponseDatum{Name: "x-a", Value: "v"}},
+			{ResponseDatum{Name: "X-B", Value: "v-override"}},
+			{ResponseDatum{Name: "x-c", Value: "v"}},
+			{ResponseDatum{Name: "X-0", Value: "v-override"}},
+			{ResponseDatum{Name: "X-D", Value: "v-override"}},
+		},
+	}
+
+	assert.DeepEqual(t, recv.MergeFrom(over), expected)
+}
+
+func TestResponseDataMergeFromCookies(t *testing.T) {
+	recv := ResponseData{
+		Cookies: []CookieDatum{
+			{ResponseDatum: ResponseDatum{Name: "x-a", Value: "v"}},
+			{ResponseDatum: ResponseDatum{Name: "x-b", Value: "v"}},
+			{ResponseDatum: ResponseDatum{Name: "x-c", Value: "v"}},
+		},
+	}
+
+	over := ResponseData{
+		Cookies: []CookieDatum{
+			{ResponseDatum: ResponseDatum{Name: "x-0", Value: "v-override"}},
+			{ResponseDatum: ResponseDatum{Name: "x-b", Value: "v-override"}},
+			{ResponseDatum: ResponseDatum{Name: "X-C", Value: "v-override"}},
+			{ResponseDatum: ResponseDatum{Name: "x-d", Value: "v-override"}},
+		},
+	}
+
+	expected := ResponseData{
+		Cookies: []CookieDatum{
+			{ResponseDatum: ResponseDatum{Name: "x-a", Value: "v"}},
+			{ResponseDatum: ResponseDatum{Name: "x-b", Value: "v-override"}},
+			{ResponseDatum: ResponseDatum{Name: "x-c", Value: "v"}},
+			{ResponseDatum: ResponseDatum{Name: "x-0", Value: "v-override"}},
+			{ResponseDatum: ResponseDatum{Name: "X-C", Value: "v-override"}},
+			{ResponseDatum: ResponseDatum{Name: "x-d", Value: "v-override"}},
+		},
+	}
+
+	assert.DeepEqual(t, recv.MergeFrom(over), expected)
+}
