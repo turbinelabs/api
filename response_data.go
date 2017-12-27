@@ -188,7 +188,7 @@ func (rd ResponseData) MergeFrom(overrides ResponseData) ResponseData {
 
 // ResponseDatum represents the set of information necessary to determine
 // how to name and produce the value that should be attached to a response
-// and under what condictions the data should be sent back.
+// and under what conditions the data should be sent back.
 type ResponseDatum struct {
 	// Name of the data being sent back to the requesting client.
 	Name string `json:"name"`
