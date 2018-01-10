@@ -108,11 +108,11 @@ func AuthorizationMethodDeniedError() *Error {
 	}
 }
 
-// Generically converts a go error into an Error. If err is already an
-// Error, it is returned directly (as a pointer). If not, a new Error
-// with status 500 (internal server error), the given code, and the
-// original error message is returned.
-func FromError(err error, code ErrorCode) *Error {
+// FromErrorDefaultType returns an *Error based on the provided base error
+// object. If err is already an *Error it will be cast and returned unchanged,
+// otherwise a new *Error will be created with the specifid code and status.
+// The Message will be err.Error().
+func FromErrorDefaultType(err error, code ErrorCode, status int) *Error {
 	if err == nil {
 		return nil
 	}
@@ -121,8 +121,21 @@ func FromError(err error, code ErrorCode) *Error {
 	case *Error:
 		return httpErr
 	default:
-		return New500(err.Error(), code)
+		return &Error{
+			err.Error(),
+			code,
+			status,
+			nil,
+		}
 	}
+}
+
+// Generically converts a go error into an Error. If err is already an
+// Error, it is returned directly (as a pointer). If not, a new Error
+// with status 500 (internal server error), the given code, and the
+// original error message is returned.
+func FromError(err error, code ErrorCode) *Error {
+	return FromErrorDefaultType(err, code, 500)
 }
 
 func (e *Error) Error() string {

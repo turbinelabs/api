@@ -23,11 +23,8 @@ import (
 )
 
 type TimeRange struct {
-	// Start and End represent the start and end of a time range,
-	// specified in microseconds since the Unix epoch, UTC. End
-	// takes precedence over Duration.
-	Start *int64 `json:"start,omitempty" form:"start"`
-	End   *int64 `json:"end,omitempty" form:"end"`
+	// SimpleTimeRange specifies the window this time range covers.
+	SimpleTimeRange
 
 	// Duration specifies how long a time span of stats data to
 	// return in microseconds. End takes precedence over
@@ -44,7 +41,25 @@ type TimeRange struct {
 	Granularity timegranularity.TimeGranularity `json:"granularity" form:"granularity"`
 }
 
+// SimpleTimeRange represents the start and end of a time range, specified in
+// microseconds since the Unix epoch, UTC.
+type SimpleTimeRange struct {
+	// Start indicates when data should begin being reported.
+	Start *int64 `json:"start,omitempty" form:"start"`
+
+	// End specifies when data is no longer desired.
+	End *int64 `json:"end,omitempty" form:"end"`
+}
+
 type QueryTimeSeries struct {
+	// TimeRangeOverride is a way to specify that this QueryTimeSeries should limit
+	// the window that data is returned for beyond the global TimeRange specified
+	// in Query. It will share the same granularity as the parent TimeRange. If
+	// either Start or End exceed the parent range the query will be rejected. If
+	// only one Start or End value is specified then the other will be inferred from
+	// the parent range. If both Start and End are nil the query will be rejected.
+	TimeRangeOverride *SimpleTimeRange `json:"time_range,omitempty" form:"time_range"`
+
 	// Specifies a name for this timeseries query. It may be used
 	// to assist in identifying the corresponding data in the
 	// response object.
@@ -99,6 +114,12 @@ type Query struct {
 	// hour.
 	TimeRange TimeRange `json:"time_range" form:"time_range"`
 
+	// ZeroFill, if set, instructs the stat server how to fill in zero values for
+	// timestamps that have no value. If all values are filled then an additional
+	// "empty_series" field will be set on the response TimeSeries. See ZeroFill
+	// for details.
+	ZeroFill *ZeroFill `json:"zero_fill,omitempty" form:"zero_fill"`
+
 	// Specifies one or more queries to execute against the given
 	// zone and time range.
 	TimeSeries []QueryTimeSeries `json:"timeseries" form:"timeseries"`
@@ -125,6 +146,10 @@ type TimeSeries struct {
 	// The QueryTimeSeries object corresponding to the data
 	// points.
 	Query QueryTimeSeries `json:"query"`
+
+	// EmptySeries is set if the stats request indicated that stats-server should
+	// fill in zero values if a TimeSeries would otherwise have no Points.
+	EmptySeries *bool `json:"empty_series,omitempty"`
 
 	// The data points that represent the time series.
 	Points []Point `json:"points"`
