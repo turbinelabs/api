@@ -71,9 +71,9 @@ func TestHeaderDatumNameChanged(t *testing.T) {
 	headerDatumTest{t, hd, false}.run()
 }
 
-func TestHeaderDatumNameChangedToLowerCase(t *testing.T) {
+func TestHeaderDatumNameChangedToUpperCase(t *testing.T) {
 	hd := mkHD()
-	hd.Name = strings.ToLower(hd.Name)
+	hd.Name = strings.ToUpper(hd.Name)
 	headerDatumTest{t, hd, true}.run()
 }
 
@@ -93,6 +93,11 @@ func TestHeaderDatumAlwaysChanged(t *testing.T) {
 	hd := mkHD()
 	hd.AlwaysSend = !hd.AlwaysSend
 	headerDatumTest{t, hd, false}.run()
+}
+
+func TestHeaderDatumCanonicalName(t *testing.T) {
+	hd := mkHD()
+	assert.Equal(t, hd.CanonicalName(), strings.ToLower(hd.Name))
 }
 
 type cookieDatumTest struct {
@@ -388,7 +393,7 @@ func TestResponseDataIsValidDuplicateHeaders(t *testing.T) {
 func TestResponseDataIsValidDuplicateHeadersCaseDiffers(t *testing.T) {
 	rd := mkRD()
 	rd.Headers = append(rd.Headers, rd.Headers[1])
-	rd.Headers[2].Name = strings.ToLower(rd.Headers[2].Name)
+	rd.Headers[2].Name = strings.ToUpper(rd.Headers[2].Name)
 	n := rd.Headers[2].Name
 
 	assert.DeepEqual(t, rd.IsValid(), &ValidationError{[]ErrorCase{
@@ -417,7 +422,7 @@ func TestResponseDataIsValidDuplicateCokies(t *testing.T) {
 func TestResponseDataIsValidDuplicateCokiesDifferntCase(t *testing.T) {
 	rd := mkRD()
 	rd.Cookies = append(rd.Cookies, rd.Cookies[1])
-	rd.Cookies[2].Name = strings.ToLower(rd.Cookies[2].Name)
+	rd.Cookies[2].Name = strings.ToUpper(rd.Cookies[2].Name)
 	assert.Nil(t, rd.IsValid())
 }
 

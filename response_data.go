@@ -92,13 +92,12 @@ func (rd ResponseData) IsValid() *ValidationError {
 
 	hdrSeen := map[string]int{}
 	hdrIsSeen := func(s string) bool {
-		canonical := strings.ToLower(s)
-		hdrSeen[canonical]++
-		return hdrSeen[canonical] > 1
+		hdrSeen[s]++
+		return hdrSeen[s] > 1
 	}
 
 	for _, hdr := range rd.Headers {
-		if hdrIsSeen(hdr.Name) {
+		if hdrIsSeen(hdr.CanonicalName()) {
 			errs.AddNew(ErrorCase{"headers", fmt.Sprintf("Header %q exported multiple times", hdr.Name)})
 		}
 		parent := fmt.Sprintf("headers[%v]", hdr.Name)
@@ -140,13 +139,13 @@ func (rd ResponseData) MergeFrom(overrides ResponseData) ResponseData {
 	// Remember where the overrides are by name.
 	overrideIndexes := map[string]int{}
 	for idx, header := range overrides.Headers {
-		overrideIndexes[strings.ToLower(header.Name)] = idx
+		overrideIndexes[header.CanonicalName()] = idx
 	}
 
 	// For each header in the receiver, copy it to the result unless
 	// the overrides have a header with the same name.
 	for _, header := range rd.Headers {
-		name := strings.ToLower(header.Name)
+		name := header.CanonicalName()
 		headerToMerge := header
 		if idx, found := overrideIndexes[name]; found {
 			headerToMerge = overrides.Headers[idx]
@@ -157,7 +156,7 @@ func (rd ResponseData) MergeFrom(overrides ResponseData) ResponseData {
 
 	// Copy remaining override headers into result.
 	for _, header := range overrides.Headers {
-		if _, remains := overrideIndexes[strings.ToLower(header.Name)]; remains {
+		if _, remains := overrideIndexes[header.CanonicalName()]; remains {
 			merged.Headers = append(merged.Headers, header)
 		}
 	}
@@ -220,7 +219,7 @@ type HeaderDatum struct {
 // equal if the name (case insensitive check), value, ValueIsLiteral, and
 // AlwaysSend attributes are equal.
 func (hd HeaderDatum) Equals(o HeaderDatum) bool {
-	return strings.ToLower(hd.Name) == strings.ToLower(o.Name) &&
+	return hd.CanonicalName() == o.CanonicalName() &&
 		hd.Value == o.Value &&
 		hd.ValueIsLiteral == o.ValueIsLiteral &&
 		hd.AlwaysSend == o.AlwaysSend
@@ -240,6 +239,12 @@ func (hd HeaderDatum) IsValid() *ValidationError {
 	}
 
 	return errs.OrNil()
+}
+
+// CanonicalName returns a canonical name for the header, suitable for
+// comparison across HeaderDatum.
+func (hd HeaderDatum) CanonicalName() string {
+	return strings.ToLower(hd.Name)
 }
 
 // SameSiteType allows specification for the 'SameSite' annotation on a cookie
