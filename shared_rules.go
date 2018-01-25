@@ -48,6 +48,7 @@ type SharedRules struct {
 	ResponseData   ResponseData   `json:"response_data"`
 	CohortSeed     *CohortSeed    `json:"cohort_seed"`
 	Properties     Metadata       `json:"properties"`
+	RetryPolicy    *RetryPolicy   `json:"retry_policy"`
 	OrgKey         OrgKey         `json:"-"`
 	Checksum
 }

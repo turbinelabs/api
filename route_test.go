@@ -65,6 +65,7 @@ func getRouteDefaults() (Route, Route) {
 		rules,
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
+		nil,
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -78,6 +79,7 @@ func getRouteDefaults() (Route, Route) {
 		rules,
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
+		nil,
 		"1",
 		Checksum{"cs-1"},
 	}

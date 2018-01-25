@@ -45,6 +45,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
 		Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
+		nil,
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -58,6 +59,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
 		Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
+		nil,
 		"1",
 		Checksum{"cs-1"},
 	}

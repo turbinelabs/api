@@ -148,6 +148,7 @@ type DataFixturesT struct {
 	RouteRules1          api.Rules
 	RouteResponseData1   api.ResponseData
 	RouteCohortSeed1     *api.CohortSeed
+	RouteRetryPolicy1    *api.RetryPolicy
 	RouteChecksum1       api.Checksum
 	RouteOrgKey1         api.OrgKey
 	RouteKey2            api.RouteKey
@@ -158,6 +159,7 @@ type DataFixturesT struct {
 	RouteRules2          api.Rules
 	RouteResponseData2   api.ResponseData
 	RouteCohortSeed2     *api.CohortSeed
+	RouteRetryPolicy2    *api.RetryPolicy
 	RouteChecksum2       api.Checksum
 	RouteOrgKey2         api.OrgKey
 	Route1               api.Route
@@ -173,6 +175,7 @@ type DataFixturesT struct {
 	SharedRulesResponseData1 api.ResponseData
 	SharedRulesCohortSeed1   *api.CohortSeed
 	SharedRulesProperties1   api.Metadata
+	SharedRulesRetryPolicy1  *api.RetryPolicy
 	SharedRulesChecksum1     api.Checksum
 	SharedRulesOrgKey1       api.OrgKey
 	SharedRulesKey2          api.SharedRulesKey
@@ -183,6 +186,7 @@ type DataFixturesT struct {
 	SharedRulesResponseData2 api.ResponseData
 	SharedRulesCohortSeed2   *api.CohortSeed
 	SharedRulesProperties2   api.Metadata
+	SharedRulesRetryPolicy2  *api.RetryPolicy
 	SharedRulesChecksum2     api.Checksum
 	SharedRulesOrgKey2       api.OrgKey
 	SharedRules1             api.SharedRules
@@ -312,35 +316,39 @@ func New() DataFixturesT {
 		ProxyOrgKey2:   "1",
 		ProxyChecksum2: api.Checksum{"proxy-cs-2"},
 
-		RouteKey1:        "route-key-1",
-		RouteDomain1:     "route-dom-1",
-		RouteZone1:       "route-zone-1",
-		RoutePath1:       "for/bar/path",
-		RouteCohortSeed1: &api.CohortSeed{api.CohortSeedCookie, "cookie-cohort-data", false},
-		RouteOrgKey1:     "1",
-		RouteChecksum1:   api.Checksum{"route-cs-1"},
-		RouteKey2:        "route-key-2",
-		RouteDomain2:     "route-dom-2",
-		RouteZone2:       "route-zone-2",
-		RoutePath2:       "quix/qux/quuuuux",
-		RouteCohortSeed2: nil,
-		RouteOrgKey2:     "1",
-		RouteChecksum2:   api.Checksum{"route-cs-2"},
+		RouteKey1:         "route-key-1",
+		RouteDomain1:      "route-dom-1",
+		RouteZone1:        "route-zone-1",
+		RoutePath1:        "for/bar/path",
+		RouteCohortSeed1:  &api.CohortSeed{api.CohortSeedCookie, "cookie-cohort-data", false},
+		RouteRetryPolicy1: nil,
+		RouteOrgKey1:      "1",
+		RouteChecksum1:    api.Checksum{"route-cs-1"},
+		RouteKey2:         "route-key-2",
+		RouteDomain2:      "route-dom-2",
+		RouteZone2:        "route-zone-2",
+		RoutePath2:        "quix/qux/quuuuux",
+		RouteCohortSeed2:  nil,
+		RouteRetryPolicy2: nil,
+		RouteOrgKey2:      "1",
+		RouteChecksum2:    api.Checksum{"route-cs-2"},
 
-		SharedRulesKey1:        "shared-rules-key-1",
-		SharedRulesName1:       "shared-rules-name-1",
-		SharedRulesZone1:       "shared-rules-zone-1",
-		SharedRulesCohortSeed1: &api.CohortSeed{api.CohortSeedHeader, "x-cohort-data", true},
-		SharedRulesProperties1: api.Metadata{{"pk1", "pv1"}, {"pk12", "pv12"}},
-		SharedRulesOrgKey1:     "1",
-		SharedRulesChecksum1:   api.Checksum{"shared-rules-cs-1"},
-		SharedRulesKey2:        "shared-rules-key-2",
-		SharedRulesName2:       "shared-rules-name-2",
-		SharedRulesZone2:       "shared-rules-zone-2",
-		SharedRulesCohortSeed2: nil,
-		SharedRulesProperties2: api.Metadata{{"pk2", "pv2"}, {"pk22", "pv22"}},
-		SharedRulesOrgKey2:     "1",
-		SharedRulesChecksum2:   api.Checksum{"shared-rules-cs-2"},
+		SharedRulesKey1:         "shared-rules-key-1",
+		SharedRulesName1:        "shared-rules-name-1",
+		SharedRulesZone1:        "shared-rules-zone-1",
+		SharedRulesCohortSeed1:  &api.CohortSeed{api.CohortSeedHeader, "x-cohort-data", true},
+		SharedRulesProperties1:  api.Metadata{{"pk1", "pv1"}, {"pk12", "pv12"}},
+		SharedRulesRetryPolicy1: nil,
+		SharedRulesOrgKey1:      "1",
+		SharedRulesChecksum1:    api.Checksum{"shared-rules-cs-1"},
+		SharedRulesKey2:         "shared-rules-key-2",
+		SharedRulesName2:        "shared-rules-name-2",
+		SharedRulesZone2:        "shared-rules-zone-2",
+		SharedRulesCohortSeed2:  nil,
+		SharedRulesProperties2:  api.Metadata{{"pk2", "pv2"}, {"pk22", "pv22"}},
+		SharedRulesRetryPolicy2: nil,
+		SharedRulesOrgKey2:      "1",
+		SharedRulesChecksum2:    api.Checksum{"shared-rules-cs-2"},
 
 		AccessTokenKey1:         "access-token-key-1",
 		AccessTokenDescription1: "access-token-descirption-1",
@@ -592,6 +600,7 @@ func New() DataFixturesT {
 		df.RouteRules1,
 		df.RouteResponseData1,
 		df.RouteCohortSeed1,
+		df.RouteRetryPolicy1,
 		df.RouteOrgKey1,
 		df.RouteChecksum1,
 	}
@@ -605,6 +614,7 @@ func New() DataFixturesT {
 		df.RouteRules2,
 		df.RouteResponseData2,
 		df.RouteCohortSeed2,
+		df.RouteRetryPolicy2,
 		df.RouteOrgKey2,
 		df.RouteChecksum2,
 	}
@@ -696,6 +706,7 @@ func New() DataFixturesT {
 		df.SharedRulesResponseData1,
 		df.SharedRulesCohortSeed1,
 		df.SharedRulesProperties1,
+		df.SharedRulesRetryPolicy1,
 		df.SharedRulesOrgKey1,
 		df.SharedRulesChecksum1,
 	}
@@ -709,6 +720,7 @@ func New() DataFixturesT {
 		df.SharedRulesResponseData2,
 		df.SharedRulesCohortSeed2,
 		df.SharedRulesProperties2,
+		df.SharedRulesRetryPolicy2,
 		df.SharedRulesOrgKey2,
 		df.SharedRulesChecksum2,
 	}

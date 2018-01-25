@@ -57,6 +57,7 @@ func getSharedRulesFilterTestSharedRules() api.SharedRules {
 		api.ResponseData{},
 		nil,
 		api.Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
+		nil,
 		"123",
 		api.Checksum{"cs-1"},
 	}
@@ -93,6 +94,7 @@ func getRouteFilterTestRoute() api.Route {
 		api.SharedRulesKey("shared-rules-key"),
 		rules,
 		api.ResponseData{},
+		nil,
 		nil,
 		"123",
 		api.Checksum{"cs-1"},

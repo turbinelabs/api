@@ -51,6 +51,7 @@ type Route struct {
 	Rules          Rules          `json:"rules"`
 	ResponseData   ResponseData   `json:"response_data"`
 	CohortSeed     *CohortSeed    `json:"cohort_seed"`
+	RetryPolicy    *RetryPolicy   `json:"retry_policy"`
 	OrgKey         OrgKey         `json:"-"`
 	Checksum
 }
