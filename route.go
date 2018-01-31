@@ -79,9 +79,11 @@ func (r Route) Equals(o Route) bool {
 		eqSRKey  = r.SharedRulesKey == o.SharedRulesKey
 		eqRd     = r.ResponseData.Equals(o.ResponseData)
 		eqCohort = CohortSeedPtrEquals(r.CohortSeed, o.CohortSeed)
+		eqRp     = RetryPolicyEquals(r.RetryPolicy, o.RetryPolicy)
 	)
 
-	if !(eqKey && eqDom && eqZone && eqPath && eqCS && eqOrg && eqSRKey && eqRd && eqCohort) {
+	if !(eqKey && eqDom && eqZone && eqPath && eqCS &&
+		eqOrg && eqSRKey && eqRd && eqCohort && eqRp) {
 		return false
 	}
 
@@ -108,6 +110,9 @@ func (r Route) IsValid() *ValidationError {
 	errs.MergePrefixed(r.ResponseData.IsValid(), scope("response_data"))
 	if r.CohortSeed != nil {
 		errs.MergePrefixed(r.CohortSeed.IsValid(), "route")
+	}
+	if r.RetryPolicy != nil {
+		errs.MergePrefixed(r.RetryPolicy.IsValid(), "route")
 	}
 
 	return errs.OrNil()

@@ -77,9 +77,10 @@ func (r SharedRules) Equals(o SharedRules) bool {
 		eqRd   = r.ResponseData.Equals(o.ResponseData)
 		eqCs   = CohortSeedPtrEquals(r.CohortSeed, o.CohortSeed)
 		eqPr   = r.Properties.Equals(o.Properties)
+		eqRp   = RetryPolicyEquals(r.RetryPolicy, o.RetryPolicy)
 	)
 
-	if !(eqKey && eqName && eqZone && eqCS && eqOrg && eqRd && eqCs && eqPr) {
+	if !(eqKey && eqName && eqZone && eqCS && eqOrg && eqRd && eqCs && eqPr && eqRp) {
 		return false
 	}
 
@@ -104,6 +105,9 @@ func (r SharedRules) IsValid() *ValidationError {
 		errs.MergePrefixed(r.CohortSeed.IsValid(), "shared_rules")
 	}
 	errs.MergePrefixed(SharedRulesPropertiesValid(r.Properties), "shared_rules")
+	if r.RetryPolicy != nil {
+		errs.MergePrefixed(r.RetryPolicy.IsValid(), "shared_rules")
+	}
 
 	return errs.OrNil()
 }

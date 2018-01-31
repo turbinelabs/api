@@ -45,7 +45,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
 		Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
-		nil,
+		&RetryPolicy{1, 30, 60},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -59,7 +59,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-data", false},
 		Metadata{{"pk", "pv"}, {"pk2", "pv2"}},
-		nil,
+		&RetryPolicy{1, 30, 60},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -73,6 +73,39 @@ func TestSharedRulesEqualsSuccess(t *testing.T) {
 
 	assert.True(t, r1.Equals(r2))
 	assert.True(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsRetryPolicyNilNil(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.RetryPolicy = nil
+	r2.RetryPolicy = nil
+
+	assert.True(t, r1.Equals(r2))
+	assert.True(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsRetryPolicyNotNilNil(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r2.RetryPolicy = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsRetryPolicyNilNotNil(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.RetryPolicy = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestSharedRulesEqualsRetryPolicyVaries(t *testing.T) {
+	r1, r2 := getSharedRulesDefaults()
+	r1.RetryPolicy.PerTryTimeoutMsec = r2.RetryPolicy.PerTryTimeoutMsec + 1
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
 }
 
 func TestSharedRulesEqualsCohortSeedNilNil(t *testing.T) {
@@ -257,6 +290,22 @@ func TestSharedRulesIsValidBadDefault(t *testing.T) {
 	r.Default = AllConstraints{}
 
 	assert.NonNil(t, r.IsValid())
+}
+
+func TestSharedRulesIsValidNoRetryPolicy(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.RetryPolicy = nil
+
+	assert.Nil(t, r.IsValid())
+}
+
+func TestSharedRulesIsValidBadRetryPolicy(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.RetryPolicy.NumRetries = -1
+
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.retry_policy.num_retries", "must not be negative"},
+	}})
 }
 
 func TestSharedRulesIsValidNoCohort(t *testing.T) {

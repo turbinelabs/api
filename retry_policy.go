@@ -13,3 +13,41 @@ type RetryPolicy struct {
 	// attempt).
 	TimeoutMsec int `json:"timeout_msec"`
 }
+
+// Checks for exact equality between this retry policy and another. Exact
+// equality means each field must be equal (== or Equal, as appropriate) to the
+// corresponding field in the parameter.
+func (p RetryPolicy) Equals(o RetryPolicy) bool {
+	return p == o
+}
+
+// Convenience function for calling Equals when you have pointers to two retry
+// policies.
+func RetryPolicyEquals(a, b *RetryPolicy) bool {
+	if a == b {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return a.Equals(*b)
+}
+
+// Checks validity of a retry policy. For a retry policy to be valid it must
+// have non-negative NumRetries, PerTryTimeoutMsec, and TimeoutMsec.
+func (p RetryPolicy) IsValid() *ValidationError {
+	scope := func(s string) string { return "retry_policy." + s }
+
+	errs := &ValidationError{}
+	if p.NumRetries < 0 {
+		errs.AddNew(ErrorCase{scope("num_retries"), "must not be negative"})
+	}
+	if p.PerTryTimeoutMsec < 0 {
+		errs.AddNew(ErrorCase{scope("per_try_timeout_msec"), "must not be negative"})
+	}
+	if p.TimeoutMsec < 0 {
+		errs.AddNew(ErrorCase{scope("timeout_msec"), "must not be negative"})
+	}
+
+	return errs.OrNil()
+}

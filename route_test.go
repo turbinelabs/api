@@ -65,7 +65,7 @@ func getRouteDefaults() (Route, Route) {
 		rules,
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
-		nil,
+		&RetryPolicy{1, 30, 60},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -79,7 +79,7 @@ func getRouteDefaults() (Route, Route) {
 		rules,
 		getRD(),
 		&CohortSeed{CohortSeedHeader, "x-cohort-seed", true},
-		nil,
+		&RetryPolicy{1, 30, 60},
 		"1",
 		Checksum{"cs-1"},
 	}
@@ -90,6 +90,31 @@ func getRouteDefaults() (Route, Route) {
 // Route.Equals
 func TestRouteEqualsSuccess(t *testing.T) {
 	r1, r2 := getRouteDefaults()
+
+	assert.True(t, r1.Equals(r2))
+	assert.True(t, r2.Equals(r1))
+}
+
+func TestRouteEqualsRetryPolicyVaries(t *testing.T) {
+	r1, r2 := getRouteDefaults()
+	r2.RetryPolicy.NumRetries = r1.RetryPolicy.NumRetries + 1
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestRouteEqualsRetryPolicyNotNilNil(t *testing.T) {
+	r1, r2 := getRouteDefaults()
+	r2.RetryPolicy = nil
+
+	assert.False(t, r1.Equals(r2))
+	assert.False(t, r2.Equals(r1))
+}
+
+func TestRouteEqualsRetryPolicyNilNil(t *testing.T) {
+	r1, r2 := getRouteDefaults()
+	r1.RetryPolicy = nil
+	r2.RetryPolicy = nil
 
 	assert.True(t, r1.Equals(r2))
 	assert.True(t, r2.Equals(r1))
@@ -209,7 +234,23 @@ func TestRouteIsValidSuccess(t *testing.T) {
 	assert.Nil(t, r.IsValid())
 }
 
-func TestRouteIsValidBadCohortseed(t *testing.T) {
+func TestRouteIsValidNoRetryPolicy(t *testing.T) {
+	r, _ := getRouteDefaults()
+	r.RetryPolicy = nil
+
+	assert.Nil(t, r.IsValid())
+}
+
+func TestRouteIsValidBadRetryPolicy(t *testing.T) {
+	r, _ := getRouteDefaults()
+	r.RetryPolicy.NumRetries = -1
+
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"route.retry_policy.num_retries", "must not be negative"},
+	}})
+}
+
+func TestRouteIsValidBadCohortSeed(t *testing.T) {
 	r, _ := getRouteDefaults()
 	r.CohortSeed.Name = ""
 
