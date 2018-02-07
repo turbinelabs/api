@@ -338,7 +338,7 @@ func New() DataFixturesT {
 		SharedRulesZone1:        "shared-rules-zone-1",
 		SharedRulesCohortSeed1:  &api.CohortSeed{api.CohortSeedHeader, "x-cohort-data", true},
 		SharedRulesProperties1:  api.Metadata{{"pk1", "pv1"}, {"pk12", "pv12"}},
-		SharedRulesRetryPolicy1: nil,
+		SharedRulesRetryPolicy1: &api.RetryPolicy{1, 30, 60},
 		SharedRulesOrgKey1:      "1",
 		SharedRulesChecksum1:    api.Checksum{"shared-rules-cs-1"},
 		SharedRulesKey2:         "shared-rules-key-2",
