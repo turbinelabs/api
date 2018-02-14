@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package stats defines the interfaces representing the portion of the
-// Turbine Labs public API prefixed by /v1.0/stats
+// Turbine Labs public API prefixed by /v1.0/stats and /v2.0/stats.
 package stats
 
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE

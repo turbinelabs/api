@@ -16,36 +16,44 @@ limitations under the License.
 
 package stats
 
-// Valid stat names.
+// Valid stat names
 const (
+	// Client-facing stats
 	Requests  = "requests"
 	Responses = "responses"
 	Latency   = "latency"
 
+	// Upstream stats
 	UpstreamRequests  = "us_requests"
 	UpstreamResponses = "us_responses"
 	UpstreamLatency   = "us_latency"
 
+	// Proxy stats
 	Poll   = "poll"
 	Config = "config"
 )
 
-// Valid tag names.
+// Valid tag names
 const (
-	Domain     = "domain"      // valid for Upstream* stats only
-	RouteKey   = "route"       // "
-	Rule       = "rule"        // "
-	SharedRule = "shared_rule" // "
-	Method     = "method"      // "
-	Upstream   = "upstream"    // "
-	Instance   = "instance"    // "
-	StatusCode = "status_code" // valid for Responses and UpstreamResponses only
+	// Client and Upstream tags
+	Domain     = "domain"
+	RouteKey   = "route"
+	Rule       = "rule"
+	SharedRule = "shared_rule"
+	Method     = "method"
+	Upstream   = "upstream"
+	Instance   = "instance"
 
-	PollResult        = "result" // valid for Poll only
+	// Additional Responses and UpstreamResponses tags
+	StatusCode = "status_code"
+
+	// Poll tags
+	PollResult        = "result"
 	PollSuccessResult = "success"
 	PollErrorResult   = "error"
 
-	ConfigState   = "state" // valid for Config only
+	// Config tags
+	ConfigState   = "state"
 	ConfigValid   = "valid"
 	ConfigInvalid = "invalid"
 )
