@@ -45,7 +45,7 @@ type httpBatchingStatsV2 struct {
 
 // NewBatchingStatsV2Client returns a non-blocking implementation of
 // StatsServiceV2. Each invocation of ForwardV2 accepts a single
-// PayloadV2. The client will return immediately, reporting that all
+// Payload. The client will return immediately, reporting that all
 // stats were successfully sent. Internally, the stats are buffered
 // until the buffer contains at least maxSize stats or maxDelay time
 // has elapsed since the oldest stats in the buffer were added. At
@@ -64,7 +64,7 @@ func NewBatchingStatsV2Client(
 	clientApp App,
 	exec executor.Executor,
 	logger *log.Logger,
-) (statsapi.StatsServiceV2, error) {
+) (statsapi.StatsService, error) {
 	if maxDelay < time.Second {
 		return nil, errors.New("max delay must be at least 1 second")
 	}
@@ -97,7 +97,7 @@ func mkKey(source, zone string) string {
 	return string(key)
 }
 
-func (hs *httpBatchingStatsV2) getBatcher(payload *statsapi.PayloadV2) *payloadV2Batcher {
+func (hs *httpBatchingStatsV2) getBatcher(payload *statsapi.Payload) *payloadV2Batcher {
 	key := mkKey(payload.Source, payload.Zone)
 
 	hs.mutex.RLock()
@@ -111,7 +111,7 @@ func (hs *httpBatchingStatsV2) getBatcher(payload *statsapi.PayloadV2) *payloadV
 		client: hs,
 		source: payload.Source,
 		zone:   payload.Zone,
-		ch:     make(chan *statsapi.PayloadV2, 10),
+		ch:     make(chan *statsapi.Payload, 10),
 	}
 
 	hs.batchers[key] = batcher
@@ -120,7 +120,7 @@ func (hs *httpBatchingStatsV2) getBatcher(payload *statsapi.PayloadV2) *payloadV
 	return batcher
 }
 
-func (hs *httpBatchingStatsV2) ForwardV2(payload *statsapi.PayloadV2) (*statsapi.ForwardResult, error) {
+func (hs *httpBatchingStatsV2) ForwardV2(payload *statsapi.Payload) (*statsapi.ForwardResult, error) {
 	batcher := hs.getBatcher(payload)
 
 	batcher.ch <- payload
@@ -160,8 +160,8 @@ type payloadV2Batcher struct {
 	proxy        *string
 	proxyVersion *string
 	limits       map[string][]float64
-	buffer       []statsapi.StatV2
-	ch           chan *statsapi.PayloadV2
+	buffer       []statsapi.Stat
+	ch           chan *statsapi.Payload
 }
 
 func (b *payloadV2Batcher) start() {
@@ -169,7 +169,7 @@ func (b *payloadV2Batcher) start() {
 }
 
 func (b *payloadV2Batcher) run(timer tbntime.Timer) {
-	b.buffer = make([]statsapi.StatV2, 0, b.client.maxSize)
+	b.buffer = make([]statsapi.Stat, 0, b.client.maxSize)
 
 	if !timer.Stop() {
 		<-timer.C()
@@ -229,7 +229,7 @@ func limitsRequireFlush(payloadLimitsMap, batchLimitsMap map[string][]float64) b
 	return false
 }
 
-func (b *payloadV2Batcher) write(p *statsapi.PayloadV2) bool {
+func (b *payloadV2Batcher) write(p *statsapi.Payload) bool {
 	flushed := false
 
 	proxyRequiresFlush :=
@@ -274,7 +274,7 @@ func (b *payloadV2Batcher) write(p *statsapi.PayloadV2) bool {
 }
 
 func (b *payloadV2Batcher) flush() {
-	payload := &statsapi.PayloadV2{
+	payload := &statsapi.Payload{
 		Source:       b.source,
 		Zone:         b.zone,
 		Proxy:        b.proxy,
@@ -291,7 +291,7 @@ func (b *payloadV2Batcher) flush() {
 	b.buffer = b.buffer[0:0]
 }
 
-func (b *payloadV2Batcher) forward(payload *statsapi.PayloadV2) {
+func (b *payloadV2Batcher) forward(payload *statsapi.Payload) {
 	atomic.AddInt32(&b.client.inFlight, 1)
 
 	err := b.client.ForwardWithCallback(

@@ -39,8 +39,8 @@ const (
 type StatsClientFromFlags interface {
 	Validate() error
 
-	// Make constructs a statsapi.StatsServiceV2 using the given Logger.
-	Make(*log.Logger) (statsapi.StatsServiceV2, error)
+	// Make constructs a statsapi.StatsService using the given Logger.
+	Make(*log.Logger) (statsapi.StatsService, error)
 
 	// APIKey returns the API Key used to construct the statsapi.StatsService.
 	APIKey() string
@@ -119,7 +119,7 @@ type statsClientFromFlags struct {
 	maxBatchDelay      time.Duration
 	maxBatchSize       int
 
-	cachedClient statsapi.StatsServiceV2
+	cachedClient statsapi.StatsService
 }
 
 func (ff *statsClientFromFlags) Validate() error {
@@ -142,7 +142,7 @@ func (ff *statsClientFromFlags) Validate() error {
 
 func (ff *statsClientFromFlags) Make(
 	logger *log.Logger,
-) (statsapi.StatsServiceV2, error) {
+) (statsapi.StatsService, error) {
 	if ff.cachedClient != nil {
 		return ff.cachedClient, nil
 	}
@@ -154,7 +154,7 @@ func (ff *statsClientFromFlags) Make(
 
 	exec := ff.execFromFlags.Make(logger)
 
-	var stats statsapi.StatsServiceV2
+	var stats statsapi.StatsService
 	if ff.useBatching {
 		stats, err = client.NewBatchingStatsV2Client(
 			ff.maxBatchDelay,

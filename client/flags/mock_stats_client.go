@@ -47,9 +47,9 @@ func (mr *MockStatsClientFromFlagsMockRecorder) Validate() *gomock.Call {
 }
 
 // Make mocks base method
-func (m *MockStatsClientFromFlags) Make(arg0 *log.Logger) (stats.StatsServiceV2, error) {
+func (m *MockStatsClientFromFlags) Make(arg0 *log.Logger) (stats.StatsService, error) {
 	ret := m.ctrl.Call(m, "Make", arg0)
-	ret0, _ := ret[0].(stats.StatsServiceV2)
+	ret0, _ := ret[0].(stats.StatsService)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

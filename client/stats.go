@@ -16,19 +16,22 @@ limitations under the License.
 
 package client
 
-//go:generate $TBN_HOME/scripts/mockgen_internal.sh -type internalStatsClient -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go
+//go:generate $TBN_HOME/scripts/mockgen_internal.sh -type internalStatsClient -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go statsv2api=../service/stats/v2/stats.go
 
 import (
 	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 
 	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
 	statsapi "github.com/turbinelabs/api/service/stats"
+	statsapiv2 "github.com/turbinelabs/api/service/stats/v2"
 	"github.com/turbinelabs/nonstdlib/executor"
 )
 
@@ -42,11 +45,17 @@ const (
 // internalStatsClient is an internal interface for issuing forwarding
 // requests with a callback
 type internalStatsClient interface {
-	statsapi.StatsServiceV2
+	// Want to reference statsapi.StatsService, but mockgen doesn't seem to
+	// understand type aliases. Instead, copy the functions and make type assertions.
+	ForwardV2(*statsapi.Payload) (*statsapi.ForwardResult, error)
+	Query(*statsapi.Query) (*statsapi.QueryResult, error)
+	QueryV2(*statsapiv2.Query) (*statsapiv2.QueryResult, error)
 
 	// Issues a forwarding request for the given payload with the
 	// given executor.CallbackFunc.
-	ForwardWithCallback(*statsapi.PayloadV2, executor.CallbackFunc) error
+	ForwardWithCallback(*statsapi.Payload, executor.CallbackFunc) error
+
+	io.Closer
 }
 
 type httpStats struct {
@@ -56,15 +65,18 @@ type httpStats struct {
 	exec           executor.Executor
 }
 
-// NewStatsV2Client returns a blocking implementation of StatsServiceV2. Each
-// invocation of ForwardV2 accepts a single PayloadV2, issues a forwarding
-// request to a remote stats-server and awaits a response.
+var _ statsapi.StatsService = &httpStats{}
+var _ internalStatsClient = &httpStats{}
+
+// NewStatsV2Client returns a blocking implementation of StatsForwardService and
+// StatsQueryService. Each invocation of ForwardV2 accepts a single Payload, issues
+// a forwarding request to a remote stats-server and awaits a response.
 func NewStatsV2Client(
 	dest apihttp.Endpoint,
 	apiKey string,
 	clientApp App,
 	exec executor.Executor,
-) (statsapi.StatsServiceV2, error) {
+) (statsapi.StatsService, error) {
 	return newInternalStatsClient(dest, v2ForwardPath, apiKey, clientApp, exec)
 }
 
@@ -89,7 +101,7 @@ func newInternalStatsClient(
 	}, nil
 }
 
-func encodePayload(payload *statsapi.PayloadV2) ([]byte, error) {
+func encodePayload(payload *statsapi.Payload) ([]byte, error) {
 	var buffer bytes.Buffer
 	gzip := gzip.NewWriter(&buffer)
 	encoder := json.NewEncoder(gzip)
@@ -112,7 +124,7 @@ func encodePayload(payload *statsapi.PayloadV2) ([]byte, error) {
 }
 
 func (hs *httpStats) ForwardWithCallback(
-	payload *statsapi.PayloadV2,
+	payload *statsapi.Payload,
 	cb executor.CallbackFunc,
 ) error {
 	encoded, err := encodePayload(payload)
@@ -144,7 +156,7 @@ func (hs *httpStats) ForwardWithCallback(
 	return nil
 }
 
-func (hs *httpStats) ForwardV2(payload *statsapi.PayloadV2) (*statsapi.ForwardResult, error) {
+func (hs *httpStats) ForwardV2(payload *statsapi.Payload) (*statsapi.ForwardResult, error) {
 	responseChan := make(chan executor.Try, 1)
 	defer close(responseChan)
 
@@ -194,4 +206,8 @@ func (hs *httpStats) Query(query *statsapi.Query) (*statsapi.QueryResult, error)
 	}
 
 	return response, nil
+}
+
+func (hs *httpStats) QueryV2(query *statsapiv2.Query) (*statsapiv2.QueryResult, error) {
+	return nil, errors.New("unsupported")
 }

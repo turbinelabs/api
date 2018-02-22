@@ -6,66 +6,68 @@ package stats
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	v1 "github.com/turbinelabs/api/service/stats/v1"
+	v2 "github.com/turbinelabs/api/service/stats/v2"
 	reflect "reflect"
 )
 
-// MockStatsServiceV2 is a mock of StatsServiceV2 interface
-type MockStatsServiceV2 struct {
+// MockStatsService is a mock of StatsService interface
+type MockStatsService struct {
 	ctrl     *gomock.Controller
-	recorder *MockStatsServiceV2MockRecorder
+	recorder *MockStatsServiceMockRecorder
 }
 
-// MockStatsServiceV2MockRecorder is the mock recorder for MockStatsServiceV2
-type MockStatsServiceV2MockRecorder struct {
-	mock *MockStatsServiceV2
+// MockStatsServiceMockRecorder is the mock recorder for MockStatsService
+type MockStatsServiceMockRecorder struct {
+	mock *MockStatsService
 }
 
-// NewMockStatsServiceV2 creates a new mock instance
-func NewMockStatsServiceV2(ctrl *gomock.Controller) *MockStatsServiceV2 {
-	mock := &MockStatsServiceV2{ctrl: ctrl}
-	mock.recorder = &MockStatsServiceV2MockRecorder{mock}
+// NewMockStatsService creates a new mock instance
+func NewMockStatsService(ctrl *gomock.Controller) *MockStatsService {
+	mock := &MockStatsService{ctrl: ctrl}
+	mock.recorder = &MockStatsServiceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockStatsServiceV2) EXPECT() *MockStatsServiceV2MockRecorder {
+func (m *MockStatsService) EXPECT() *MockStatsServiceMockRecorder {
 	return m.recorder
 }
 
 // ForwardV2 mocks base method
-func (m *MockStatsServiceV2) ForwardV2(arg0 *PayloadV2) (*ForwardResult, error) {
+func (m *MockStatsService) ForwardV2(arg0 *v2.Payload) (*v2.ForwardResult, error) {
 	ret := m.ctrl.Call(m, "ForwardV2", arg0)
-	ret0, _ := ret[0].(*ForwardResult)
+	ret0, _ := ret[0].(*v2.ForwardResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ForwardV2 indicates an expected call of ForwardV2
-func (mr *MockStatsServiceV2MockRecorder) ForwardV2(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardV2", reflect.TypeOf((*MockStatsServiceV2)(nil).ForwardV2), arg0)
+func (mr *MockStatsServiceMockRecorder) ForwardV2(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardV2", reflect.TypeOf((*MockStatsService)(nil).ForwardV2), arg0)
 }
 
 // Query mocks base method
-func (m *MockStatsServiceV2) Query(arg0 *Query) (*QueryResult, error) {
+func (m *MockStatsService) Query(arg0 *v1.Query) (*v1.QueryResult, error) {
 	ret := m.ctrl.Call(m, "Query", arg0)
-	ret0, _ := ret[0].(*QueryResult)
+	ret0, _ := ret[0].(*v1.QueryResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Query indicates an expected call of Query
-func (mr *MockStatsServiceV2MockRecorder) Query(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockStatsServiceV2)(nil).Query), arg0)
+func (mr *MockStatsServiceMockRecorder) Query(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockStatsService)(nil).Query), arg0)
 }
 
 // Close mocks base method
-func (m *MockStatsServiceV2) Close() error {
+func (m *MockStatsService) Close() error {
 	ret := m.ctrl.Call(m, "Close")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Close indicates an expected call of Close
-func (mr *MockStatsServiceV2MockRecorder) Close() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockStatsServiceV2)(nil).Close))
+func (mr *MockStatsServiceMockRecorder) Close() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockStatsService)(nil).Close))
 }

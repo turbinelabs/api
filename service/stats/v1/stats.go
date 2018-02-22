@@ -14,20 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stats
+// Package v1 defines the interfaces representing the portion of the
+// Turbine Labs public API prefixed by /v1.0/stats.
+package v1
 
-import (
-	v2 "github.com/turbinelabs/api/service/stats/v2"
-)
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
-// Payload is an alias for the V2 stats API Payload type.
-type Payload = v2.Payload
-
-// Stat is an alias for the V2 stats API Stat type.
-type Stat = v2.Stat
-
-// Histogram is an alias for the V2 stats API Histogram type.
-type Histogram = v2.Histogram
-
-// ForwardResult is an alias for the V2 stats API ForwardResult type
-type ForwardResult = v2.ForwardResult
+// StatsQueryService queries stats data from a remote stats-server using the version
+// 1 query API.
+type StatsQueryService interface {
+	// Query executes the given query.
+	Query(*Query) (*QueryResult, error)
+}

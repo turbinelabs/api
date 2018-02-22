@@ -14,22 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stats
-
-import (
-	"io"
-
-	v1 "github.com/turbinelabs/api/service/stats/v1"
-	v2 "github.com/turbinelabs/api/service/stats/v2"
-)
+// Package v2 defines the interfaces representing the portion of the
+// Turbine Labs public API prefixed by /v2.0/stats.
+package v2
 
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
-// StatsService combines the current versions of the StatsForwardService and
-// StatsQueryService.
-type StatsService interface {
-	v2.StatsForwardService
-	v1.StatsQueryService
+// StatsForwardService forwards stats data to a remote stats-server using
+// the version 2 forwarding API.
+type StatsForwardService interface {
+	// ForwardV2 the given stats payload.
+	ForwardV2(*Payload) (*ForwardResult, error)
+}
 
-	io.Closer
+// StatsQueryService queries stats data from a remote stats-server using the version
+// 2 query API.
+type StatsQueryService interface {
+	// QueryV2 executes the given query.
+	QueryV2(*Query) (*QueryResult, error)
 }

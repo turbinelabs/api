@@ -36,31 +36,31 @@ import (
 
 const sourceString1 = "the-source"
 
-func payloadV2OfSize(s int) *statsapi.PayloadV2 {
+func payloadV2OfSize(s int) *statsapi.Payload {
 	switch s {
 	case 0:
-		return &statsapi.PayloadV2{Source: sourceString1, Zone: zoneString1}
+		return &statsapi.Payload{Source: sourceString1, Zone: zoneString1}
 
 	case 1:
 		p := *payloadV2
 		return &p
 
 	default:
-		a := make([]statsapi.StatV2, s)
+		a := make([]statsapi.Stat, s)
 		for i := 0; i < s; i++ {
 			a[i] = payloadV2.Stats[0]
 		}
-		return &statsapi.PayloadV2{Source: sourceString1, Zone: zoneString1, Stats: a}
+		return &statsapi.Payload{Source: sourceString1, Zone: zoneString1, Stats: a}
 	}
 }
 
 type batcherV2Test struct {
-	expectedPayloadSizes   []int                 // the output batches: N payloads of given sizes
-	expectedCustomPayloads []*statsapi.PayloadV2 // or else specific expected batches
+	expectedPayloadSizes   []int               // the output batches: N payloads of given sizes
+	expectedCustomPayloads []*statsapi.Payload // or else specific expected batches
 
-	numForwards    int                   // number of payloads passed to the batcher
-	forwardedSize  int                   // size of each payload
-	customPayloads []*statsapi.PayloadV2 // or else specific input payloads
+	numForwards    int                 // number of payloads passed to the batcher
+	forwardedSize  int                 // size of each payload
+	customPayloads []*statsapi.Payload // or else specific input payloads
 
 	closeAfterLastPayload bool
 
@@ -83,14 +83,14 @@ func (bt batcherV2Test) run(t *testing.T) {
 			expectedPayload := payloadV2OfSize(payloadSize)
 			mockUnderlyingStatsClient.EXPECT().
 				ForwardWithCallback(expectedPayload, gomock.Any()).
-				Do(func(_ *statsapi.PayloadV2, cb executor.CallbackFunc) { cbfChan <- cb }).
+				Do(func(_ *statsapi.Payload, cb executor.CallbackFunc) { cbfChan <- cb }).
 				Return(nil)
 		}
 	} else {
 		for _, expectedPayload := range bt.expectedCustomPayloads {
 			mockUnderlyingStatsClient.EXPECT().
 				ForwardWithCallback(expectedPayload, gomock.Any()).
-				Do(func(_ *statsapi.PayloadV2, cb executor.CallbackFunc) { cbfChan <- cb }).
+				Do(func(_ *statsapi.Payload, cb executor.CallbackFunc) { cbfChan <- cb }).
 				Return(nil)
 		}
 	}
@@ -103,7 +103,7 @@ func (bt batcherV2Test) run(t *testing.T) {
 		},
 		source: sourceString1,
 		zone:   zoneString1,
-		ch:     make(chan *statsapi.PayloadV2, 2*bt.maxSize),
+		ch:     make(chan *statsapi.Payload, 2*bt.maxSize),
 	}
 
 	mockTimer := tbntime.NewMockTimer(ctrl)
@@ -219,7 +219,7 @@ func TestHttpBatchingStatsV2GetBatcher(t *testing.T) {
 		mutex:    &sync.RWMutex{},
 	}
 
-	batcher := client.getBatcher(&statsapi.PayloadV2{Source: "s", Zone: "z"})
+	batcher := client.getBatcher(&statsapi.Payload{Source: "s", Zone: "z"})
 	defer close(batcher.ch)
 
 	assert.NonNil(t, batcher)
@@ -228,7 +228,7 @@ func TestHttpBatchingStatsV2GetBatcher(t *testing.T) {
 	assert.Equal(t, batcher.zone, "z")
 	assert.NonNil(t, batcher.ch)
 
-	batcher2 := client.getBatcher(&statsapi.PayloadV2{Source: "s", Zone: "z"})
+	batcher2 := client.getBatcher(&statsapi.Payload{Source: "s", Zone: "z"})
 	assert.SameInstance(t, batcher2, batcher)
 }
 
@@ -266,8 +266,8 @@ func TestHttpBatchingStatsV2Close(t *testing.T) {
 		logger:   log.NewNoopLogger(),
 	}
 
-	client.getBatcher(&statsapi.PayloadV2{Source: "this-source", Zone: "zone"})
-	client.getBatcher(&statsapi.PayloadV2{Source: "that-source", Zone: "zone"})
+	client.getBatcher(&statsapi.Payload{Source: "this-source", Zone: "zone"})
+	client.getBatcher(&statsapi.Payload{Source: "that-source", Zone: "zone"})
 	assert.Equal(t, len(client.batchers), 2)
 
 	ch1 := client.batchers["this-source|zone"].ch
@@ -414,8 +414,8 @@ func TestPayloadV2BatcherRunSendsOnProxyChange(t *testing.T) {
 	payload2.Proxy = ptr.String("p2")
 
 	batcherV2Test{
-		expectedCustomPayloads: []*statsapi.PayloadV2{payload1, payload2},
-		customPayloads:         []*statsapi.PayloadV2{payload1, payload2},
+		expectedCustomPayloads: []*statsapi.Payload{payload1, payload2},
+		customPayloads:         []*statsapi.Payload{payload1, payload2},
 		maxDelay:               time.Second,
 		maxSize:                5,
 		timerBehavior: func(mockTimer *tbntime.MockTimer) {
@@ -444,8 +444,8 @@ func TestPayloadV2BatcherRunSendsOnProxyVersionChange(t *testing.T) {
 	payload2.ProxyVersion = ptr.String("v2")
 
 	batcherV2Test{
-		expectedCustomPayloads: []*statsapi.PayloadV2{payload1, payload2},
-		customPayloads:         []*statsapi.PayloadV2{payload1, payload2},
+		expectedCustomPayloads: []*statsapi.Payload{payload1, payload2},
+		customPayloads:         []*statsapi.Payload{payload1, payload2},
 		maxDelay:               time.Second,
 		maxSize:                5,
 		timerBehavior: func(mockTimer *tbntime.MockTimer) {
@@ -481,8 +481,8 @@ func TestPayloadV2BatcherRunSendsMergedProxyData(t *testing.T) {
 	combined.ProxyVersion = ptr.String("v2")
 
 	batcherV2Test{
-		expectedCustomPayloads: []*statsapi.PayloadV2{combined},
-		customPayloads:         []*statsapi.PayloadV2{payload1, payload2, payload3, payload4},
+		expectedCustomPayloads: []*statsapi.Payload{combined},
+		customPayloads:         []*statsapi.Payload{payload1, payload2, payload3, payload4},
 		maxDelay:               time.Second,
 		maxSize:                4,
 		timerBehavior: func(mockTimer *tbntime.MockTimer) {
@@ -514,8 +514,8 @@ func TestPayloadV2BatcherRunSendsOnDefaultLimitsChange(t *testing.T) {
 	}
 
 	batcherV2Test{
-		expectedCustomPayloads: []*statsapi.PayloadV2{payload1, payload2},
-		customPayloads:         []*statsapi.PayloadV2{payload1, payload2},
+		expectedCustomPayloads: []*statsapi.Payload{payload1, payload2},
+		customPayloads:         []*statsapi.Payload{payload1, payload2},
 		maxDelay:               time.Second,
 		maxSize:                5,
 		timerBehavior: func(mockTimer *tbntime.MockTimer) {
@@ -549,8 +549,8 @@ func TestPayloadV2BatcherRunSendsOnLimitsChange(t *testing.T) {
 	}
 
 	batcherV2Test{
-		expectedCustomPayloads: []*statsapi.PayloadV2{payload1, payload2},
-		customPayloads:         []*statsapi.PayloadV2{payload1, payload2},
+		expectedCustomPayloads: []*statsapi.Payload{payload1, payload2},
+		customPayloads:         []*statsapi.Payload{payload1, payload2},
 		maxDelay:               time.Second,
 		maxSize:                5,
 		timerBehavior: func(mockTimer *tbntime.MockTimer) {
@@ -582,8 +582,8 @@ func TestPayloadV2BatcherRunSendsOnLimitsSizeChange(t *testing.T) {
 	}
 
 	batcherV2Test{
-		expectedCustomPayloads: []*statsapi.PayloadV2{payload1, payload2},
-		customPayloads:         []*statsapi.PayloadV2{payload1, payload2},
+		expectedCustomPayloads: []*statsapi.Payload{payload1, payload2},
+		customPayloads:         []*statsapi.Payload{payload1, payload2},
 		maxDelay:               time.Second,
 		maxSize:                5,
 		timerBehavior: func(mockTimer *tbntime.MockTimer) {
@@ -622,8 +622,8 @@ func TestPayloadV2BatcherRunSendsMergedLimits(t *testing.T) {
 	}
 
 	batcherV2Test{
-		expectedCustomPayloads: []*statsapi.PayloadV2{combined},
-		customPayloads:         []*statsapi.PayloadV2{payload1, payload2, payload3},
+		expectedCustomPayloads: []*statsapi.Payload{combined},
+		customPayloads:         []*statsapi.Payload{payload1, payload2, payload3},
 		maxDelay:               time.Second,
 		maxSize:                3,
 		timerBehavior: func(mockTimer *tbntime.MockTimer) {
@@ -679,7 +679,7 @@ func TestPayloadV2BatcherCountsInFlightRequests(t *testing.T) {
 		},
 	}
 
-	payload := &statsapi.PayloadV2{}
+	payload := &statsapi.Payload{}
 	captor := matcher.CaptureAny()
 
 	mockUnderlyingStatsClient.EXPECT().ForwardWithCallback(payload, captor).Return(nil)

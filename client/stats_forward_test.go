@@ -50,10 +50,10 @@ const (
 var (
 	when1Millis = tbntime.ToUnixMilli(time.Now())
 
-	payloadV2 = &statsapi.PayloadV2{
+	payloadV2 = &statsapi.Payload{
 		Source: sourceString1,
 		Zone:   zoneString1,
-		Stats: []statsapi.StatV2{
+		Stats: []statsapi.Stat{
 			{
 				Name:      metricName1,
 				Gauge:     ptr.Float64(1.41421),
@@ -63,10 +63,10 @@ var (
 		},
 	}
 
-	badPayloadV2 = &statsapi.PayloadV2{
+	badPayloadV2 = &statsapi.Payload{
 		Source: sourceString1,
 		Zone:   zoneString1,
-		Stats: []statsapi.StatV2{
+		Stats: []statsapi.Stat{
 			{
 				Name:      metricName1,
 				Gauge:     ptr.Float64(math.Inf(1)),
@@ -79,7 +79,7 @@ var (
 	endpoint, _ = apihttp.NewEndpoint(apihttp.HTTP, "example.com:8080")
 )
 
-func TestEncodePayloadV2(t *testing.T) {
+func TestEncodePayload(t *testing.T) {
 	expectedJson :=
 		fmt.Sprintf(
 			`{"source":"%s","zone":"%s","stats":[{"name":"%s","gauge":%g,"timestamp":%d,"tags":{"%s":"%s"}}]}`+"\n",
@@ -101,7 +101,7 @@ func TestEncodePayloadV2(t *testing.T) {
 	assert.DeepEqual(t, json, expectedBytes.Bytes())
 }
 
-func TestEncodePayloadV2Error(t *testing.T) {
+func TestEncodePayloadError(t *testing.T) {
 	json, err := encodePayload(badPayloadV2)
 	assert.Nil(t, json)
 	assert.NonNil(t, err)
@@ -113,12 +113,12 @@ type forwardResult struct {
 }
 
 type resultV2Func func() (*statsapi.ForwardResult, error)
-type requestV2Func func(statsapi.StatsServiceV2) (*statsapi.ForwardResult, error)
+type requestV2Func func(statsapi.StatsService) (*statsapi.ForwardResult, error)
 type newStatsV2Func func(
 	apihttp.Endpoint,
 	string,
 	executor.Executor,
-) (statsapi.StatsServiceV2, error)
+) (statsapi.StatsService, error)
 
 func prepareStatsV2ClientTest(
 	t *testing.T,
@@ -161,9 +161,9 @@ func prepareStatsV2ClientTest(
 }
 
 func payloadV2Forward(
-	p *statsapi.PayloadV2,
-) func(client statsapi.StatsServiceV2) (*statsapi.ForwardResult, error) {
-	return func(client statsapi.StatsServiceV2) (*statsapi.ForwardResult, error) {
+	p *statsapi.Payload,
+) func(client statsapi.StatsService) (*statsapi.ForwardResult, error) {
+	return func(client statsapi.StatsService) (*statsapi.ForwardResult, error) {
 		return client.ForwardV2(p)
 	}
 }
@@ -194,7 +194,7 @@ func TestStatsV2ClientForwardV2Failure(t *testing.T) {
 
 type testHandlerV2 struct {
 	t               *testing.T
-	requestPayload  *statsapi.PayloadV2
+	requestPayload  *statsapi.Payload
 	responsePayload *statsapi.ForwardResult
 	responseError   *httperr.Error
 }
@@ -212,7 +212,7 @@ func (h *testHandlerV2) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			defer gzipReader.Close()
 			assert.Nil(h.t, err)
 
-			stats := &statsapi.PayloadV2{}
+			stats := &statsapi.Payload{}
 			err = json.Unmarshal(bytes, stats)
 			assert.Nil(h.t, err)
 			h.requestPayload = stats
@@ -226,10 +226,10 @@ func (h *testHandlerV2) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 func runStatsV2ClientFuncTest(
 	t *testing.T,
-	requestPayload *statsapi.PayloadV2,
+	requestPayload *statsapi.Payload,
 	responsePayload *statsapi.ForwardResult,
 	httpErr *httperr.Error,
-) (*statsapi.PayloadV2, *statsapi.ForwardResult, error) {
+) (*statsapi.Payload, *statsapi.ForwardResult, error) {
 	handler := &testHandlerV2{responsePayload: responsePayload, responseError: httpErr}
 	server := httptest.NewServer(handler)
 	defer server.Close()

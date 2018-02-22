@@ -1,5 +1,5 @@
 /*
-Copyright 2018 Turbine Labs, Inc.
+Copyright 2017 Turbine Labs, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stats
+// Package timegranularity defines the TimeGranularity enumeration.
+package timegranularity
 
-import (
-	v2 "github.com/turbinelabs/api/service/stats/v2"
-)
+//go:generate codegen --output=time_granularity.go --source=$GOFILE ../../enum.template type=timegranularity.TimeGranularity values[]=Minutes,Hours,Unknown
 
-// Payload is an alias for the V2 stats API Payload type.
-type Payload = v2.Payload
-
-// Stat is an alias for the V2 stats API Stat type.
-type Stat = v2.Stat
-
-// Histogram is an alias for the V2 stats API Histogram type.
-type Histogram = v2.Histogram
-
-// ForwardResult is an alias for the V2 stats API ForwardResult type
-type ForwardResult = v2.ForwardResult
+//go:generate codegen --output=time_granularity_test.go --source=$GOFILE ../../enum_test.template type=timegranularity.TimeGranularity values[]=Minutes,Hours,Unknown

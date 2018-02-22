@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stats
+package v2
 
 // Valid stat names
 const (
@@ -59,22 +59,22 @@ const (
 )
 
 // DefaultLimitName specifies the name of the default limits. See
-// PayloadV2 and HistogramV2.
+// Payload and Histogram.
 const DefaultLimitName = "default"
 
-// HistogramV2 represents count of measurements within predefined
+// Histogram represents count of measurements within predefined
 // ranges. In addition it contains a count and sum of all measurements
 // and the smallest and largest values measured.
-type HistogramV2 struct {
-	// Limit specifies which entry in the PayloadV2 Limits field
+type Histogram struct {
+	// Limit specifies which entry in the Payload Limits field
 	// should be used for this Histogram. If this field is
 	// omitted, it is treated as if the value was "default".
 	Limit *string `json:"limit,omitempty"`
 
 	// Buckets must contain one value for every entry in the
-	// PayloadV2.Limits for the PayloadV2 within which this
-	// HistogramV2 is contained. Indexes of this field correspond
-	// one-to-one with the indexes in PayloadV2.Limits.
+	// Payload.Limits for the Payload within which this
+	// Histogram is contained. Indexes of this field correspond
+	// one-to-one with the indexes in Payload.Limits.
 	Buckets []int64 `json:"buckets"`
 
 	// Count is the number of items measured by this histogram:
@@ -96,14 +96,14 @@ type HistogramV2 struct {
 	Maximum float64 `json:"max"`
 }
 
-// StatV2 is a named, timestamped data point or histogram.
-type StatV2 struct {
+// Stat is a named, timestamped data point or histogram.
+type Stat struct {
 	Name string `json:"name"`
 
 	// Only one of Count, Gauge, or Histogram may be set.
-	Count     *float64     `json:"count,omitempty"`
-	Gauge     *float64     `json:"gauge,omitempty"`
-	Histogram *HistogramV2 `json:"histo,omitempty"`
+	Count     *float64   `json:"count,omitempty"`
+	Gauge     *float64   `json:"gauge,omitempty"`
+	Histogram *Histogram `json:"histo,omitempty"`
 
 	// Timestamp is milliseconds since the Unix epoch, UTC. Note
 	// the change in units from the old Stats struct.
@@ -114,8 +114,8 @@ type StatV2 struct {
 	Tags map[string]string `json:"tags,omitempty"`
 }
 
-// PayloadV2 is a stats payload.
-type PayloadV2 struct {
+// Payload is a stats payload.
+type Payload struct {
 	// Source is the source of the measurement.
 	Source string `json:"source"`
 
@@ -134,18 +134,24 @@ type PayloadV2 struct {
 	// payload.
 	//
 	// Each set of limits is named and referenced by the
-	// HistogramV2 instance that uses it (see HistogramV2.Limit).
+	// Histogram instance that uses it (see Histogram.Limit).
 	// As a special case, if there is a limit named "default",
-	// HistogramV2 entries may omit a name and the default limits
+	// Histogram entries may omit a name and the default limits
 	// will be used.
 	//
 	// There must be at least two values in the limits array. The
-	// number of values in each HistogramV2.Buckets field must be
+	// number of values in each Histogram.Buckets field must be
 	// the same as the number of values in the corresponding entry
 	// in this map. The limit value array must be sorted in
 	// ascending order.
 	Limits map[string][]float64 `json:"limits,omitempty"`
 
 	// Stats is an array of measurements in this payload.
-	Stats []StatV2 `json:"stats"`
+	Stats []Stat `json:"stats"`
+}
+
+// ForwardResult is a JSON-encodable struct that encapsulates the result of
+// forwarding metrics.
+type ForwardResult struct {
+	NumAccepted int `json:"numAccepted"`
 }
