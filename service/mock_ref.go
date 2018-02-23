@@ -129,15 +129,3 @@ func (m *MockZoneRef) Name() string {
 func (mr *MockZoneRefMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockZoneRef)(nil).Name))
 }
-
-// MapKey mocks base method
-func (m *MockZoneRef) MapKey() string {
-	ret := m.ctrl.Call(m, "MapKey")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// MapKey indicates an expected call of MapKey
-func (mr *MockZoneRefMockRecorder) MapKey() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MapKey", reflect.TypeOf((*MockZoneRef)(nil).MapKey))
-}
