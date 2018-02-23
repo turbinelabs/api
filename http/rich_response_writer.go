@@ -59,7 +59,7 @@ func mkLastDitchErrorEnvelope(
 // httperr.Error it is encapsulated into an IntervalServerError with the error
 // code 'UnknownUnclassifiedCode'.
 //
-// If the processed e is non-nil the HTTP response code is drawn from tha error
+// If the processed e is non-nil the HTTP response code is drawn from the error
 // otherwise it is 200.
 //
 // The actual body of the response is the json marshaled envelope.Response object

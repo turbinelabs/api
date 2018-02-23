@@ -33,7 +33,7 @@ type QueryTimeSeries struct {
 
 	// ZeroFillDefault allows a query to override the default value specified when
 	// populating series points if there is no data. If unspecified 0 will be used.
-	ZeroFillDefault *float64 `json:"zero_fill_default" form:"zero_fill_default"`
+	ZeroFillDefault *float64 `json:"zero_fill_default,omitempty" form:"zero_fill_default"`
 
 	// Specifies a name for this timeseries query. It may be used to assist in
 	// identifying the corresponding data in the response object.

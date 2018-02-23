@@ -59,7 +59,7 @@ type QueryTimeSeries struct {
 
 	// ZeroFillDefault allows a query to override the default value specified when
 	// populating series points if there is no data. If unspecified 0 will be used.
-	ZeroFillDefault *float64 `json:"zero_fill_default" form:"zero_fill_default"`
+	ZeroFillDefault *float64 `json:"zero_fill_default,omitempty" form:"zero_fill_default"`
 
 	// FilterName allows a pre-defined filter to be selected. The Filter field is
 	// ignored if FilterName is set.
@@ -115,7 +115,7 @@ type QueryFilter struct {
 	// codes (e.g., "404", "503") or a single numeric digit followed by "xx" to
 	// represent a grouping of status codes (e.g., "2xx" for success or "5xx" for
 	// server errors). Results are aggregated across all status codes given. Required
-	// when the QueryType is ResponsesForyCode or DownstreamResposnesForCode. Ignored
+	// when the QueryType is ResponsesForCode or DownstreamResponsesForCode. Ignored
 	// for all other QueryTypes.
 	StatusCodes []string `json:"status_codes,omitempty" form:"status_codes"`
 }
