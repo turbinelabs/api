@@ -321,7 +321,7 @@ func New() DataFixturesT {
 		RouteZone1:        "route-zone-1",
 		RoutePath1:        "for/bar/path",
 		RouteCohortSeed1:  &api.CohortSeed{api.CohortSeedCookie, "cookie-cohort-data", false},
-		RouteRetryPolicy1: nil,
+		RouteRetryPolicy1: &api.RetryPolicy{1, 23, 45},
 		RouteOrgKey1:      "1",
 		RouteChecksum1:    api.Checksum{"route-cs-1"},
 		RouteKey2:         "route-key-2",

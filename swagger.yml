@@ -1399,6 +1399,8 @@ definitions:
         $ref: '#/definitions/ResponseData'
       cohort_seed:
         $ref: '#/definitions/CohortSeed'
+      retry_policy:
+        $ref: '#/definitions/RetryPolicy'
   Rule:
     type: object
     properties:
@@ -1602,6 +1604,8 @@ definitions:
           specified here.
       cohort_seed:
         $ref: '#/definitions/CohortSeed'
+      retry_policy:
+        $ref: '#/definitions/RetryPolicy'
       properties:
         $ref: "#/definitions/Metadata"
       checksum:
@@ -1745,6 +1749,28 @@ definitions:
         type: integer
         format: int64
 
+  RetryPolicy:
+    description: Number of times to retry a request and how long to wait before timing out.
+    type: object
+    properties:
+      num_retries:
+        type: integer
+        format: int64
+        description: |
+          Number of times to retry an upstream request. Note that the initial
+          connection attempt is not included in this number, hence 0 means initial
+          attempt and no retries, and 1 means initial attempt plus one retry.
+
+      per_try_timeout_msec:
+        type: integer
+        format: int64
+        description: Time limit in milliseconds for a single attempt.
+
+      timeout_msec:
+        type: integer
+        format: int64
+        description: |
+          Total time limit in milliseconds for all attempts (including the initial attempt)
 
   ResponseData:
     type: object
