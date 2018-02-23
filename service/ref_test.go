@@ -27,29 +27,31 @@ import (
 
 func TestRefNameMapKeys(t *testing.T) {
 	zNameRef := NewZoneNameZoneRef("that-zone-name")
-	assert.Equal(t, zNameRef.MapKey(), "zone_name=that-zone-name")
-
 	pNameRef := NewProxyNameProxyRef("that-proxy-name", zNameRef)
-	assert.Equal(t, pNameRef.MapKey(), "zone_name=that-zone-name:proxy_name=that-proxy-name")
+	got := pNameRef.MapKey()
+	want := `{"proxy_name":"that-proxy-name","zone_name":"that-zone-name"}`
+	assert.Equal(t, got, want)
 }
 
-func TestRefNameMapKeysWithColonsAndEquals(t *testing.T) {
-	zNameRef := NewZoneNameZoneRef("that:zone=name")
-	assert.Equal(t, zNameRef.MapKey(), `zone_name=that\:zone\=name`)
+func TestRefFromMapKey(t *testing.T) {
+	keyStr := `{"proxy_name":"that-proxy-name","zone_name":"that-zone-name"}`
+	zNameRef := NewZoneNameZoneRef("that-zone-name")
+	want := NewProxyNameProxyRef("that-proxy-name", zNameRef)
 
-	pNameRef := NewProxyNameProxyRef("that:proxy=name", zNameRef)
-	assert.Equal(t, pNameRef.MapKey(), `zone_name=that\:zone\=name:proxy_name=that\:proxy\=name`)
+	got, err := NewProxyRefFromMapKey(keyStr)
+	assert.Nil(t, err)
+	assert.Equal(t, got.Name(), want.Name())
+	assert.Equal(t, got.ZoneRef().Name(), want.ZoneRef().Name())
 }
 
-func TestRefMapKeys(t *testing.T) {
+func TestRefMapKey(t *testing.T) {
 	z := api.Zone{Name: "that-zone-name"}
 	p := api.Proxy{Name: "that-proxy-name"}
-
-	zRef := NewZoneRef(z)
-	assert.Equal(t, zRef.MapKey(), "zone_name=that-zone-name")
-
 	pRef := NewProxyRef(p, z)
-	assert.Equal(t, pRef.MapKey(), "zone_name=that-zone-name:proxy_name=that-proxy-name")
+
+	got := pRef.MapKey()
+	want := `{"proxy_name":"that-proxy-name","zone_name":"that-zone-name"}`
+	assert.Equal(t, got, want)
 }
 
 func TestNewProxyRef(t *testing.T) {

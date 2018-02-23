@@ -17,9 +17,9 @@ limitations under the License.
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/turbinelabs/api"
 )
@@ -37,6 +37,11 @@ type ProxyRef interface {
 	// in a map. ProxyRefs with the same MapKey refer to the same
 	// Proxy.
 	MapKey() string
+}
+
+type proxyRefMapKey struct {
+	ProxyName string `json:"proxy_name"`
+	ZoneName  string `json:"zone_name"`
 }
 
 type proxyRef struct {
@@ -81,7 +86,16 @@ func (r *proxyRef) ZoneRef() ZoneRef {
 }
 
 func (r *proxyRef) MapKey() string {
-	return fmt.Sprintf("%s:proxy_name=%s", r.zoneRef.MapKey(), encodeName(r.name))
+	key := proxyRefMapKey{
+		ProxyName: r.Name(),
+		ZoneName:  r.zoneRef.Name(),
+	}
+	bs, err := json.Marshal(key)
+	if err != nil {
+		// this really should never ever happen
+		panic(err)
+	}
+	return string(bs)
 }
 
 // NewProxyRef produces a ProxyRef from an api.Proxy and an api.Zone
@@ -100,17 +114,21 @@ func NewProxyNameProxyRef(name string, zRef ZoneRef) ProxyRef {
 	}
 }
 
+// NewProxyRefFromMapKey returns a ProxyRef keyed by the given map key
+func NewProxyRefFromMapKey(keyStr string) (ProxyRef, error) {
+	key := proxyRefMapKey{}
+	if err := json.Unmarshal([]byte(keyStr), &key); err != nil {
+		return nil, err
+	}
+	return NewProxyNameProxyRef(key.ProxyName, NewZoneNameZoneRef(key.ZoneName)), nil
+}
+
 // ZoneRef encapsulates a lookup of a Zone by Name
 type ZoneRef interface {
 	// Get returns the Zone corresponding to the ZoneRef. The lookup is memoized.
 	Get(All) (api.Zone, error)
 
 	Name() string
-
-	// MapKey returns a string suitable for keying the ZoneRef
-	// in a map. ZoneRefs with the same MapKey refer to the same
-	// Zone.
-	MapKey() string
 }
 
 // NewZoneRef produces a ZoneRef from an api.Zone
@@ -155,12 +173,4 @@ func (r *zoneRef) Get(svc All) (api.Zone, error) {
 
 func (r *zoneRef) Name() string {
 	return r.name
-}
-
-func (r *zoneRef) MapKey() string {
-	return "zone_name=" + encodeName(r.name)
-}
-
-func encodeName(name string) string {
-	return strings.Replace(strings.Replace(name, ":", `\:`, -1), "=", `\=`, -1)
 }
