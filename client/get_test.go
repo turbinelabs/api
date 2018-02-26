@@ -71,7 +71,7 @@ func (tc getTestCase) run(t *testing.T) {
 
 func mkAssertGetURL(prefix string) func(*testing.T, *url.URL, string) {
 	return func(t *testing.T, inurl *url.URL, key string) {
-		if !assertURLPrefix(t, inurl.Path, prefix) {
+		if !assert.HasPrefix(t, inurl.Path, prefix) {
 			return
 		}
 

@@ -66,7 +66,7 @@ func TestTimeGranularityString(t *testing.T) {
 		Minutes.String(),
 		"minutes",
 	)
-	assert.MatchesRegex(t, Unknown.String(), `unknown\([0-9]+\)`)
+	assert.MatchesRegex(t, Unknown.String(), `^unknown\([0-9]+\)$`)
 	assert.Equal(t, TimeGranularity(100).String(), "unknown(100)")
 }
 

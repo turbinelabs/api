@@ -66,7 +66,7 @@ func TestQueryTypeString(t *testing.T) {
 		Requests.String(),
 		"requests",
 	)
-	assert.MatchesRegex(t, Unknown.String(), `unknown\([0-9]+\)`)
+	assert.MatchesRegex(t, Unknown.String(), `^unknown\([0-9]+\)$`)
 	assert.Equal(t, QueryType(100).String(), "unknown(100)")
 }
 

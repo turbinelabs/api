@@ -68,7 +68,7 @@ func Test{{.type.Capitalize}}String(t *testing.T) {
 		{{$testVal.Capitalize}}.String(),
 		"{{$testVal.SnakeCase}}",
 	)
-	assert.MatchesRegex(t, Unknown.String(), `unknown\([0-9]+\)`)
+	assert.MatchesRegex(t, Unknown.String(), `^unknown\([0-9]+\)$`)
 	assert.Equal(t, {{.type.Capitalize}}(100).String(), "unknown(100)")
 }
 

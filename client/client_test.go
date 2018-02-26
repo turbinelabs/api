@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/turbinelabs/api"
@@ -137,14 +136,6 @@ func (w verifyingHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			rrw.WriteEnvelope(nil, w.response)
 		}
 	}
-}
-
-func assertURLPrefix(t *testing.T, url, prefix string) bool {
-	if !assert.True(t, strings.HasPrefix(url, prefix)) {
-		assert.Tracing(t).Errorf("%q is not prefixed by %q", url, prefix)
-		return false
-	}
-	return true
 }
 
 func stripURLPrefix(url, prefix string) string {

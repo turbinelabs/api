@@ -50,7 +50,7 @@ type indexTestCase struct {
 }
 
 func assertIndexURL(t *testing.T, inurl *url.URL, prefix, filterStr string) {
-	if !assertURLPrefix(t, inurl.Path, prefix) {
+	if !assert.HasPrefix(t, inurl.Path, prefix) {
 		// if it's not a cluster url then we can just give up b/c we're about to
 		// panic otherwise
 		return

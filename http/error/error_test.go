@@ -37,7 +37,7 @@ func (tc *errorCodeTestCase) run(t *testing.T) {
 		assert.Equal(g, err.Message, "rat-a-tat-tat")
 		assert.Equal(g, err.Code, UnknownUnclassifiedCode)
 		assert.Equal(g, err.Status, tc.expectedStatus)
-		assert.MatchesRegex(g, err.Error(), "rat-a-tat-tat")
+		assert.ErrorContains(g, err, "rat-a-tat-tat")
 	})
 }
 
@@ -57,7 +57,7 @@ func TestConstructors(t *testing.T) {
 func TestAuthorizationError(t *testing.T) {
 	err := AuthorizationError()
 
-	assert.MatchesRegex(t, err.Message, "not authorized")
+	assert.StringContains(t, err.Message, "not authorized")
 	assert.Equal(t, err.Code, UnknownUnauthorizedCode)
 	assert.Equal(t, err.Status, 403)
 }
