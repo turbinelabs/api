@@ -16,42 +16,63 @@ limitations under the License.
 
 package error
 
-// Identifier specifying what kind of error we're reporting.
+// ErrorCode is an identifier specifying what kind of error we're reporting.
 type ErrorCode string
 
 const (
-	DataConstraintErrorCode ErrorCode = "DataConstraintErrorCode" // some integrity constraint rejected the change
-	OwningOrgImmutable      ErrorCode = "OwningOrgImmutable"      // an attempt was made to change the org an object belongs to
+	// DataConstraintErrorCode indicates some integrity constraint rejected the change.
+	DataConstraintErrorCode ErrorCode = "DataConstraintErrorCode"
 
-	DuplicateKeyErrorCode      ErrorCode = "DuplicateClusterKeyCode"    // an object with that key already exists
-	InvalidObjectErrorCode     ErrorCode = "InvalidObjectCode"          // attempted to pass on object that did not have valid data
-	KeyImmutableErrorCode      ErrorCode = "KeyImmutable"               // can't change the generated object key
-	MiscErrorCode              ErrorCode = "MiscCode"                   // misc errors
-	NotFoundErrorCode          ErrorCode = "NotFound"                   // the object requested didn't exist
-	AuthMethodDeniedCode       ErrorCode = "AuthMethodDenied"           // auth method not allowed
-	BadParameterErrorCode      ErrorCode = "BadParameterErrorCode"      // some parameter was bad
-	ObjectKeyRequiredErrorCode ErrorCode = "ObjectKeyRequiredErrorCode" // returned when a Get attempt is made with no key
+	// OwningOrgImmutable indicates an attempt was made to change the org to which an
+	// object belongs.
+	OwningOrgImmutable ErrorCode = "OwningOrgImmutable"
+
+	// DuplicateKeyErrorCode indicates an object with the given key already exists.
+	DuplicateKeyErrorCode ErrorCode = "DuplicateClusterKeyCode"
+
+	// InvalidObjectErrorCode indicates an attempt to pass on invalid object.
+	InvalidObjectErrorCode ErrorCode = "InvalidObjectCode"
+
+	// KeyImmutableErrorCode indicates an attempt was made to change an object's key.
+	KeyImmutableErrorCode ErrorCode = "KeyImmutable"
+
+	// MiscErrorCode indicates a miscellaneous error.
+	MiscErrorCode ErrorCode = "MiscCode"
+
+	// NotFoundErrorCode indicates the request object does not exist.
+	NotFoundErrorCode ErrorCode = "NotFound"
+
+	// AuthMethodDeniedCode indicates an authorization method was denied.
+	AuthMethodDeniedCode ErrorCode = "AuthMethodDenied"
+
+	// BadParameterErrorCode indicates an invalid parameter was passed.
+	BadParameterErrorCode ErrorCode = "BadParameterErrorCode"
+
+	// ObjectKeyRequiredErrorCode indicates a Get attempt with no key was made.
+	ObjectKeyRequiredErrorCode ErrorCode = "ObjectKeyRequiredErrorCode"
 )
 
 const (
-	// there was a problem decoding something
+	// UnknownDecodingCode indicates there was a problem decoding something.
 	UnknownDecodingCode ErrorCode = "UnknownDecodingCode"
 
-	// there was a problem encoding something
+	// UnknownEncodingCode indicates there was a problem encoding something.
 	UnknownEncodingCode ErrorCode = "UnknownEncodingCode"
 
-	// expected some content from the request body but could not find it
+	// UnknownNoBodyCode indicates the server expected some content from the request
+	// body but could not find it.
 	UnknownNoBodyCode ErrorCode = "UnknownNoBodyCode"
 
-	// Something involving manipulating HTTP response/request
+	// UnknownTransportCode indicates an error manipulating HTTP response/request.
 	UnknownTransportCode ErrorCode = "UnknownTransportCode"
 
-	// authorization for this request failed
+	// UnknownUnauthorizedCode indicates that authorization for this request failed.
 	UnknownUnauthorizedCode ErrorCode = "UnknownUnathorizedCode"
 
-	// unclassified failure
+	// UnknownUnclassifiedCode indicates an unclassified failure.
 	UnknownUnclassifiedCode ErrorCode = "UnknownUnclassifiedCode"
 
-	// attempted to save data but it was modified & you were working with an old copy
+	// UnknownModificationConflict indicates an attempt to save data failed because
+	// the request was made against an out-of-date copy.
 	UnknownModificationConflict ErrorCode = "UnknownModificationConflict"
 )

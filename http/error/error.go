@@ -14,20 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-	Package error contains an error definition intended to be serialized
-	and sent over the wire between the api-server and clients.
-
-	An error can be associated with either one of the top level domain objects
-	(Clusters, Routes, etc.) or not (Unknown). Examples of each would include
-	business validation failures (domain object category) and errors processing
-	the HTTP request object (unknown categary). This association and the specific
-	error is captured, By convention, in the code name: {Type}{Error}Code.
-
-	A service.http.error.Error is created in the api-server by processing a
-	server.model.error.Error and converting it to something client appropriate.
-	See server.handler docs for more details on this process.
-*/
+// Package error contains an error definition intended to be serialized and sent over
+// the wire between the api-server and clients.
 package error
 
 import (
@@ -35,9 +23,8 @@ import (
 	"net/http"
 )
 
-// on the server side we will map (as noted above) from server.error.Error to a
-// domain-specific service.http.error.Error; on the client side we'll just
-// decode into this.
+// Error represents an HTTP API error serialized between the api-server and its
+// clients.
 type Error struct {
 	Message string      `json:"message"`           // Human readable message
 	Code    ErrorCode   `json:"code"`              // This provides more detail into the type of error
@@ -45,51 +32,63 @@ type Error struct {
 	Details interface{} `json:"details,omitempty"` // any error specific information
 }
 
-// Construct a new error code that will be sent to a client
+func (e *Error) Error() string {
+	hd := e.Details != nil
+	return fmt.Sprintf("{Message: %s, Code: %s, Detailed: %v}", e.Message, e.Code, hd)
+}
+
+// NewDetailed400 constructs a new Error with status code 400, bad request.
 func NewDetailed400(msg string, code ErrorCode, details interface{}) *Error {
 	return &Error{msg, code, http.StatusBadRequest, details}
 }
 
+// New400 constructs a new Error with status code 400, bad request.
 func New400(msg string, code ErrorCode) *Error {
 	return NewDetailed400(msg, code, nil)
 }
 
-// Construct a new HTTP 500 (InternalServerError) response
+// NewDetailed500 constructs a new Error with status code 500, internal server error.
 func NewDetailed500(msg string, code ErrorCode, details interface{}) *Error {
 	return &Error{msg, code, http.StatusInternalServerError, details}
 }
 
+// New500 constructs a new Error with status code 500, internal server error.
 func New500(msg string, code ErrorCode) *Error {
 	return NewDetailed500(msg, code, nil)
 }
 
-// Construct a new HTTP 501 (NotImplemented) response
+// NewDetailed501 constructs a new Error with status code 501, not implemented.
 func NewDetailed501(msg string, code ErrorCode, details interface{}) *Error {
 	return &Error{msg, code, http.StatusNotImplemented, details}
 }
 
+// New501 constructs a new Error with status code 501, not implemented.
 func New501(msg string, code ErrorCode) *Error {
 	return NewDetailed501(msg, code, nil)
 }
 
-// Construct a new HTTP 404 (NotFound) response
+// NewDetailed404 constructs a new Error with status code 404, not found.
 func NewDetailed404(msg string, code ErrorCode, details interface{}) *Error {
 	return &Error{msg, code, http.StatusNotFound, details}
 }
 
+// New404 constructs a new Error with status code 404, not found.
 func New404(msg string, code ErrorCode) *Error {
 	return NewDetailed404(msg, code, nil)
 }
 
-// Construct a new HTTP 409 (Conflict) response
+// NewDetailed409 constructs a new Error with status code 409, status conflict.
 func NewDetailed409(msg string, code ErrorCode, details interface{}) *Error {
 	return &Error{msg, code, http.StatusConflict, details}
 }
 
+// New409 constructs a new Error with status code 409, status conflict.
 func New409(msg string, code ErrorCode) *Error {
 	return NewDetailed409(msg, code, nil)
 }
 
+// AuthorizationError creates a generic authorization Error with status code 403,
+// forbidden.
 func AuthorizationError() *Error {
 	return &Error{
 		"not authorized to make this request",
@@ -99,6 +98,8 @@ func AuthorizationError() *Error {
 	}
 }
 
+// AuthorizationMethodDeniedError creates a new Error indicating that the
+// authorization method was denied, with status code 403, forbidden.
 func AuthorizationMethodDeniedError() *Error {
 	return &Error{
 		"authorization method denied",
@@ -108,10 +109,9 @@ func AuthorizationMethodDeniedError() *Error {
 	}
 }
 
-// FromErrorDefaultType returns an *Error based on the provided base error
-// object. If err is already an *Error it will be cast and returned unchanged,
-// otherwise a new *Error will be created with the specifid code and status.
-// The Message will be err.Error().
+// FromErrorDefaultType returns an *Error based on the provided error object. If err
+// is already an *Error it is returned unchanged. Otherwise, a new *Error will be
+// created with the specified code and status. The Message will be err.Error().
 func FromErrorDefaultType(err error, code ErrorCode, status int) *Error {
 	if err == nil {
 		return nil
@@ -130,15 +130,9 @@ func FromErrorDefaultType(err error, code ErrorCode, status int) *Error {
 	}
 }
 
-// Generically converts a go error into an Error. If err is already an
-// Error, it is returned directly (as a pointer). If not, a new Error
-// with status 500 (internal server error), the given code, and the
-// original error message is returned.
+// FromError returns an *Error based on the provided error object. If err is already
+// an *Error it is returned unchanged. Otherwise, a new *Error will be created with
+// the status code 500, internal server error. The Message will be err.Error().
 func FromError(err error, code ErrorCode) *Error {
 	return FromErrorDefaultType(err, code, 500)
-}
-
-func (e *Error) Error() string {
-	hd := e.Details != nil
-	return fmt.Sprintf("{Message: %s, Code: %s, Detailed: %v}", e.Message, e.Code, hd)
 }
