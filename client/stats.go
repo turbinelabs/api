@@ -23,7 +23,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -38,6 +37,7 @@ import (
 const (
 	v2ForwardPath = "/v2.0/stats/forward"
 	v1QueryPath   = "/v1.0/stats/query"
+	v2QueryPath   = "/v2.0/stats/query"
 
 	queryArg = "query"
 )
@@ -101,19 +101,19 @@ func newInternalStatsClient(
 	}, nil
 }
 
-func encodePayload(payload *statsapi.Payload) ([]byte, error) {
+func encodePayload(payload interface{}) ([]byte, error) {
 	var buffer bytes.Buffer
 	gzip := gzip.NewWriter(&buffer)
 	encoder := json.NewEncoder(gzip)
 
 	if err := encoder.Encode(payload); err != nil {
-		msg := fmt.Sprintf("could not encode stats payload: %+v\n%+v", err, payload)
+		msg := fmt.Sprintf("could not encode body: %+v\n%+v", err, payload)
 		return nil, httperr.New400(msg, httperr.UnknownEncodingCode)
 	}
 
 	if err := gzip.Close(); err != nil {
 		msg := fmt.Sprintf(
-			"could not finish encoding stats payload: %+v\n%+v",
+			"could not finish encoding body: %+v\n%+v",
 			err,
 			payload,
 		)
@@ -182,23 +182,19 @@ func (hs *httpStats) Close() error {
 }
 
 func (hs *httpStats) Query(query *statsapi.Query) (*statsapi.QueryResult, error) {
-	params := apihttp.Params{}
-
-	if query != nil {
-		queryBytes, err := json.Marshal(query)
-		if err != nil {
-			return nil, httperr.New400(
-				fmt.Sprintf("unable to encode query: %v: %s", query, err),
-				httperr.UnknownUnclassifiedCode,
-			)
-		}
-
-		params[queryArg] = string(queryBytes)
+	encoded, err := encodePayload(query)
+	if err != nil {
+		return nil, err
 	}
 
 	response := &statsapi.QueryResult{}
 	reqFn := func() (*http.Request, error) {
-		return hs.dest.NewRequest(http.MethodGet, v1QueryPath, params, nil)
+		return hs.dest.NewRequest(
+			http.MethodPost,
+			v1QueryPath,
+			apihttp.Params{},
+			bytes.NewReader(encoded),
+		)
 	}
 
 	if err := hs.requestHandler.Do(reqFn, response); err != nil {
@@ -209,5 +205,24 @@ func (hs *httpStats) Query(query *statsapi.Query) (*statsapi.QueryResult, error)
 }
 
 func (hs *httpStats) QueryV2(query *statsapiv2.Query) (*statsapiv2.QueryResult, error) {
-	return nil, errors.New("unsupported")
+	encoded, err := encodePayload(query)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &statsapiv2.QueryResult{}
+	reqFn := func() (*http.Request, error) {
+		return hs.dest.NewRequest(
+			http.MethodPost,
+			v2QueryPath,
+			apihttp.Params{},
+			bytes.NewReader(encoded),
+		)
+	}
+
+	if err := hs.requestHandler.Do(reqFn, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

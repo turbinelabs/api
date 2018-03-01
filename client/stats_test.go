@@ -17,8 +17,12 @@ limitations under the License.
 package client
 
 import (
+	"bytes"
+	"compress/gzip"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/turbinelabs/api"
@@ -26,7 +30,8 @@ import (
 	"github.com/turbinelabs/api/http/envelope"
 	httperr "github.com/turbinelabs/api/http/error"
 	apiheader "github.com/turbinelabs/api/http/header"
-	statsapi "github.com/turbinelabs/api/service/stats"
+	statsapi "github.com/turbinelabs/api/service/stats/v1"
+	statsapiv2 "github.com/turbinelabs/api/service/stats/v2"
 	"github.com/turbinelabs/test/assert"
 )
 
@@ -38,9 +43,18 @@ func TestStatsClientQuerySuccess(t *testing.T) {
 	verifier := verifyingHandler{
 		fn: func(rr apihttp.RichRequest) {
 			assert.Equal(t, rr.Underlying().URL.Path, v1QueryPath)
-			assert.NonNil(t, rr.Underlying().URL.Query()["query"])
-			assert.Equal(t, len(rr.Underlying().URL.Query()["query"]), 1)
-			assert.Equal(t, rr.Underlying().URL.Query()["query"][0], wantQueryStr)
+			assert.Nil(t, rr.Underlying().URL.Query()["query"])
+			body, err := rr.GetBody()
+			assert.Nil(t, err)
+
+			gzipReader, err := gzip.NewReader(bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			bodyBytes, err := ioutil.ReadAll(gzipReader)
+			defer gzipReader.Close()
+			assert.Nil(t, err)
+
+			assert.Equal(t, strings.TrimSpace(string(bodyBytes)), wantQueryStr)
 		},
 		status:   http.StatusOK,
 		response: want,
@@ -54,7 +68,6 @@ func TestStatsClientQuerySuccess(t *testing.T) {
 
 	got, gotErr := client.Query(&statsapi.Query{})
 	assert.Nil(t, gotErr)
-
 	assert.DeepEqual(t, got, want)
 }
 
@@ -66,9 +79,18 @@ func TestStatsClientQueryError(t *testing.T) {
 	verifier := verifyingHandler{
 		fn: func(rr apihttp.RichRequest) {
 			assert.Equal(t, rr.Underlying().URL.Path, v1QueryPath)
-			assert.NonNil(t, rr.Underlying().URL.Query()["query"])
-			assert.Equal(t, len(rr.Underlying().URL.Query()["query"]), 1)
-			assert.Equal(t, rr.Underlying().URL.Query()["query"][0], wantQueryStr)
+			assert.Nil(t, rr.Underlying().URL.Query()["query"])
+			body, err := rr.GetBody()
+			assert.Nil(t, err)
+
+			gzipReader, err := gzip.NewReader(bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			bodyBytes, err := ioutil.ReadAll(gzipReader)
+			defer gzipReader.Close()
+			assert.Nil(t, err)
+
+			assert.Equal(t, strings.TrimSpace(string(bodyBytes)), wantQueryStr)
 		},
 		status:   http.StatusInternalServerError,
 		response: envelope.Response{wantErr, nil},
@@ -81,6 +103,80 @@ func TestStatsClientQueryError(t *testing.T) {
 	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
 
 	got, gotErr := client.Query(&statsapi.Query{})
+	assert.DeepEqual(t, gotErr, wantErr)
+	assert.Nil(t, got)
+}
+
+func TestStatsClientQueryV2Success(t *testing.T) {
+	wantQueryStr := `{"time_range":{"granularity":"minutes"},"timeseries":null}`
+
+	want := &statsapiv2.QueryResult{}
+
+	verifier := verifyingHandler{
+		fn: func(rr apihttp.RichRequest) {
+			assert.Equal(t, rr.Underlying().URL.Path, v2QueryPath)
+			assert.Nil(t, rr.Underlying().URL.Query()["query"])
+			body, err := rr.GetBody()
+			assert.Nil(t, err)
+
+			gzipReader, err := gzip.NewReader(bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			bodyBytes, err := ioutil.ReadAll(gzipReader)
+			defer gzipReader.Close()
+			assert.Nil(t, err)
+
+			assert.Equal(t, strings.TrimSpace(string(bodyBytes)), wantQueryStr)
+		},
+		status:   http.StatusOK,
+		response: want,
+	}
+
+	server := httptest.NewServer(verifier)
+	defer server.Close()
+
+	endpoint := newTestEndpointFromServer(server)
+	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
+
+	// TODO: remove cast when V2 becomes the default (#4708)
+	got, gotErr := client.(*httpStats).QueryV2(&statsapiv2.Query{})
+	assert.Nil(t, gotErr)
+	assert.DeepEqual(t, got, want)
+}
+
+func TestStatsClientQueryV2Error(t *testing.T) {
+	wantQueryStr := `{"time_range":{"granularity":"minutes"},"timeseries":null}`
+
+	wantErr := httperr.New500("Gah!", httperr.UnknownUnclassifiedCode)
+
+	verifier := verifyingHandler{
+		fn: func(rr apihttp.RichRequest) {
+			assert.Equal(t, rr.Underlying().URL.Path, v2QueryPath)
+			assert.Nil(t, rr.Underlying().URL.Query()["query"])
+			body, err := rr.GetBody()
+			assert.Nil(t, err)
+
+			gzipReader, err := gzip.NewReader(bytes.NewReader(body))
+			assert.Nil(t, err)
+
+			bodyBytes, err := ioutil.ReadAll(gzipReader)
+			defer gzipReader.Close()
+			assert.Nil(t, err)
+
+			assert.Equal(t, strings.TrimSpace(string(bodyBytes)), wantQueryStr)
+		},
+		status:   http.StatusInternalServerError,
+		response: envelope.Response{wantErr, nil},
+	}
+
+	server := httptest.NewServer(verifier)
+	defer server.Close()
+
+	endpoint := newTestEndpointFromServer(server)
+	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
+
+	// TODO: remove cast when V2 becomes the default (#4708)
+	got, gotErr := client.(*httpStats).QueryV2(&statsapiv2.Query{})
 	assert.DeepEqual(t, gotErr, wantErr)
 	assert.Nil(t, got)
 }
