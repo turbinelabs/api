@@ -19,8 +19,7 @@ package stats
 import (
 	"io"
 
-	v1 "github.com/turbinelabs/api/service/stats/v1"
-	v2 "github.com/turbinelabs/api/service/stats/v2"
+	"github.com/turbinelabs/api/service/stats/v2"
 )
 
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
@@ -29,7 +28,7 @@ import (
 // StatsQueryService.
 type StatsService interface {
 	v2.StatsForwardService
-	v1.StatsQueryService
+	v2.StatsQueryService
 
 	io.Closer
 }

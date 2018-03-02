@@ -17,37 +17,37 @@ limitations under the License.
 package stats
 
 import (
-	v1 "github.com/turbinelabs/api/service/stats/v1"
-	v1querytype "github.com/turbinelabs/api/service/stats/v1/querytype"
-	v1timegranularity "github.com/turbinelabs/api/service/stats/v1/timegranularity"
+	v2 "github.com/turbinelabs/api/service/stats/v2"
+	v2querytype "github.com/turbinelabs/api/service/stats/v2/querytype"
+	v2timegranularity "github.com/turbinelabs/api/service/stats/v2/timegranularity"
 )
 
-// Query is an alias for the V1 stats API Query type.
-type Query = v1.Query
+// Query is an alias for the V2 stats API Query type.
+type Query = v2.Query
 
-// QueryType is an alias for the V1 stats API QueryType type.
-type QueryType = v1querytype.QueryType
+// QueryType is an alias for the V2 stats API QueryType type.
+type QueryType = v2querytype.QueryType
 
-// QueryTimeSeries is an alias for the V1 stats API QueryTimeSeries type.
-type QueryTimeSeries = v1.QueryTimeSeries
+// QueryTimeSeries is an alias for the V2 stats API QueryTimeSeries type.
+type QueryTimeSeries = v2.QueryTimeSeries
 
-// TimeRange is an alias for the V1 stats API TimeRange type.
-type TimeRange = v1.TimeRange
+// TimeRange is an alias for the V2 stats API TimeRange type.
+type TimeRange = v2.TimeRange
 
-// SimpleTimeRange is an alias for the V1 stats API SimpleTimeRange type.
-type SimpleTimeRange = v1.SimpleTimeRange
+// SimpleTimeRange is an alias for the V2 stats API SimpleTimeRange type.
+type SimpleTimeRange = v2.SimpleTimeRange
 
-// TimeGranularity is an alis for the V1 stats API TimeGranularity type.
-type TimeGranularity = v1timegranularity.TimeGranularity
+// TimeGranularity is an alis for the V2 stats API TimeGranularity type.
+type TimeGranularity = v2timegranularity.TimeGranularity
 
-// ZeroFill is an alias for the V1 stats API ZeroFill type.
-type ZeroFill = v1.ZeroFill
+// ZeroFill is an alias for the V2 stats API ZeroFill type.
+type ZeroFill = v2.ZeroFill
 
-// QueryResult is an alias for the V1 stats API QueryResult type.
-type QueryResult = v1.QueryResult
+// QueryResult is an alias for the V2 stats API QueryResult type.
+type QueryResult = v2.QueryResult
 
-// TimeSeries is an alias for the V1 stats API TimeSeries type.
-type TimeSeries = v1.TimeSeries
+// TimeSeries is an alias for the V2 stats API TimeSeries type.
+type TimeSeries = v2.TimeSeries
 
-// Point is an alias for the V1 stats API Point type.
-type Point = v1.Point
+// Point is an alias for the V2 stats API Point type.
+type Point = v2.Point

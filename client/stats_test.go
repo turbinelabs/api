@@ -30,87 +30,14 @@ import (
 	"github.com/turbinelabs/api/http/envelope"
 	httperr "github.com/turbinelabs/api/http/error"
 	apiheader "github.com/turbinelabs/api/http/header"
-	statsapi "github.com/turbinelabs/api/service/stats/v1"
-	statsapiv2 "github.com/turbinelabs/api/service/stats/v2"
+	statsapi "github.com/turbinelabs/api/service/stats"
 	"github.com/turbinelabs/test/assert"
 )
-
-func TestStatsClientQuerySuccess(t *testing.T) {
-	wantQueryStr := `{"zone_name":"","time_range":{"granularity":"seconds"},"timeseries":null}`
-
-	want := &statsapi.QueryResult{}
-
-	verifier := verifyingHandler{
-		fn: func(rr apihttp.RichRequest) {
-			assert.Equal(t, rr.Underlying().URL.Path, v1QueryPath)
-			assert.Nil(t, rr.Underlying().URL.Query()["query"])
-			body, err := rr.GetBody()
-			assert.Nil(t, err)
-
-			gzipReader, err := gzip.NewReader(bytes.NewReader(body))
-			assert.Nil(t, err)
-
-			bodyBytes, err := ioutil.ReadAll(gzipReader)
-			defer gzipReader.Close()
-			assert.Nil(t, err)
-
-			assert.Equal(t, strings.TrimSpace(string(bodyBytes)), wantQueryStr)
-		},
-		status:   http.StatusOK,
-		response: want,
-	}
-
-	server := httptest.NewServer(verifier)
-	defer server.Close()
-
-	endpoint := newTestEndpointFromServer(server)
-	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
-
-	got, gotErr := client.Query(&statsapi.Query{})
-	assert.Nil(t, gotErr)
-	assert.DeepEqual(t, got, want)
-}
-
-func TestStatsClientQueryError(t *testing.T) {
-	wantQueryStr := `{"zone_name":"","time_range":{"granularity":"seconds"},"timeseries":null}`
-
-	wantErr := httperr.New500("Gah!", httperr.UnknownUnclassifiedCode)
-
-	verifier := verifyingHandler{
-		fn: func(rr apihttp.RichRequest) {
-			assert.Equal(t, rr.Underlying().URL.Path, v1QueryPath)
-			assert.Nil(t, rr.Underlying().URL.Query()["query"])
-			body, err := rr.GetBody()
-			assert.Nil(t, err)
-
-			gzipReader, err := gzip.NewReader(bytes.NewReader(body))
-			assert.Nil(t, err)
-
-			bodyBytes, err := ioutil.ReadAll(gzipReader)
-			defer gzipReader.Close()
-			assert.Nil(t, err)
-
-			assert.Equal(t, strings.TrimSpace(string(bodyBytes)), wantQueryStr)
-		},
-		status:   http.StatusInternalServerError,
-		response: envelope.Response{wantErr, nil},
-	}
-
-	server := httptest.NewServer(verifier)
-	defer server.Close()
-
-	endpoint := newTestEndpointFromServer(server)
-	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
-
-	got, gotErr := client.Query(&statsapi.Query{})
-	assert.DeepEqual(t, gotErr, wantErr)
-	assert.Nil(t, got)
-}
 
 func TestStatsClientQueryV2Success(t *testing.T) {
 	wantQueryStr := `{"time_range":{"granularity":"minutes"},"timeseries":null}`
 
-	want := &statsapiv2.QueryResult{}
+	want := &statsapi.QueryResult{}
 
 	verifier := verifyingHandler{
 		fn: func(rr apihttp.RichRequest) {
@@ -138,8 +65,7 @@ func TestStatsClientQueryV2Success(t *testing.T) {
 	endpoint := newTestEndpointFromServer(server)
 	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
 
-	// TODO: remove cast when V2 becomes the default (#4708)
-	got, gotErr := client.(*httpStats).QueryV2(&statsapiv2.Query{})
+	got, gotErr := client.QueryV2(&statsapi.Query{})
 	assert.Nil(t, gotErr)
 	assert.DeepEqual(t, got, want)
 }
@@ -175,8 +101,7 @@ func TestStatsClientQueryV2Error(t *testing.T) {
 	endpoint := newTestEndpointFromServer(server)
 	client, _ := NewStatsV2Client(endpoint, clientTestAPIKey, clientTestApp, nil)
 
-	// TODO: remove cast when V2 becomes the default (#4708)
-	got, gotErr := client.(*httpStats).QueryV2(&statsapiv2.Query{})
+	got, gotErr := client.QueryV2(&statsapi.Query{})
 	assert.DeepEqual(t, gotErr, wantErr)
 	assert.Nil(t, got)
 }

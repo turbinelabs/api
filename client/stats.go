@@ -24,13 +24,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	apihttp "github.com/turbinelabs/api/http"
 	httperr "github.com/turbinelabs/api/http/error"
 	statsapi "github.com/turbinelabs/api/service/stats"
-	statsapiv2 "github.com/turbinelabs/api/service/stats/v2"
 	"github.com/turbinelabs/nonstdlib/executor"
 )
 
@@ -45,17 +43,11 @@ const (
 // internalStatsClient is an internal interface for issuing forwarding
 // requests with a callback
 type internalStatsClient interface {
-	// Want to reference statsapi.StatsService, but mockgen doesn't seem to
-	// understand type aliases. Instead, copy the functions and make type assertions.
-	ForwardV2(*statsapi.Payload) (*statsapi.ForwardResult, error)
-	Query(*statsapi.Query) (*statsapi.QueryResult, error)
-	QueryV2(*statsapiv2.Query) (*statsapiv2.QueryResult, error)
+	statsapi.StatsService
 
 	// Issues a forwarding request for the given payload with the
 	// given executor.CallbackFunc.
 	ForwardWithCallback(*statsapi.Payload, executor.CallbackFunc) error
-
-	io.Closer
 }
 
 type httpStats struct {
@@ -64,9 +56,6 @@ type httpStats struct {
 	requestHandler apihttp.RequestHandler
 	exec           executor.Executor
 }
-
-var _ statsapi.StatsService = &httpStats{}
-var _ internalStatsClient = &httpStats{}
 
 // NewStatsV2Client returns a blocking implementation of StatsForwardService and
 // StatsQueryService. Each invocation of ForwardV2 accepts a single Payload, issues
@@ -181,36 +170,13 @@ func (hs *httpStats) Close() error {
 	return nil
 }
 
-func (hs *httpStats) Query(query *statsapi.Query) (*statsapi.QueryResult, error) {
+func (hs *httpStats) QueryV2(query *statsapi.Query) (*statsapi.QueryResult, error) {
 	encoded, err := encodePayload(query)
 	if err != nil {
 		return nil, err
 	}
 
 	response := &statsapi.QueryResult{}
-	reqFn := func() (*http.Request, error) {
-		return hs.dest.NewRequest(
-			http.MethodPost,
-			v1QueryPath,
-			apihttp.Params{},
-			bytes.NewReader(encoded),
-		)
-	}
-
-	if err := hs.requestHandler.Do(reqFn, response); err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
-func (hs *httpStats) QueryV2(query *statsapiv2.Query) (*statsapiv2.QueryResult, error) {
-	encoded, err := encodePayload(query)
-	if err != nil {
-		return nil, err
-	}
-
-	response := &statsapiv2.QueryResult{}
 	reqFn := func() (*http.Request, error) {
 		return hs.dest.NewRequest(
 			http.MethodPost,

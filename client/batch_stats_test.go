@@ -695,7 +695,7 @@ func TestPayloadV2BatcherCountsInFlightRequests(t *testing.T) {
 	assert.Equal(t, batcher.client.inFlight, int32(0))
 }
 
-func TestBatchingStatsV2ClientQuery(t *testing.T) {
+func TestBatchingStatsV2ClientQueryV2(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
@@ -703,16 +703,16 @@ func TestBatchingStatsV2ClientQuery(t *testing.T) {
 	want := &statsapi.QueryResult{}
 
 	mockClient := newMockInternalStatsClient(ctrl)
-	mockClient.EXPECT().Query(query).Return(want, nil)
+	mockClient.EXPECT().QueryV2(query).Return(want, nil)
 
 	client := &httpBatchingStatsV2{internalStatsClient: mockClient}
 
-	got, gotErr := client.Query(query)
+	got, gotErr := client.QueryV2(query)
 	assert.Equal(t, got, want)
 	assert.Nil(t, gotErr)
 }
 
-func TestBatchingStatsV2ClientQueryErr(t *testing.T) {
+func TestBatchingStatsV2ClientQueryV2Err(t *testing.T) {
 	ctrl := gomock.NewController(assert.Tracing(t))
 	defer ctrl.Finish()
 
@@ -720,11 +720,11 @@ func TestBatchingStatsV2ClientQueryErr(t *testing.T) {
 	query := &statsapi.Query{}
 
 	mockClient := newMockInternalStatsClient(ctrl)
-	mockClient.EXPECT().Query(query).Return(nil, wantErr)
+	mockClient.EXPECT().QueryV2(query).Return(nil, wantErr)
 
 	client := &httpBatchingStatsV2{internalStatsClient: mockClient}
 
-	got, gotErr := client.Query(query)
+	got, gotErr := client.QueryV2(query)
 	assert.Nil(t, got)
 	assert.Equal(t, gotErr, wantErr)
 }

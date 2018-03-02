@@ -36,9 +36,9 @@ func (m *mockInternalStatsClient) EXPECT() *mockInternalStatsClientMockRecorder 
 }
 
 // ForwardV2 mocks base method
-func (m *mockInternalStatsClient) ForwardV2(arg0 *stats.Payload) (*stats.ForwardResult, error) {
+func (m *mockInternalStatsClient) ForwardV2(arg0 *v2.Payload) (*v2.ForwardResult, error) {
 	ret := m.ctrl.Call(m, "ForwardV2", arg0)
-	ret0, _ := ret[0].(*stats.ForwardResult)
+	ret0, _ := ret[0].(*v2.ForwardResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -46,19 +46,6 @@ func (m *mockInternalStatsClient) ForwardV2(arg0 *stats.Payload) (*stats.Forward
 // ForwardV2 indicates an expected call of ForwardV2
 func (mr *mockInternalStatsClientMockRecorder) ForwardV2(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardV2", reflect.TypeOf((*mockInternalStatsClient)(nil).ForwardV2), arg0)
-}
-
-// Query mocks base method
-func (m *mockInternalStatsClient) Query(arg0 *stats.Query) (*stats.QueryResult, error) {
-	ret := m.ctrl.Call(m, "Query", arg0)
-	ret0, _ := ret[0].(*stats.QueryResult)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Query indicates an expected call of Query
-func (mr *mockInternalStatsClientMockRecorder) Query(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*mockInternalStatsClient)(nil).Query), arg0)
 }
 
 // QueryV2 mocks base method
@@ -74,18 +61,6 @@ func (mr *mockInternalStatsClientMockRecorder) QueryV2(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryV2", reflect.TypeOf((*mockInternalStatsClient)(nil).QueryV2), arg0)
 }
 
-// ForwardWithCallback mocks base method
-func (m *mockInternalStatsClient) ForwardWithCallback(arg0 *stats.Payload, arg1 executor.CallbackFunc) error {
-	ret := m.ctrl.Call(m, "ForwardWithCallback", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ForwardWithCallback indicates an expected call of ForwardWithCallback
-func (mr *mockInternalStatsClientMockRecorder) ForwardWithCallback(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardWithCallback", reflect.TypeOf((*mockInternalStatsClient)(nil).ForwardWithCallback), arg0, arg1)
-}
-
 // Close mocks base method
 func (m *mockInternalStatsClient) Close() error {
 	ret := m.ctrl.Call(m, "Close")
@@ -96,4 +71,16 @@ func (m *mockInternalStatsClient) Close() error {
 // Close indicates an expected call of Close
 func (mr *mockInternalStatsClientMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*mockInternalStatsClient)(nil).Close))
+}
+
+// ForwardWithCallback mocks base method
+func (m *mockInternalStatsClient) ForwardWithCallback(arg0 *stats.Payload, arg1 executor.CallbackFunc) error {
+	ret := m.ctrl.Call(m, "ForwardWithCallback", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ForwardWithCallback indicates an expected call of ForwardWithCallback
+func (mr *mockInternalStatsClientMockRecorder) ForwardWithCallback(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardWithCallback", reflect.TypeOf((*mockInternalStatsClient)(nil).ForwardWithCallback), arg0, arg1)
 }
