@@ -43,6 +43,7 @@ const (
 	Method     = "method"
 	Upstream   = "upstream"
 	Instance   = "instance"
+	Constraint = "constraint"
 
 	// Additional Responses and UpstreamResponses tags
 	StatusCode = "status_code"
