@@ -97,6 +97,11 @@ type QueryFilter struct {
 	// across rules.
 	RuleKey *api.RuleKey `json:"rule_key,omitempty" form:"rule_key"`
 
+	// ConstraintKey specifies the Constraint key for which stats are returned. If
+	// set, either a RouteKey and RuleKey or a SharedRuleName and RuleKey must be
+	// given. If not specified, stats are aggregated across constraints.
+	ConstraintKey *api.ConstraintKey `json:"constraint,omitempty" form:"constraint"`
+
 	// Method specifies the HTTP method for which stats are returned. If not
 	// specified, stats are aggregated across methods.
 	Method *string `json:"method,omitempty" form:"method"`
