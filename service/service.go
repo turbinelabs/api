@@ -20,28 +20,28 @@ package service
 //go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
 
 import (
-	"strings"
 	"time"
 
 	"github.com/turbinelabs/api"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 )
 
-/*
-	All defines the interface for the public JSON/REST API.
+// None is a monitor value used to incidate an empty array
+const None = "-"
 
-	We define it in Go because it's convenient to allow our
-	Go clients and servers to share a common language-level
-	interface.
-
-	Where necessary, we add commentary to describe things about
-	the REST api that aren't documented by the language itself
-	(eg paths, methods, etc)
-
-	Each of the sub-interfaces presents an organization-scoped view.
-	The method of scoping is not specified here, but in HTTP implementations
-	will be the use of an authorization header.
-*/
+// All defines the interface for the public JSON/REST API.
+//
+// We define it in Go because it's convenient to allow our
+// Go clients and servers to share a common language-level
+// interface.
+//
+// Where necessary, we add commentary to describe things about
+// the REST api that aren't documented by the language itself
+// (eg paths, methods, etc)
+//
+// Each of the sub-interfaces presents an organization-scoped view.
+// The method of scoping is not specified here, but in HTTP implementations
+// will be the use of an authorization header.
 type All interface {
 	Cluster() Cluster
 	Domain() Domain
@@ -52,6 +52,7 @@ type All interface {
 	History() History
 }
 
+// ClusterFilter describes a filter on the full list of Clusters
 type ClusterFilter struct {
 	ClusterKey api.ClusterKey `json:"cluster_key"`
 	Name       string         `json:"name"`
@@ -59,25 +60,17 @@ type ClusterFilter struct {
 	OrgKey     api.OrgKey     `json:"org_key"`
 }
 
-func (cf ClusterFilter) Matches(c api.Cluster) bool {
-	var (
-		keyMatch  = cf.ClusterKey == "" || cf.ClusterKey == c.ClusterKey
-		nameMatch = cf.Name == "" || cf.Name == c.Name
-		zoneMatch = cf.ZoneKey == "" || cf.ZoneKey == c.ZoneKey
-		orgMatch  = cf.OrgKey == "" || cf.OrgKey == c.OrgKey
-	)
-
-	return keyMatch && nameMatch && zoneMatch && orgMatch
-}
-
+// IsNil returns true if the receiver is the zero value
 func (cf ClusterFilter) IsNil() bool {
 	return cf.Equals(ClusterFilter{})
 }
 
+// Equals returns true if the target is equal to the receiver
 func (cf ClusterFilter) Equals(o ClusterFilter) bool {
 	return cf == o
 }
 
+// Cluster describes the CRUD interface for api.Clusters
 type Cluster interface {
 	// GET /v1.0/cluster
 	//
@@ -137,32 +130,53 @@ type Cluster interface {
 	) (api.Cluster, error)
 }
 
+// DomainFilter describes a filter on the full list of Domains
 type DomainFilter struct {
 	DomainKey api.DomainKey `json:"domain_key"`
 	Name      string        `json:"name"`
 	ZoneKey   api.ZoneKey   `json:"zone_key"`
 	OrgKey    api.OrgKey    `json:"org_key"`
+	// ProxyKeys matches Domains with a superset of the specified ProxyKeys. A
+	// slice with a single value of "-" will produce Domains with no linked
+	// Proxies.
+	ProxyKeys []api.ProxyKey `json:"proxy_keys"`
 }
 
-func (df DomainFilter) Matches(d api.Domain) bool {
-	var (
-		keyMatches  = df.DomainKey == "" || df.DomainKey == d.DomainKey
-		nameMatches = df.Name == "" || df.Name == d.Name
-		zoneMatches = df.ZoneKey == "" || df.ZoneKey == d.ZoneKey
-		orgMatches  = df.OrgKey == "" || df.OrgKey == d.OrgKey
-	)
-
-	return keyMatches && nameMatches && zoneMatches && orgMatches
+// HasNoProxies returns true if ProxyKeys has been set to the monitor value
+// indicating a filter for Domains with no linked Proxies.
+func (df DomainFilter) HasNoProxies() bool {
+	return len(df.ProxyKeys) == 1 && df.ProxyKeys[0] == None
 }
 
+// IsNil returns true if the receiver is the zero value
 func (df DomainFilter) IsNil() bool {
 	return df.Equals(DomainFilter{})
 }
 
+// Equals returns true if the target is equal to the receiver
 func (df DomainFilter) Equals(o DomainFilter) bool {
-	return df == o
+	if !(df.DomainKey == o.DomainKey &&
+		df.Name == o.Name &&
+		df.ZoneKey == o.ZoneKey &&
+		df.OrgKey == o.OrgKey &&
+		len(df.ProxyKeys) == len(o.ProxyKeys)) {
+		return false
+	}
+
+	m := make(map[string]bool)
+	for _, e := range df.ProxyKeys {
+		m[string(e)] = true
+	}
+	for _, e := range o.ProxyKeys {
+		if !m[string(e)] {
+			return false
+		}
+	}
+
+	return true
 }
 
+// Domain describes the CRUD interface for api.Domains
 type Domain interface {
 	// GET /v1.0/domains
 	//
@@ -200,48 +214,30 @@ type Domain interface {
 	Delete(domainKey api.DomainKey, checksum api.Checksum) error
 }
 
+// ProxyFilter describes a filter on the full list of Proxies
 type ProxyFilter struct {
-	ProxyKey   api.ProxyKey    `json:"proxy_key"`
-	Name       string          `json:"name"`
-	DomainKeys []api.DomainKey `json:"domain_keys"` // Matches Proxies with a superset of the specified DomainKeys
+	ProxyKey api.ProxyKey `json:"proxy_key"`
+	Name     string       `json:"name"`
+	// DomainKeys matches Proxies with a superset of the specified DomainKeys. A
+	// slice with a single value of "-" will produce Proxies with no linked
+	// Domains.
+	DomainKeys []api.DomainKey `json:"domain_keys"`
 	ZoneKey    api.ZoneKey     `json:"zone_key"`
 	OrgKey     api.OrgKey      `json:"org_key"`
 }
 
-func (pf ProxyFilter) Matches(p api.Proxy) bool {
-	var (
-		keyMatch  = pf.ProxyKey == "" || pf.ProxyKey == p.ProxyKey
-		nameMatch = pf.Name == "" || pf.Name == p.Name
-		zoneMatch = pf.ZoneKey == "" || pf.ZoneKey == p.ZoneKey
-		orgMatch  = pf.OrgKey == "" || pf.OrgKey == p.OrgKey
-	)
-
-	if !(keyMatch && nameMatch && zoneMatch && orgMatch) {
-		return false
-	}
-
-	if len(pf.DomainKeys) == 0 {
-		return true
-	}
-
-	hasDomain := make(map[api.DomainKey]bool)
-	for _, dk := range p.DomainKeys {
-		hasDomain[dk] = true
-	}
-
-	for _, dk := range pf.DomainKeys {
-		if !hasDomain[dk] {
-			return false
-		}
-	}
-
-	return true
+// HasNoDomains returns true if DomainKeys has been set to the monitor
+// value indicating a filter for Proxies with no linked Domains.
+func (pf ProxyFilter) HasNoDomains() bool {
+	return len(pf.DomainKeys) == 1 && pf.DomainKeys[0] == None
 }
 
+// IsNil returns true if the receiver is the zero value
 func (pf ProxyFilter) IsNil() bool {
 	return pf.Equals(ProxyFilter{})
 }
 
+// Equals returns true if the target is equal to the receiver
 func (pf ProxyFilter) Equals(o ProxyFilter) bool {
 	if !(pf.ProxyKey == o.ProxyKey &&
 		pf.Name == o.Name &&
@@ -264,6 +260,7 @@ func (pf ProxyFilter) Equals(o ProxyFilter) bool {
 	return true
 }
 
+// Proxy describes the CRUD interface for api.Proxy
 type Proxy interface {
 	// GET /v1.0/proxies
 	//
@@ -301,6 +298,7 @@ type Proxy interface {
 	Delete(proxyKey api.ProxyKey, checksum api.Checksum) error
 }
 
+// SharedRulesFilter describes a filter on the full list of SharedRules
 type SharedRulesFilter struct {
 	SharedRulesKey api.SharedRulesKey `json:"shared_rules_key"`
 	Name           string             `json:"name"`
@@ -308,25 +306,17 @@ type SharedRulesFilter struct {
 	OrgKey         api.OrgKey         `json:"org_key"`
 }
 
-func (rf SharedRulesFilter) Matches(r api.SharedRules) bool {
-	var (
-		eqName = rf.Name == "" || rf.Name == r.Name
-		eqKey  = rf.SharedRulesKey == "" || rf.SharedRulesKey == r.SharedRulesKey
-		eqZone = rf.ZoneKey == "" || r.ZoneKey == rf.ZoneKey
-		eqOrg  = rf.OrgKey == "" || r.OrgKey == rf.OrgKey
-	)
-
-	return eqKey && eqName && eqZone && eqOrg
-}
-
+// IsNil returns true if the receiver is the zero value
 func (rf SharedRulesFilter) IsNil() bool {
 	return rf.Equals(SharedRulesFilter{})
 }
 
+// Equals returns true if the target is equal to the receiver
 func (rf SharedRulesFilter) Equals(o SharedRulesFilter) bool {
 	return rf == o
 }
 
+// SharedRules describes the CRUD interface for api.SharedRules
 type SharedRules interface {
 	// GET /v1.0/shared_rules/<string:sharedRulesKey>
 	//
@@ -364,6 +354,7 @@ type SharedRules interface {
 	Delete(sharedRulesKey api.SharedRulesKey, checksum api.Checksum) error
 }
 
+// RouteFilter describes a filter on the full list of Routes
 type RouteFilter struct {
 	RouteKey       api.RouteKey       `json:"route_key"`
 	DomainKey      api.DomainKey      `json:"domain_key"`
@@ -374,28 +365,17 @@ type RouteFilter struct {
 	OrgKey         api.OrgKey         `json:"org_key"`
 }
 
-func (rf RouteFilter) Matches(r api.Route) bool {
-	var (
-		eqKey    = rf.RouteKey == "" || rf.RouteKey == r.RouteKey
-		eqDomain = rf.DomainKey == "" || r.DomainKey == rf.DomainKey
-		eqSRK    = rf.SharedRulesKey == "" || r.SharedRulesKey == rf.SharedRulesKey
-		eqPath   = rf.Path == "" || r.Path == rf.Path
-		eqPrefix = rf.PathPrefix == "" || strings.HasPrefix(r.Path, rf.PathPrefix)
-		eqZone   = rf.ZoneKey == "" || r.ZoneKey == rf.ZoneKey
-		eqOrg    = rf.OrgKey == "" || r.OrgKey == rf.OrgKey
-	)
-
-	return eqKey && eqDomain && eqSRK && eqPath && eqPrefix && eqZone && eqOrg
-}
-
+// IsNil returns true if the receiver is the zero value
 func (rf RouteFilter) IsNil() bool {
 	return rf.Equals(RouteFilter{})
 }
 
+// Equals returns true if the target is equal to the receiver
 func (rf RouteFilter) Equals(o RouteFilter) bool {
 	return rf == o
 }
 
+// Route describes the CRUD interface for api.Routes
 type Route interface {
 	// GET /v1.0/routes/<string:routeKey>
 	//
@@ -433,6 +413,7 @@ type Route interface {
 	Delete(routeKey api.RouteKey, checksum api.Checksum) error
 }
 
+// Zone describes the CRUD interface for api.Zones
 type Zone interface {
 	// GET /v1.0/admin/zone
 	//
@@ -470,20 +451,24 @@ type Zone interface {
 	Delete(zoneKey api.ZoneKey, checksum api.Checksum) error
 }
 
+// ZoneFilter describes a filter on the full list of Zones
 type ZoneFilter struct {
 	ZoneKey api.ZoneKey `json:"zone_key"`
 	Name    string      `json:"name"`
 	OrgKey  api.OrgKey  `json:"org_key"`
 }
 
+// IsNil returns true if the receiver is the zero value
 func (z ZoneFilter) IsNil() bool {
 	return z.Equals(ZoneFilter{})
 }
 
+// Equals returns true if the target is equal to the receiver
 func (z ZoneFilter) Equals(o ZoneFilter) bool {
 	return z == o
 }
 
+// AccessTokenFilter describes a filter on the full list of AccessTokens
 type AccessTokenFilter struct {
 	Description    string             `json:"description"`
 	AccessTokenKey api.AccessTokenKey `json:"access_token_key"`
@@ -493,10 +478,12 @@ type AccessTokenFilter struct {
 	CreatedBefore  *time.Time         `json:"created_before"`
 }
 
+// IsNil returns true if the receiver is the zero value
 func (of AccessTokenFilter) IsNil() bool {
 	return of.Equals(AccessTokenFilter{})
 }
 
+// Equals returns true if the target is equal to the receiver
 func (of AccessTokenFilter) Equals(o AccessTokenFilter) bool {
 	return of.Description == o.Description &&
 		of.AccessTokenKey == o.AccessTokenKey &&
