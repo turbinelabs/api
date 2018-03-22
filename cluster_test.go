@@ -19,6 +19,7 @@ package api
 import (
 	"testing"
 
+	"github.com/turbinelabs/nonstdlib/ptr"
 	"github.com/turbinelabs/test/assert"
 )
 
@@ -27,7 +28,8 @@ func getClusters() (Cluster, Cluster) {
 	ib := Instance{"Host2", 1234, nil}
 	ic := Instance{"Host3", 1234, nil}
 	i := Instances{ia, ib, ic}
-	c := Cluster{"ckey", "zkey", "name", true, i, "okey1", Checksum{}}
+	cb := CircuitBreakers{ptr.Int(1), ptr.Int(2), ptr.Int(3), ptr.Int(4)}
+	c := Cluster{"ckey", "zkey", "name", true, i, "okey1", &cb, Checksum{}}
 	return c, c
 }
 
@@ -113,6 +115,14 @@ func TestClusterEqualInstanceOrderVaries(t *testing.T) {
 	assert.True(t, c2.Equals(c1))
 }
 
+func TestClusterEqualCircuitBreakersVaries(t *testing.T) {
+	c1, c2 := getClusters()
+	c2.CircuitBreakers = &CircuitBreakers{ptr.Int(4), ptr.Int(3), ptr.Int(2), ptr.Int(1)}
+
+	assert.False(t, c1.Equals(c2))
+	assert.False(t, c2.Equals(c1))
+}
+
 func TestClustersGroupBy(t *testing.T) {
 	c := Clusters{
 		Cluster{Name: "a", ClusterKey: "a"},
@@ -153,8 +163,9 @@ func mkTestC() *Cluster {
 			{"foo", 9090, MetadataFromMap(map[string]string{"key1": "value1"})},
 			{"bar", 9090, MetadataFromMap(map[string]string{"key1": "value1", "key2": "value2"})},
 		},
-		OrgKey:   "ok-1",
-		Checksum: Checksum{"ck-1"},
+		OrgKey:          "ok-1",
+		CircuitBreakers: &CircuitBreakers{ptr.Int(1), ptr.Int(2), ptr.Int(3), ptr.Int(4)},
+		Checksum:        Checksum{"ck-1"},
 	}
 }
 
@@ -180,14 +191,20 @@ func TestClusterKeyIsValidBadZoneKey(t *testing.T) {
 	assert.NonNil(t, c.IsValid())
 }
 
-func TestClusterKeyIsValidBadName(t *testing.T) {
+func TestClusterIsValidBadName(t *testing.T) {
 	c := mkTestC()
 	c.Name = "aoeu[]',.p"
 	assert.NonNil(t, c.IsValid())
 }
 
-func TestClusterKeyIsValidBadInstances(t *testing.T) {
+func TestClusterIsValidBadInstances(t *testing.T) {
 	c := mkTestC()
 	c.Instances = append(c.Instances, c.Instances[0])
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterIsValidBadCircuitBreakers(t *testing.T) {
+	c := mkTestC()
+	c.CircuitBreakers.MaxConnections = ptr.Int(-1)
 	assert.NonNil(t, c.IsValid())
 }

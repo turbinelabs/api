@@ -20,6 +20,7 @@ import (
 	"sort"
 )
 
+// Clusters is a slice of Cluster objects
 type Clusters []Cluster
 
 func (c Clusters) GroupBy(fn func(Cluster) string) map[string]Clusters {
@@ -41,12 +42,13 @@ type ClusterKey string
 
 // A Cluster is a named list of Instances within a zone
 type Cluster struct {
-	ClusterKey ClusterKey `json:"cluster_key"` // overwritten on create
-	ZoneKey    ZoneKey    `json:"zone_key"`
-	Name       string     `json:"name"`
-	RequireTLS bool       `json:"require_tls,omitempty"`
-	Instances  Instances  `json:"instances"`
-	OrgKey     OrgKey     `json:"-"`
+	ClusterKey      ClusterKey       `json:"cluster_key"` // overwritten on create
+	ZoneKey         ZoneKey          `json:"zone_key"`
+	Name            string           `json:"name"`
+	RequireTLS      bool             `json:"require_tls,omitempty"`
+	Instances       Instances        `json:"instances"`
+	OrgKey          OrgKey           `json:"-"`
+	CircuitBreakers *CircuitBreakers `json:"circuit_breakers"`
 	Checksum
 }
 
@@ -64,13 +66,11 @@ func (c Cluster) Equals(o Cluster) bool {
 		c.ZoneKey == o.ZoneKey &&
 		c.Name == o.Name &&
 		c.OrgKey == o.OrgKey &&
-		c.RequireTLS == o.RequireTLS
+		c.RequireTLS == o.RequireTLS &&
+		CircuitBreakersPtrEquals(c.CircuitBreakers, o.CircuitBreakers) &&
+		c.Checksum.Equals(o.Checksum)
 
 	if !coreResp {
-		return false
-	}
-
-	if !c.Checksum.Equals(o.Checksum) {
 		return false
 	}
 
@@ -94,6 +94,9 @@ func (c *Cluster) IsValid() *ValidationError {
 	errCheckIndex(c.Name, errs, scope("name"))
 
 	errs.MergePrefixed(c.Instances.IsValid(), "cluster")
+	if c.CircuitBreakers != nil {
+		errs.MergePrefixed(c.CircuitBreakers.IsValid(), "cluster")
+	}
 
 	return errs.OrNil()
 }

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/turbinelabs/api"
+	"github.com/turbinelabs/nonstdlib/ptr"
 )
 
 // struct containing fixture data
@@ -73,24 +74,26 @@ type DataFixturesT struct {
 	UserSlice       api.Users
 	PublicUserSlice api.Users
 
-	ClusterKey1        api.ClusterKey // UUID of cluster 1
-	ClusterZone1       api.ZoneKey    // zone key for cluster 1
-	ClusterName1       string         // name of cluster 1
-	ClusterRequireTLS1 bool           // should cluster 1 require TLS communications
-	ClusterChecksum1   api.Checksum   // the checksum for cluster 1
-	ClusterOrgKey1     api.OrgKey
-	ClusterKey2        api.ClusterKey // UUId of cluster 2
-	ClusterZone2       api.ZoneKey    // zone key for cluster 2
-	ClusterName2       string         // name of cluster 2
-	ClusterRequireTLS2 bool           // should cluster 2 require TLS communications
-	ClusterChecksum2   api.Checksum   // the checksum for cluster 2
-	ClusterOrgKey2     api.OrgKey
-	Cluster1           api.Cluster  // instance of cluster 1
-	Cluster2           api.Cluster  // instance of cluster 1
-	Instance21         api.Instance // first instance on cluster 2
-	Instance22         api.Instance // first instance on cluster 2
-	ClusterSlice       api.Clusters // slice of the two clusters
-	PublicClusterSlice api.Clusters
+	ClusterKey1             api.ClusterKey // UUID of cluster 1
+	ClusterZone1            api.ZoneKey    // zone key for cluster 1
+	ClusterName1            string         // name of cluster 1
+	ClusterRequireTLS1      bool           // should cluster 1 require TLS communications
+	ClusterChecksum1        api.Checksum   // the checksum for cluster 1
+	ClusterOrgKey1          api.OrgKey
+	ClusterCircuitBreakers1 *api.CircuitBreakers // circuit breakers for cluster 1
+	ClusterKey2             api.ClusterKey       // UUId of cluster 2
+	ClusterZone2            api.ZoneKey          // zone key for cluster 2
+	ClusterName2            string               // name of cluster 2
+	ClusterRequireTLS2      bool                 // should cluster 2 require TLS communications
+	ClusterChecksum2        api.Checksum         // the checksum for cluster 2
+	ClusterOrgKey2          api.OrgKey
+	ClusterCircuitBreakers2 *api.CircuitBreakers // circuit breakers for cluster 2
+	Cluster1                api.Cluster          // instance of cluster 1
+	Cluster2                api.Cluster          // instance of cluster 1
+	Instance21              api.Instance         // first instance on cluster 2
+	Instance22              api.Instance         // first instance on cluster 2
+	ClusterSlice            api.Clusters         // slice of the two clusters
+	PublicClusterSlice      api.Clusters
 
 	DomainKey1         api.DomainKey // UUID of domain 1
 	DomainZone1        api.ZoneKey   // zone of domain 1
@@ -227,59 +230,75 @@ func New() DataFixturesT {
 		ZoneKey1:      api.ZoneKey("zone-1"),
 		ZoneName1:     "us-west",
 		ZoneOrgKey1:   api.OrgKey("1"),
-		ZoneChecksum1: api.Checksum{"Z-CS-1"},
+		ZoneChecksum1: api.Checksum{Checksum: "Z-CS-1"},
 		ZoneKey2:      api.ZoneKey("zone-2"),
 		ZoneName2:     "us-east",
 		ZoneOrgKey2:   api.OrgKey("2"),
-		ZoneChecksum2: api.Checksum{"Z-CS-2"},
+		ZoneChecksum2: api.Checksum{Checksum: "Z-CS-2"},
 
 		OrgKey1:          api.OrgKey("1"),
 		OrgName1:         "ExampleCo",
 		OrgContactEmail1: "adminco1@example.com",
-		OrgChecksum1:     api.Checksum{"Org-CS-1"},
+		OrgChecksum1:     api.Checksum{Checksum: "Org-CS-1"},
 		OrgKey2:          api.OrgKey("2"),
 		OrgName2:         "ExampleCo2",
 		OrgContactEmail2: "adminco2@alt.example.com",
-		OrgChecksum2:     api.Checksum{"Org-CS-2"},
+		OrgChecksum2:     api.Checksum{Checksum: "Org-CS-2"},
 
 		UserKey1:        api.UserKey("1"),
 		UserLoginEmail1: "someuser@example.com",
 		UserAPIAuthKey1: api.APIAuthKey("user-api-key-1"),
 		UserOrgKey1:     "1",
 		UserDeletedAt1:  nil,
-		UserChecksum1:   api.Checksum{"user-cs-1"},
+		UserChecksum1:   api.Checksum{Checksum: "user-cs-1"},
 
 		UserKey2:        api.UserKey("2"),
 		UserLoginEmail2: "otheruser@example.com",
 		UserAPIAuthKey2: api.APIAuthKey("user-api-key-2"),
 		UserOrgKey2:     "1",
 		UserDeletedAt2:  nil,
-		UserChecksum2:   api.Checksum{"user-cs-2"},
+		UserChecksum2:   api.Checksum{Checksum: "user-cs-2"},
 
 		ClusterKey1:        "98a13568-a599-4c8d-4ae8-657f3917e2cf",
 		ClusterZone1:       "zk1",
 		ClusterName1:       "cluster1",
 		ClusterRequireTLS1: false,
-		ClusterChecksum1:   api.Checksum{"cluster-checksum-1"},
+		ClusterChecksum1:   api.Checksum{Checksum: "cluster-checksum-1"},
 		ClusterOrgKey1:     "1",
+		ClusterCircuitBreakers1: &api.CircuitBreakers{
+			MaxConnections:     ptr.Int(1),
+			MaxPendingRequests: ptr.Int(2),
+			MaxRetries:         ptr.Int(3),
+			MaxRequests:        ptr.Int(4),
+		},
 		ClusterKey2:        "2794c958-d44c-418c-5cac-4d1af020df99",
 		ClusterZone2:       "zk2",
 		ClusterName2:       "cluster2",
 		ClusterRequireTLS2: true,
 		ClusterOrgKey2:     "1",
-		ClusterChecksum2:   api.Checksum{"cluster-checksum-2"},
-
+		ClusterChecksum2:   api.Checksum{Checksum: "cluster-checksum-2"},
+		ClusterCircuitBreakers2: &api.CircuitBreakers{
+			MaxConnections: ptr.Int(5),
+			MaxRequests:    ptr.Int(8),
+		},
 		DomainKey1:       "asonetuhasonetuh",
 		DomainZone1:      "zk1",
 		DomainName1:      "domain-1",
 		DomainPort1:      8080,
 		DomainSSLConfig1: nil,
 		DomainRedirects1: api.Redirects{{
-			"redirect1",
-			".*",
-			"http://www.example.com",
-			api.PermanentRedirect,
-			api.HeaderConstraints{{"x-random-header", "", false, true}},
+			Name:         "redirect1",
+			From:         ".*",
+			To:           "http://www.example.com",
+			RedirectType: api.PermanentRedirect,
+			HeaderConstraints: api.HeaderConstraints{
+				{
+					Name:          "x-random-header",
+					Value:         "",
+					CaseSensitive: false,
+					Invert:        true,
+				},
+			},
 		}},
 		DomainGzipEnabled1: true,
 		DomainCorsConfig1: &api.CorsConfig{
@@ -291,7 +310,7 @@ func New() DataFixturesT {
 			AllowedHeaders:   []string{"x-allowed-1", "x-allowed-2"},
 		},
 		DomainAliases1:     api.DomainAliases{"example.com", "*.example.com"},
-		DomainChecksum1:    api.Checksum{"ck1"},
+		DomainChecksum1:    api.Checksum{Checksum: "ck1"},
 		DomainOrgKey1:      "1",
 		DomainKey2:         "sntaohesntahoesuntaohe",
 		DomainZone2:        "zk2",
@@ -303,18 +322,18 @@ func New() DataFixturesT {
 		DomainCorsConfig2:  nil,
 		DomainAliases2:     nil,
 		DomainOrgKey2:      "1",
-		DomainChecksum2:    api.Checksum{"ck2"},
+		DomainChecksum2:    api.Checksum{Checksum: "ck2"},
 
 		ProxyKey1:      "proxy-1",
 		ProxyZone1:     "proxy-zone-1",
 		ProxyName1:     "proxy-name-1",
-		ProxyChecksum1: api.Checksum{"proxy-cs-1"},
+		ProxyChecksum1: api.Checksum{Checksum: "proxy-cs-1"},
 		ProxyOrgKey1:   "1",
 		ProxyKey2:      "proxy-2",
 		ProxyZone2:     "proxy-zone-2",
 		ProxyName2:     "proxy-name-2",
 		ProxyOrgKey2:   "1",
-		ProxyChecksum2: api.Checksum{"proxy-cs-2"},
+		ProxyChecksum2: api.Checksum{Checksum: "proxy-cs-2"},
 
 		RouteKey1:         "route-key-1",
 		RouteDomain1:      "route-dom-1",
@@ -382,16 +401,16 @@ func New() DataFixturesT {
 	ts := time.Date(2015, 2, 28, 12, 30, 0, 0, time.UTC)
 	df.UserDeletedAt2 = &ts
 	df.Zone1 = api.Zone{
-		df.ZoneKey1,
-		df.ZoneName1,
-		df.ZoneOrgKey1,
-		df.ZoneChecksum1,
+		ZoneKey:  df.ZoneKey1,
+		Name:     df.ZoneName1,
+		OrgKey:   df.ZoneOrgKey1,
+		Checksum: df.ZoneChecksum1,
 	}
 	df.Zone2 = api.Zone{
-		df.ZoneKey2,
-		df.ZoneName2,
-		df.ZoneOrgKey2,
-		df.ZoneChecksum2,
+		ZoneKey:  df.ZoneKey2,
+		Name:     df.ZoneName2,
+		OrgKey:   df.ZoneOrgKey2,
+		Checksum: df.ZoneChecksum2,
 	}
 	df.ZoneSlice = api.Zones{df.Zone1, df.Zone2}
 	df.PublicZoneSlice = make(api.Zones, len(df.ZoneSlice))
@@ -423,27 +442,35 @@ func New() DataFixturesT {
 	}
 
 	df.Cluster1 = api.Cluster{
-		ClusterKey: df.ClusterKey1,
-		ZoneKey:    df.ClusterZone1,
-		Name:       df.ClusterName1,
-		RequireTLS: df.ClusterRequireTLS1,
-		OrgKey:     df.ClusterOrgKey1,
-		Checksum:   df.ClusterChecksum1,
+		ClusterKey:      df.ClusterKey1,
+		ZoneKey:         df.ClusterZone1,
+		Name:            df.ClusterName1,
+		RequireTLS:      df.ClusterRequireTLS1,
+		OrgKey:          df.ClusterOrgKey1,
+		CircuitBreakers: df.ClusterCircuitBreakers1,
+		Checksum:        df.ClusterChecksum1,
 	}
 
 	df.Instance21 = api.Instance{
-		Host: "int-host", Port: 1234, Metadata: api.Metadata{{"key1", "value1"}, {"key2", "value2"}}}
+		Host: "int-host",
+		Port: 1234,
+		Metadata: api.Metadata{
+			{Key: "key1", Value: "value1"},
+			{Key: "key2", Value: "value2"},
+		},
+	}
 
 	df.Instance22 = api.Instance{Host: "int-host-2", Port: 1234}
 
 	df.Cluster2 = api.Cluster{
-		ClusterKey: df.ClusterKey2,
-		ZoneKey:    df.ClusterZone2,
-		Name:       df.ClusterName2,
-		RequireTLS: df.ClusterRequireTLS2,
-		Instances:  api.Instances{df.Instance21, df.Instance22},
-		OrgKey:     df.ClusterOrgKey2,
-		Checksum:   df.ClusterChecksum2,
+		ClusterKey:      df.ClusterKey2,
+		ZoneKey:         df.ClusterZone2,
+		Name:            df.ClusterName2,
+		RequireTLS:      df.ClusterRequireTLS2,
+		Instances:       api.Instances{df.Instance21, df.Instance22},
+		OrgKey:          df.ClusterOrgKey2,
+		CircuitBreakers: df.ClusterCircuitBreakers2,
+		Checksum:        df.ClusterChecksum2,
 	}
 
 	df.ClusterSlice = []api.Cluster{df.Cluster1, df.Cluster2}
@@ -455,31 +482,31 @@ func New() DataFixturesT {
 
 	// domain setup
 	df.Domain1 = api.Domain{
-		df.DomainKey1,
-		df.DomainZone1,
-		df.DomainName1,
-		df.DomainPort1,
-		df.DomainSSLConfig1,
-		df.DomainRedirects1,
-		df.DomainGzipEnabled1,
-		df.DomainCorsConfig1,
-		df.DomainAliases1,
-		df.DomainOrgKey1,
-		df.DomainChecksum1,
+		DomainKey:   df.DomainKey1,
+		ZoneKey:     df.DomainZone1,
+		Name:        df.DomainName1,
+		Port:        df.DomainPort1,
+		SSLConfig:   df.DomainSSLConfig1,
+		Redirects:   df.DomainRedirects1,
+		GzipEnabled: df.DomainGzipEnabled1,
+		CorsConfig:  df.DomainCorsConfig1,
+		Aliases:     df.DomainAliases1,
+		OrgKey:      df.DomainOrgKey1,
+		Checksum:    df.DomainChecksum1,
 	}
 
 	df.Domain2 = api.Domain{
-		df.DomainKey2,
-		df.DomainZone2,
-		df.DomainName2,
-		df.DomainPort2,
-		df.DomainSSLConfig2,
-		df.DomainRedirects2,
-		df.DomainGzipEnabled2,
-		df.DomainCorsConfig2,
-		df.DomainAliases2,
-		df.DomainOrgKey2,
-		df.DomainChecksum2,
+		DomainKey:   df.DomainKey2,
+		ZoneKey:     df.DomainZone2,
+		Name:        df.DomainName2,
+		Port:        df.DomainPort2,
+		SSLConfig:   df.DomainSSLConfig2,
+		Redirects:   df.DomainRedirects2,
+		GzipEnabled: df.DomainGzipEnabled2,
+		CorsConfig:  df.DomainCorsConfig2,
+		Aliases:     df.DomainAliases2,
+		OrgKey:      df.DomainOrgKey2,
+		Checksum:    df.DomainChecksum2,
 	}
 
 	df.DomainSlice = api.Domains{df.Domain1, df.Domain2}
@@ -495,22 +522,22 @@ func New() DataFixturesT {
 		df.Domain2.DomainKey,
 	}
 	df.Proxy1 = api.Proxy{
-		df.ProxyKey1,
-		df.ProxyZone1,
-		df.ProxyName1,
-		df.ProxyDomainKeys1,
-		df.ProxyOrgKey1,
-		df.ProxyChecksum1,
+		ProxyKey:   df.ProxyKey1,
+		ZoneKey:    df.ProxyZone1,
+		Name:       df.ProxyName1,
+		DomainKeys: df.ProxyDomainKeys1,
+		OrgKey:     df.ProxyOrgKey1,
+		Checksum:   df.ProxyChecksum1,
 	}
 
 	df.ProxyDomainKeys2 = df.ProxyDomainKeys1
 	df.Proxy2 = api.Proxy{
-		df.ProxyKey2,
-		df.ProxyZone2,
-		df.ProxyName2,
-		df.ProxyDomainKeys2,
-		df.ProxyOrgKey2,
-		df.ProxyChecksum2,
+		ProxyKey:   df.ProxyKey2,
+		ZoneKey:    df.ProxyZone2,
+		Name:       df.ProxyName2,
+		DomainKeys: df.ProxyDomainKeys2,
+		OrgKey:     df.ProxyOrgKey2,
+		Checksum:   df.ProxyChecksum2,
 	}
 
 	df.ProxySlice = []api.Proxy{df.Proxy1, df.Proxy2}
