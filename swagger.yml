@@ -961,6 +961,35 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+    put:
+      summary: modify cluster
+      description: Modify an existing cluster
+      tags:
+        - Cluster
+      consumes:
+        - application/json
+      parameters:
+        - name: clusterKey
+          in: path
+          description: the cluster key
+          required: true
+          type: string
+          x-example: 5074fe62-821e-4034-55bd-b9caa09af2a1
+        - name: cluster
+          in: body
+          description: the cluster to modify
+          required: true
+          schema:
+            $ref: "#/definitions/Cluster"
+      responses:
+        200:
+          description: A result containing the modified cluster
+          schema:
+            $ref: "#/definitions/ClusterResult"
+        default:
+          description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
     delete:
       summary: delete cluster
       description: Delete an existing cluster
@@ -1008,7 +1037,7 @@ paths:
           description: the instance to add
           required: true
           schema:
-            $ref: "#/definitions/RouteCreate"
+            $ref: "#/definitions/Instance"
       responses:
         200:
           description: the newly created instance
