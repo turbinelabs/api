@@ -535,3 +535,35 @@ func TestDomainAliasesEqualsFailure(t *testing.T) {
 	assert.False(t, das1.Equals(das2))
 	assert.False(t, das2.Equals(das1))
 }
+
+func mkCorsConfig() CorsConfig {
+	return CorsConfig{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET"},
+	}
+}
+
+func TestDomainCorsIsValidFailsNoAllowedOrigins(t *testing.T) {
+	cc := mkCorsConfig()
+	cc.AllowedOrigins = nil
+
+	assert.DeepEqual(t, cc.IsValid(), &ValidationError{[]ErrorCase{
+		{"cors_config.allowed_origins", "must have at least one element"},
+	}})
+}
+
+func TestDomainCorsIsValidFailsWildcardMixedAllowedOrigins(t *testing.T) {
+	cc := mkCorsConfig()
+	cc.AllowedOrigins = append(cc.AllowedOrigins, "aoeu.com")
+
+	assert.DeepEqual(t, cc.IsValid(), &ValidationError{[]ErrorCase{
+		{"cors_config.allowed_origins", "may not mix wildcard (*) with specific origins"},
+	}})
+}
+
+func TestDomainCorsIsValidSuccess(t *testing.T) {
+	cc := mkCorsConfig()
+	cc.AllowedOrigins = []string{"example.com", "aoeu.com"}
+
+	assert.Nil(t, cc.IsValid())
+}

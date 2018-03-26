@@ -307,12 +307,6 @@ func (cc CorsConfig) IsValid() *ValidationError {
 	}
 
 	if lao > 1 {
-		// temporary until we build a more powerful proxy plugin instead of relying
-		// on config-only solution
-		errs.AddNew(ec(
-			"allowed_origins",
-			"currently Allowed-Origins only supports wildcard or a single target"))
-
 		if tbnstrings.NewSet(cc.AllowedOrigins...).Contains("*") {
 			errs.AddNew(ec("allowed_origins", "may not mix wildcard (*) with specific origins"))
 		}
