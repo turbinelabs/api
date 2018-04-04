@@ -276,19 +276,8 @@ func TestHttpBatchingStatsV2Close(t *testing.T) {
 	assert.Nil(t, client.Close())
 	assert.Equal(t, len(client.batchers), 0)
 
-	select {
-	case _, ok := <-ch1:
-		assert.False(t, ok)
-	default:
-		assert.Failed(t, "expected closed channel ch1, saw empty channel")
-	}
-
-	select {
-	case _, ok := <-ch2:
-		assert.False(t, ok)
-	default:
-		assert.Failed(t, "expected closed channel ch2, saw empty channel")
-	}
+	assert.ChannelClosedAndEmpty(t, ch1)
+	assert.ChannelClosedAndEmpty(t, ch2)
 }
 
 func TestHttpBatchingStatsV2CloseWaitForInFlightRequests(t *testing.T) {
