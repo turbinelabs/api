@@ -53,10 +53,10 @@ func (p Proxy) IsValid() *ValidationError {
 	for _, dk := range p.DomainKeys {
 		sdk := string(dk)
 		if seenDomain[sdk] {
-			errs.AddNew(ErrorCase{scope("domains"), fmt.Sprintf("duplicate domain key '%v'", sdk)})
+			errs.AddNew(ErrorCase{scope("domain_keys"), fmt.Sprintf("duplicate domain key '%v'", sdk)})
 		}
 		seenDomain[sdk] = true
-		errCheckKey(sdk, errs, fmt.Sprintf("proxy.domains[%v]", sdk))
+		errCheckKey(sdk, errs, fmt.Sprintf("proxy.domain_keys[%v]", sdk))
 	}
 
 	errCheckKey(string(p.OrgKey), errs, scope("org_key"))

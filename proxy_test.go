@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -140,10 +141,26 @@ func TestProxyIsValidBadZoneKey(t *testing.T) {
 	assert.NonNil(t, p.IsValid())
 }
 
+func TestProxyIsValidBadDomainKeys(t *testing.T) {
+	badKey := "aoentuhahoe1120[]]"
+	p := mkTestP()
+	p.DomainKeys = []DomainKey{DomainKey(badKey)}
+	gotErr := p.IsValid()
+	assert.DeepEqual(t, gotErr, &ValidationError{[]ErrorCase{
+		{
+			fmt.Sprintf("proxy.domain_keys[%v]", badKey),
+			"must match pattern: ^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$",
+		},
+	}})
+}
+
 func TestProxyIsValidDupeDomainKeys(t *testing.T) {
 	p := mkTestP()
 	p.DomainKeys = append(p.DomainKeys, p.DomainKeys[0])
-	assert.NonNil(t, p.IsValid())
+	gotErr := p.IsValid()
+	assert.DeepEqual(t, gotErr, &ValidationError{[]ErrorCase{
+		{"proxy.domain_keys", fmt.Sprintf("duplicate domain key '%v'", p.DomainKeys[0])},
+	}})
 }
 
 func TestProxyIsValidBadOrgKey(t *testing.T) {
