@@ -77,6 +77,10 @@ type QueryFilter struct {
 	// upstream QueryTypes. Optional for downstream QueryTypes.
 	ZoneName *string `json:"zone_name,omitempty" form:"zone_name"`
 
+	// ProxyName specifies the proxy name for which stats are returned. If not
+	// specified, stats are aggregated across all proxies.
+	ProxyName *string `json:"proxy_name,omitempty" form:"proxy_name"`
+
 	// DomainHost specifies the domain host for which stats are returned. The host
 	// may be just a domain name (e.g., "example.com"), or a domain name and port
 	// (e.g., "example.com:443"). The former aggregates stats across all ports
