@@ -1288,7 +1288,7 @@ definitions:
       max_age:
         description: |
           Sets how long (in seconds) the response to a preflight request may be
-          cached. https://www.w3.org/TR/cors/#access-control-max-age-response-header.
+          cached. A value of -1 will disable caching. https://www.w3.org/TR/cors/#access-control-max-age-response-header.
         type: integer
       allowed_methods:
         description: |

@@ -322,8 +322,8 @@ func (cc CorsConfig) IsValid() *ValidationError {
 		}
 	}
 
-	if cc.MaxAge < 0 {
-		errs.AddNew(ec("max_age", "must be greater than or equal to 0"))
+	if cc.MaxAge < -1 {
+		errs.AddNew(ec("max_age", "must be greater than or equal to -1"))
 	}
 
 	return errs.OrNil()

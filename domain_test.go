@@ -567,3 +567,26 @@ func TestDomainCorsIsValidSuccess(t *testing.T) {
 
 	assert.Nil(t, cc.IsValid())
 }
+
+func TestDomainCorsIsValidMaxAgeToLow(t *testing.T) {
+	cc := mkCorsConfig()
+	cc.MaxAge = -2
+
+	assert.DeepEqual(t, cc.IsValid(), &ValidationError{[]ErrorCase{
+		{"cors_config.max_age", "must be greater than or equal to -1"},
+	}})
+}
+
+func TestDomainCorsIsValidMaxAgeJustLowEnough(t *testing.T) {
+	cc := mkCorsConfig()
+	cc.MaxAge = -1
+
+	assert.Nil(t, cc.IsValid())
+}
+
+func TestDomainCorsIsValidMaxAgeSuccess(t *testing.T) {
+	cc := mkCorsConfig()
+	cc.MaxAge = 100
+
+	assert.Nil(t, cc.IsValid())
+}
