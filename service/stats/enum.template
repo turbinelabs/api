@@ -24,55 +24,55 @@ import (
 	"fmt"
 )
 
-// {{ .type.Capitalize }} is an enumeration.
-type {{.type.Capitalize}} int
+// {{ .type.Public }} is an enumeration.
+type {{.type.Public}} int
 
-// Defined values of {{ .type.Capitalize }}.
+// Defined values of {{ .type.Public }}.
 const (
 {{- range $idx, $elem := .values }}
-	{{$elem.Capitalize}} {{- if eq $idx 0 }} {{$.type.Capitalize}} = iota{{end}}
+	{{$elem.Public}} {{- if eq $idx 0 }} {{$.type.Public}} = iota{{end}}
 {{- end}}
 )
 
-var _dummy = {{.type.Capitalize}}(0)
+var _dummy = {{.type.Public}}(0)
 var _ json.Marshaler = &_dummy
 var _ json.Unmarshaler = &_dummy
 
 const (
 {{- range .values }}
-	str{{.Capitalize}} = "{{.SnakeCase}}"
+	str{{.Public}} = "{{.Public.SnakeCase}}"
 {{- end}}
 )
 
-var {{.type.VarName}}Names = [...]string{
+var {{.type.Private}}Names = [...]string{
 {{- range .values}}
-	str{{.Capitalize}},
+	str{{.Public}},
 {{- end}}
 }
 
-{{if eq .values.Last.Capitalize "Unknown" -}}
-const min{{.type.Capitalize }} = {{.type.Capitalize}}(0)
+{{if eq .values.Last.Public "Unknown" -}}
+const min{{.type.Public }} = {{.type.Public}}(0)
 
-var max{{.type.Capitalize}} = {{.type.Capitalize}}(len({{.type.VarName}}Names) - 2)
+var max{{.type.Public}} = {{.type.Public}}(len({{.type.Private}}Names) - 2)
 {{- else -}}
-{{- if eq .values.First.Capitalize "Unknown" -}}
-const min{{.type.Capitalize}} = {{.type.Capitalize}}(1)
+{{- if eq .values.First.Public "Unknown" -}}
+const min{{.type.Public}} = {{.type.Public}}(1)
 {{else -}}
-const min{{.type.Capitalize}} = {{.type.Capitalize}}(0)
+const min{{.type.Public}} = {{.type.Public}}(0)
 {{end}}
-var max{{.type.Capitalize}} = {{.type.Capitalize}}(len({{.type.VarName}}Names) - 1)
+var max{{.type.Public}} = {{.type.Public}}(len({{.type.Private}}Names) - 1)
 {{end}}
-// IsValid returns a boolean indicating whether the given {{.type.Capitalize}} is defined
+// IsValid returns a boolean indicating whether the given {{.type.Public}} is defined
 // (valid) or not.
-func IsValid(i {{.type.Capitalize}}) bool {
-	return i >= min{{.type.Capitalize}} && i <= max{{.type.Capitalize}}
+func IsValid(i {{.type.Public}}) bool {
+	return i >= min{{.type.Public}} && i <= max{{.type.Public}}
 }
 
-// FromName converts a {{.type.Capitalize}} name into a {{.type.Capitalize}}.
+// FromName converts a {{.type.Public}} name into a {{.type.Public}}.
 // Returns Unknown if the name is not known. Names are case sensitive.
-func FromName(s string) {{.type.Capitalize}} {
-	for idx, name := range {{.type.VarName}}Names {
-		candidate := {{.type.Capitalize}}(idx)
+func FromName(s string) {{.type.Public}} {
+	for idx, name := range {{.type.Private}}Names {
+		candidate := {{.type.Public}}(idx)
 		if IsValid(candidate) && name == s {
 			return candidate
 		}
@@ -81,48 +81,48 @@ func FromName(s string) {{.type.Capitalize}} {
 	return Unknown
 }
 
-// ForEach invokes the given function for each valid {{.type.Capitalize}}.
-func ForEach(f func({{.type.Capitalize}})) {
-	for i := int(min{{.type.Capitalize}}); i <= int(max{{.type.Capitalize}}); i++ {
-		tg := {{.type.Capitalize}}(i)
+// ForEach invokes the given function for each valid {{.type.Public}}.
+func ForEach(f func({{.type.Public}})) {
+	for i := int(min{{.type.Public}}); i <= int(max{{.type.Public}}); i++ {
+		tg := {{.type.Public}}(i)
 		f(tg)
 	}
 }
 
-// String return this {{.type.Capitalize}}'s string representation.
-func (i {{.type.Capitalize}}) String() string {
+// String return this {{.type.Public}}'s string representation.
+func (i {{.type.Public}}) String() string {
 	if !IsValid(i) {
 		return fmt.Sprintf("unknown(%d)", i)
 	}
-	return {{.type.VarName}}Names[i]
+	return {{.type.Private}}Names[i]
 }
 
-// MarshalJSON converts this {{.type.Capitalize}} to a quoted JSON string. Returns an
-// error if the {{.type.Capitalize}} is nil or invalid.
-func (i *{{.type.Capitalize}}) MarshalJSON() ([]byte, error) {
+// MarshalJSON converts this {{.type.Public}} to a quoted JSON string. Returns an
+// error if the {{.type.Public}} is nil or invalid.
+func (i *{{.type.Public}}) MarshalJSON() ([]byte, error) {
 	if i == nil {
-		return nil, fmt.Errorf("cannot marshal unknown {{.type.Capitalize}} (nil)")
+		return nil, fmt.Errorf("cannot marshal unknown {{.type.Public}} (nil)")
 	}
 
 	qt := *i
 	if !IsValid(qt) {
-		return nil, fmt.Errorf("cannot marshal unknown {{.type.Capitalize}} (%d)", qt)
+		return nil, fmt.Errorf("cannot marshal unknown {{.type.Public}} (%d)", qt)
 	}
 
-	name := {{.type.VarName}}Names[qt]
+	name := {{.type.Private}}Names[qt]
 	b := make([]byte, 0, len(name)+2)
 	b = append(b, '"')
 	b = append(b, name...)
 	return append(b, '"'), nil
 }
 
-// UnmarshalJSON converts a quoted JSON string into a {{.type.Capitalize}}. Returns an
+// UnmarshalJSON converts a quoted JSON string into a {{.type.Public}}. Returns an
 // error if the receiver is nil, the JSON is not a quoted string, or if the
-// string does not represent a valid {{.type.Capitalize}}. Otherwise, the receiver's value
-// is set to the {{.type.Capitalize}} represented by the string.
-func (i *{{.type.Capitalize}}) UnmarshalJSON(bytes []byte) error {
+// string does not represent a valid {{.type.Public}}. Otherwise, the receiver's value
+// is set to the {{.type.Public}} represented by the string.
+func (i *{{.type.Public}}) UnmarshalJSON(bytes []byte) error {
 	if i == nil {
-		return fmt.Errorf("cannot unmarshal into nil {{.type.Capitalize}}")
+		return fmt.Errorf("cannot unmarshal into nil {{.type.Public}}")
 	}
 
 	length := len(bytes)
@@ -135,7 +135,7 @@ func (i *{{.type.Capitalize}}) UnmarshalJSON(bytes []byte) error {
 	qt := FromName(unmarshalName)
 	if qt == Unknown {
 		return fmt.Errorf(
-			"cannot unmarshal unknown {{.type.Capitalize}} %q",
+			"cannot unmarshal unknown {{.type.Public}} %q",
 			unmarshalName,
 		)
 	}
@@ -144,18 +144,18 @@ func (i *{{.type.Capitalize}}) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-// UnmarshalForm converts a string into a {{.type.Capitalize}}. Returns an error if the
-// receiver is nil or if the string does not represent a valid {{.type.Capitalize}}.
-// Otherwise, the receiver's value is set to the {{.type.Capitalize}} represented by the
+// UnmarshalForm converts a string into a {{.type.Public}}. Returns an error if the
+// receiver is nil or if the string does not represent a valid {{.type.Public}}.
+// Otherwise, the receiver's value is set to the {{.type.Public}} represented by the
 // string.
-func (i *{{.type.Capitalize}}) UnmarshalForm(value string) error {
+func (i *{{.type.Public}}) UnmarshalForm(value string) error {
 	if i == nil {
-		return fmt.Errorf("cannot unmarshal into nil {{.type.Capitalize}}")
+		return fmt.Errorf("cannot unmarshal into nil {{.type.Public}}")
 	}
 
 	qt := FromName(value)
 	if qt == Unknown {
-		return fmt.Errorf("cannot unmarshal unknown {{.type.Capitalize}} %q", value)
+		return fmt.Errorf("cannot unmarshal unknown {{.type.Public}} %q", value)
 	}
 
 	*i = qt
