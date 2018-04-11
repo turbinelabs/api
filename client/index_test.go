@@ -485,37 +485,37 @@ func TestIndexHandlesRealErrors(t *testing.T) {
 	sentErr := httperr.New400(msg, code)
 
 	clusterIndexTest{
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantErr:     sentErr,
 	}.run(t)
 
 	domainIndexTest{
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantErr:     sentErr,
 	}.run(t)
 
 	routeIndexTest{
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantErr:     sentErr,
 	}.run(t)
 
 	sharedRulesIndexTest{
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantErr:     sentErr,
 	}.run(t)
 
 	proxyIndexTest{
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantErr:     sentErr,
 	}.run(t)
 
 	userIndexTest{
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantErr:     sentErr,
 	}.run(t)
 
 	zoneIndexTest{
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantErr:     sentErr,
 	}.run(t)
 }

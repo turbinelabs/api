@@ -50,7 +50,7 @@ func TestWriteEnvelopeSimple(t *testing.T) {
 	rrw, rec := getRRWTestWriter(t)
 	s := testRRWStruct{"aoeu", []int{1, 2, 3, 4}}
 	rrw.WriteEnvelope(nil, s)
-	rec.AssertBodyJSON(envelope.Response{nil, s})
+	rec.AssertBodyJSON(envelope.NewResponse(s))
 	rec.AssertStatus(http.StatusOK)
 	rec.AssertHeader("content-type", "application/json")
 }
@@ -70,7 +70,7 @@ func TestWriteEnvelopeNoContent(t *testing.T) {
 func TestWriteEnvelopeBadResult(t *testing.T) {
 	rrw, rec := getRRWTestWriter(t)
 	rrw.WriteEnvelope(nil, poisonRRWStruct{})
-	wantBody := `{"error": {"message":"failed to encode response object: '{Error:<nil> Payload:whelp}'; error was: 'json: error calling MarshalJSON for type http.poisonRRWStruct: w\"at'","code":"UnknownEncodingCode"}}`
+	wantBody := `{"error": {"message":"failed to encode response object: '{Error:<nil> Payload:whelp Details:<nil>}'; error was: 'json: error calling MarshalJSON for type http.poisonRRWStruct: w\"at'","code":"UnknownEncodingCode"}}`
 	rec.AssertBody(wantBody)
 	rec.AssertStatus(http.StatusInternalServerError)
 	rec.AssertHeader("content-type", "application/json")
@@ -81,7 +81,7 @@ func TestWriteEnvelopeInferHTTPErrStatusCode(t *testing.T) {
 	err := httperr.New400("some stuff", httperr.UnknownTransportCode)
 	s := testRRWStruct{"aosentuh", []int{2, 2, 2}}
 	rrw.WriteEnvelope(err, s)
-	rec.AssertBodyJSON(envelope.Response{err, s})
+	rec.AssertBodyJSON(envelope.NewErrorResponse(err, s))
 	rec.AssertStatus(400)
 	rec.AssertHeader("content-type", "application/json")
 }
@@ -92,7 +92,39 @@ func TestWriteEnvelopeLiftToHTTPErr(t *testing.T) {
 	err := errors.New("whee")
 	rrw.WriteEnvelope(err, s)
 	wantErr := httperr.New500(err.Error(), httperr.UnknownUnclassifiedCode)
-	rec.AssertBodyJSON(envelope.Response{wantErr, s})
+	rec.AssertBodyJSON(envelope.NewErrorResponse(wantErr, s))
 	rec.AssertStatus(http.StatusInternalServerError)
+	rec.AssertHeader("content-type", "application/json")
+}
+
+type tDetailedObject struct {
+	d interface{}
+}
+
+func (o tDetailedObject) GetPayload() interface{} {
+	return "payload is a string"
+}
+
+func (o tDetailedObject) GetDetails() interface{} {
+	return o.d
+}
+
+func TestWriteEnvelopeWithDetails(t *testing.T) {
+	rrw, rec := getRRWTestWriter(t)
+	rrw.WriteEnvelope(nil, tDetailedObject{map[string]string{
+		"details":   "map",
+		"are there": "indeed",
+	}})
+	rec.AssertBodyJSON(
+		envelope.Response{
+			nil,
+			"payload is a string",
+			map[string]string{
+				"details":   "map",
+				"are there": "indeed",
+			},
+		},
+	)
+	rec.AssertStatus(http.StatusOK)
 	rec.AssertHeader("content-type", "application/json")
 }

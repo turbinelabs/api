@@ -142,7 +142,7 @@ paths:
         200:
           description: A list of changes that meet the provided filter.
           schema:
-            $ref: '#/definitions/ChangeDescription'
+            $ref: '#/definitions/PaginatedChangeDescriptions'
         default:
           description: Unexpected error
           schema:
@@ -180,11 +180,38 @@ paths:
           required: false
           type: number
           format: int64
+        - name: max_results
+          in: query
+          description: |
+            Determines how many ChangeDescription object should be returned to
+            the calling code.
+          required: false
+          type: number
+          format: int64
+        - name: ref_id
+          in: query
+          description: |
+            When paginating a Changelog request start on the entry that comes
+            immediately before or after this ID (as determined by the direction
+            argument).
+          required: false
+          type: string
+        - name: direction
+          in: query
+          description: |
+            If set to "before" then changes will be returned that occurred before
+            reference ID. If "after" then changes will be returned that have
+            occurred since the reference ID.
+          required: false
+          type: string
+          enum:
+            - before
+            - after
       responses:
         200:
           description: A list of changes occurring during the requested window.
           schema:
-            $ref: '#/definitions/ChangeDescription'
+            $ref: '#/definitions/PaginatedChangeDescriptions'
         default:
           description: Unexpected error
           schema:
@@ -221,11 +248,38 @@ paths:
           required: false
           type: number
           format: int64
+        - name: max_results
+          in: query
+          description: |
+            Determines how many ChangeDescription object should be returned to
+            the calling code.
+          required: false
+          type: number
+          format: int64
+        - name: ref_id
+          in: query
+          description: |
+            When paginating a Changelog request start on the entry that comes
+            immediately before or after this ID (as determined by the direction
+            argument).
+          required: false
+          type: string
+        - name: direction
+          in: query
+          description: |
+            If set to "before" then changes will be returned that occurred before
+            reference ID. If "after" then changes will be returned that have
+            occurred since the reference ID.
+          required: false
+          type: string
+          enum:
+            - before
+            - after
       responses:
         200:
           description: A list of changes occurring during the requested window.
           schema:
-            $ref: '#/definitions/ChangeDescription'
+            $ref: '#/definitions/PaginatedChangeDescriptions'
         default:
           description: Unexpected error
           schema:
@@ -262,11 +316,38 @@ paths:
           required: false
           type: number
           format: int64
+        - name: max_results
+          in: query
+          description: |
+            Determines how many ChangeDescription object should be returned to
+            the calling code.
+          required: false
+          type: number
+          format: int64
+        - name: ref_id
+          in: query
+          description: |
+            When paginating a Changelog request start on the entry that comes
+            immediately before or after this ID (as determined by the direction
+            argument).
+          required: false
+          type: string
+        - name: direction
+          in: query
+          description: |
+            If set to "before" then changes will be returned that occurred before
+            reference ID. If "after" then changes will be returned that have
+            occurred since the reference ID.
+          required: false
+          type: string
+          enum:
+            - before
+            - after
       responses:
         200:
           description: A list of changes occurring during the requested window.
           schema:
-            $ref: '#/definitions/ChangeDescription'
+            $ref: '#/definitions/PaginatedChangeDescriptions'
         default:
           description: Unexpected error
           schema:
@@ -302,11 +383,38 @@ paths:
           required: false
           type: number
           format: int64
+        - name: max_results
+          in: query
+          description: |
+            Determines how many ChangeDescription object should be returned to
+            the calling code.
+          required: false
+          type: number
+          format: int64
+        - name: ref_id
+          in: query
+          description: |
+            When paginating a Changelog request start on the entry that comes
+            immediately before or after this ID (as determined by the direction
+            argument).
+          required: false
+          type: string
+        - name: direction
+          in: query
+          description: |
+            If set to "before" then changes will be returned that occurred before
+            reference ID. If "after" then changes will be returned that have
+            occurred since the reference ID.
+          required: false
+          type: string
+          enum:
+            - before
+            - after
       responses:
         200:
           description: A list of changes occurring during the requested window.
           schema:
-            $ref: '#/definitions/ChangeDescription'
+            $ref: '#/definitions/PaginatedChangeDescriptions'
         default:
           description: Unexpected error
           schema:
@@ -341,11 +449,38 @@ paths:
           required: false
           type: number
           format: int64
+        - name: max_results
+          in: query
+          description: |
+            Determines how many ChangeDescription object should be returned to
+            the calling code.
+          required: false
+          type: number
+          format: int64
+        - name: ref_id
+          in: query
+          description: |
+            When paginating a Changelog request start on the entry that comes
+            immediately before or after this ID (as determined by the direction
+            argument).
+          required: false
+          type: string
+        - name: direction
+          in: query
+          description: |
+            If set to "before" then changes will be returned that occurred before
+            reference ID. If "after" then changes will be returned that have
+            occurred since the reference ID.
+          required: false
+          type: string
+          enum:
+            - before
+            - after
       responses:
         200:
           description: A list of changes occurring during the requested window.
           schema:
-            $ref: '#/definitions/ChangeDescription'
+            $ref: '#/definitions/PaginatedChangeDescriptions'
         default:
           description: Unexpected error
           schema:
@@ -1714,6 +1849,43 @@ definitions:
     properties:
       result:
         $ref: "#/definitions/SharedRules"
+
+  PaginatedChangeDescriptions:
+    type: object
+    properties:
+      result: 
+        type: array
+        items:
+          $ref: '#/definitions/ChangeDescription'
+      details:
+        $ref: '#/definitions/PaginationDetails'
+
+  PaginationDetails:
+    type: object
+    properties:
+      pagination:
+        $ref: '#/definitions/PageDetails'
+
+  PageDetails:
+    type: object
+    properties:
+      total_entries:
+        type: integer
+        description: |
+          How many total entries would have been returned in the time window
+          if it had not been paginated.
+      has_more:
+        type: boolean
+        description: Whether or not there are more entries to be requested after this page.
+      direction:
+        description: The direction walked from the ref_id when building this page.
+        type: string
+        enum:
+          - before
+          - after
+      ref_id:
+        type: string
+        description: The ID used as a reference when building this page.
 
   ChangeDescription:
     type: object

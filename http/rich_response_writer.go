@@ -53,6 +53,14 @@ func mkLastDitchErrorEnvelope(
 			httperr.UnknownEncodingCode))
 }
 
+// HasDetails can be implemented by objects passed to WriteEnvelope in order to
+// pass some data back in parallel to the result of a called endpoint. For
+// example, it can be used to pass pagination context without altering the payload.
+type HasDetails interface {
+	GetPayload() interface{}
+	GetDetails() interface{}
+}
+
 // Writes out an error / result pair to a waiting HTTP response. Parameter e
 // will be forced into a httperr.Error. If it is already a httperr.Error or nil
 // it will not be modified. If it is non-nil but also not already a
@@ -69,12 +77,25 @@ func mkLastDitchErrorEnvelope(
 func (rrw RichResponseWriter) WriteEnvelope(e error, result interface{}) int {
 	// first ensure we're dealing with a known error type
 	err := httperr.FromError(e, httperr.UnknownUnclassifiedCode)
-	env := envelope.Response{err, result}
+	// and set the result code appropriately
 	resultCode := http.StatusOK
-
 	if err != nil {
 		resultCode = err.Status
 	}
+
+	var (
+		payload interface{}
+		details interface{}
+	)
+
+	if hd, ok := result.(HasDetails); ok {
+		payload = hd.GetPayload()
+		details = hd.GetDetails()
+	} else {
+		payload = result
+	}
+
+	env := envelope.Response{err, payload, details}
 
 	resultBytes, marshalErr := json.Marshal(env)
 	if marshalErr != nil {

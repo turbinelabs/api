@@ -27,4 +27,13 @@ import httperr "github.com/turbinelabs/api/http/error"
 type Response struct {
 	Error   *httperr.Error `json:"error,omitempty"`
 	Payload interface{}    `json:"result,omitempty"`
+	Details interface{}    `json:"details,omitempty"`
+}
+
+func NewResponse(payload interface{}) Response {
+	return Response{nil, payload, nil}
+}
+
+func NewErrorResponse(err *httperr.Error, payload interface{}) Response {
+	return Response{err, payload, nil}
 }

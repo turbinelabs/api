@@ -470,49 +470,49 @@ func TestGetHandlesRealErrors(t *testing.T) {
 
 	clusterGetTest{
 		clusterKey:  fixtures.ClusterKey1,
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantResp:    api.Cluster{},
 		wantErr:     sentErr,
 	}.run(t)
 
 	domainGetTest{
 		domainKey:   fixtures.DomainKey1,
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantResp:    api.Domain{},
 		wantErr:     sentErr,
 	}.run(t)
 
 	routeGetTest{
 		routeKey:    fixtures.RouteKey1,
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantResp:    api.Route{},
 		wantErr:     sentErr,
 	}.run(t)
 
 	sharedRulesGetTest{
 		sharedRulesKey: fixtures.SharedRulesKey1,
-		responseObj:    envelope.Response{sentErr, nil},
+		responseObj:    envelope.NewErrorResponse(sentErr, nil),
 		wantResp:       api.SharedRules{},
 		wantErr:        sentErr,
 	}.run(t)
 
 	proxyGetTest{
 		proxyKey:    fixtures.ProxyKey1,
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantResp:    api.Proxy{},
 		wantErr:     sentErr,
 	}.run(t)
 
 	userGetTest{
 		userKey:     fixtures.UserKey1,
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantResp:    api.User{},
 		wantErr:     sentErr,
 	}.run(t)
 
 	zoneGetTest{
 		zoneKey:     fixtures.ZoneKey1,
-		responseObj: envelope.Response{sentErr, nil},
+		responseObj: envelope.NewErrorResponse(sentErr, nil),
 		wantResp:    api.Zone{},
 		wantErr:     sentErr,
 	}.run(t)

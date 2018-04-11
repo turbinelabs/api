@@ -92,7 +92,7 @@ func TestStatsClientQueryV2Error(t *testing.T) {
 			assert.Equal(t, strings.TrimSpace(string(bodyBytes)), wantQueryStr)
 		},
 		status:   http.StatusInternalServerError,
-		response: envelope.Response{wantErr, nil},
+		response: envelope.NewErrorResponse(wantErr, nil),
 	}
 
 	server := httptest.NewServer(verifier)
