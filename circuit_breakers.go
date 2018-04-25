@@ -16,6 +16,8 @@ limitations under the License.
 
 package api
 
+import "github.com/turbinelabs/nonstdlib/ptr"
+
 // CircuitBreakers provides limits on various parameters to protect clusters
 // against sudden surges in traffic.
 type CircuitBreakers struct {
@@ -46,23 +48,10 @@ type CircuitBreakers struct {
 
 // Equals compares two CircuitBreakers for equality
 func (cb CircuitBreakers) Equals(o CircuitBreakers) bool {
-	return compareIntPtrs(cb.MaxConnections, o.MaxConnections) &&
-		compareIntPtrs(cb.MaxPendingRequests, o.MaxPendingRequests) &&
-		compareIntPtrs(cb.MaxRetries, o.MaxRetries) &&
-		compareIntPtrs(cb.MaxRequests, o.MaxRequests)
-}
-
-func compareIntPtrs(a, b *int) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	return *a == *b
-
+	return ptr.IntEqual(cb.MaxConnections, o.MaxConnections) &&
+		ptr.IntEqual(cb.MaxPendingRequests, o.MaxPendingRequests) &&
+		ptr.IntEqual(cb.MaxRetries, o.MaxRetries) &&
+		ptr.IntEqual(cb.MaxRequests, o.MaxRequests)
 }
 
 // IsValid checks for the validity of contained fields.

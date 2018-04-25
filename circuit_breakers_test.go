@@ -27,35 +27,43 @@ func TestCircuitBreakersNilsAreEqual(t *testing.T) {
 }
 
 func TestCircuitBreakersMaxConnsDifferent(t *testing.T) {
-	a, b := getCircuitBreakers()
-	a.MaxConnections = ptr.Int(100)
+	for _, v := range []*int{nil, ptr.Int(100)} {
+		a, b := getCircuitBreakers()
+		a.MaxConnections = v
 
-	assert.False(t, a.Equals(b))
-	assert.False(t, b.Equals(a))
+		assert.False(t, a.Equals(b))
+		assert.False(t, b.Equals(a))
+	}
 }
 
 func TestCircuitBreakersMaxPendingRequestsDifferent(t *testing.T) {
-	a, b := getCircuitBreakers()
-	a.MaxPendingRequests = ptr.Int(200)
+	for _, v := range []*int{nil, ptr.Int(200)} {
+		a, b := getCircuitBreakers()
+		a.MaxPendingRequests = v
 
-	assert.False(t, a.Equals(b))
-	assert.False(t, b.Equals(a))
+		assert.False(t, a.Equals(b))
+		assert.False(t, b.Equals(a))
+	}
 }
 
 func TestCircuitBreakersMaxRetriesDifferent(t *testing.T) {
-	a, b := getCircuitBreakers()
-	a.MaxRetries = ptr.Int(300)
+	for _, v := range []*int{nil, ptr.Int(300)} {
+		a, b := getCircuitBreakers()
+		a.MaxRetries = v
 
-	assert.False(t, a.Equals(b))
-	assert.False(t, b.Equals(a))
+		assert.False(t, a.Equals(b))
+		assert.False(t, b.Equals(a))
+	}
 }
 
 func TestCircuitBreakersMaxRequestsDifferent(t *testing.T) {
-	a, b := getCircuitBreakers()
-	a.MaxRequests = ptr.Int(400)
+	for _, v := range []*int{nil, ptr.Int(400)} {
+		a, b := getCircuitBreakers()
+		a.MaxRequests = v
 
-	assert.False(t, a.Equals(b))
-	assert.False(t, b.Equals(a))
+		assert.False(t, a.Equals(b))
+		assert.False(t, b.Equals(a))
+	}
 }
 
 func TestCircuitBreakersSamePointerValuesAreEqual(t *testing.T) {
