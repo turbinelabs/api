@@ -26,6 +26,7 @@ import (
 	apihttp "github.com/turbinelabs/api/http"
 	statsapi "github.com/turbinelabs/api/service/stats"
 	"github.com/turbinelabs/nonstdlib/executor"
+	"github.com/turbinelabs/nonstdlib/ptr"
 	tbntime "github.com/turbinelabs/nonstdlib/time"
 )
 
@@ -51,7 +52,7 @@ type httpBatchingStatsV2 struct {
 // has elapsed since the oldest stats in the buffer were added. At
 // that point the buffered stats are forwarded. Failures are logged,
 // but not reported to the caller. Separate buffers and deadlines are
-// maintained for each unique source and zone combination. In
+// maintained for each unique source, node, and zone combination. In
 // addition, the buffering is optimized to assume that the payloads
 // proxy, proxy version and named limits do not vary across
 // payloads. If the proxy, proxy version, or limits (with the same
@@ -88,17 +89,18 @@ func NewBatchingStatsV2Client(
 	}, nil
 }
 
-func mkKey(source, zone string) string {
-	sourceLen := len(source)
-	key := make([]byte, sourceLen+len(zone)+1)
-	copy(key, []byte(source))
-	key[sourceLen] = '|'
-	copy(key[sourceLen+1:], []byte(zone))
+func mkKey(source, node, zone string) string {
+	key := make([]byte, 0, len(source)+len(node)+len(zone)+2)
+	key = append(key, []byte(source)...)
+	key = append(key, '|')
+	key = append(key, []byte(node)...)
+	key = append(key, '|')
+	key = append(key, []byte(zone)...)
 	return string(key)
 }
 
 func (hs *httpBatchingStatsV2) getBatcher(payload *statsapi.Payload) *payloadV2Batcher {
-	key := mkKey(payload.Source, payload.Zone)
+	key := mkKey(payload.Source, ptr.StringValue(payload.Node), payload.Zone)
 
 	hs.mutex.RLock()
 	defer hs.mutex.RUnlock()
@@ -110,6 +112,7 @@ func (hs *httpBatchingStatsV2) getBatcher(payload *statsapi.Payload) *payloadV2B
 	batcher := &payloadV2Batcher{
 		client: hs,
 		source: payload.Source,
+		node:   payload.Node,
 		zone:   payload.Zone,
 		ch:     make(chan *statsapi.Payload, 10),
 	}
@@ -156,6 +159,7 @@ func (hs *httpBatchingStatsV2) Close() error {
 type payloadV2Batcher struct {
 	client       *httpBatchingStatsV2
 	source       string
+	node         *string
 	zone         string
 	proxy        *string
 	proxyVersion *string
@@ -276,6 +280,7 @@ func (b *payloadV2Batcher) write(p *statsapi.Payload) bool {
 func (b *payloadV2Batcher) flush() {
 	payload := &statsapi.Payload{
 		Source:       b.source,
+		Node:         b.node,
 		Zone:         b.zone,
 		Proxy:        b.proxy,
 		ProxyVersion: b.proxyVersion,

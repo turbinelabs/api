@@ -45,6 +45,7 @@ import (
 const (
 	zoneString1 = "zone"
 	metricName1 = "group.metric"
+	nodeString  = "node"
 )
 
 var (
@@ -52,6 +53,7 @@ var (
 
 	payloadV2 = &statsapi.Payload{
 		Source: sourceString1,
+		Node:   ptr.String(nodeString),
 		Zone:   zoneString1,
 		Stats: []statsapi.Stat{
 			{
@@ -82,8 +84,9 @@ var (
 func TestEncodePayload(t *testing.T) {
 	expectedJson :=
 		fmt.Sprintf(
-			`{"source":"%s","zone":"%s","stats":[{"name":"%s","gauge":%g,"timestamp":%d,"tags":{"%s":"%s"}}]}`+"\n",
+			`{"source":"%s","node":"%s","zone":"%s","stats":[{"name":"%s","gauge":%g,"timestamp":%d,"tags":{"%s":"%s"}}]}`+"\n",
 			sourceString1,
+			nodeString,
 			zoneString1,
 			metricName1,
 			1.41421,

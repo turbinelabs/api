@@ -117,8 +117,19 @@ type Stat struct {
 
 // Payload is a stats payload.
 type Payload struct {
-	// Source is the source of the measurement.
+	// Source is the source of the measurement. Typically, this is the host that
+	// generated the Forward request. See Node.
 	Source string `json:"source"`
+
+	// Node identifies the host that generated this payload's measurements. If a host
+	// delegates forwarding measurements to an aggregator or other intermediary, Node
+	// must be set such that for a given metric and tags, the combination of Source
+	// and Node is unique for the host and its intermediaries. The Stats API's
+	// behavior is non-determinant when two hosts forward measurements with the same
+	// metric, tags, node, and source. If omitted, Node is assumed to be the same as
+	// Source (e.g., a single host with a unique Source is generating measurements
+	// and forwarding them).
+	Node *string `json:"node,omitempty"`
 
 	// Zone is the zone within which the measurement took place.
 	Zone string `json:"zone"`

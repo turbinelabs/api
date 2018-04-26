@@ -42,13 +42,28 @@ func payloadV2OfSize(s int) *statsapi.Payload {
 		return &statsapi.Payload{Source: sourceString1, Zone: zoneString1}
 
 	case 1:
-		p := *payloadV2
-		return &p
+		return &statsapi.Payload{
+			Source: sourceString1,
+			Zone:   zoneString1,
+			Stats: []statsapi.Stat{
+				{
+					Name:      metricName1,
+					Gauge:     ptr.Float64(1.41421),
+					Timestamp: when1Millis,
+					Tags:      map[string]string{"tag": "tag-value"},
+				},
+			},
+		}
 
 	default:
 		a := make([]statsapi.Stat, s)
 		for i := 0; i < s; i++ {
-			a[i] = payloadV2.Stats[0]
+			a[i] = statsapi.Stat{
+				Name:      metricName1,
+				Gauge:     ptr.Float64(1.41421),
+				Timestamp: when1Millis,
+				Tags:      map[string]string{"tag": "tag-value"},
+			}
 		}
 		return &statsapi.Payload{Source: sourceString1, Zone: zoneString1, Stats: a}
 	}
@@ -230,6 +245,12 @@ func TestHttpBatchingStatsV2GetBatcher(t *testing.T) {
 
 	batcher2 := client.getBatcher(&statsapi.Payload{Source: "s", Zone: "z"})
 	assert.SameInstance(t, batcher2, batcher)
+
+	batcher3 := client.getBatcher(&statsapi.Payload{Source: "s", Node: ptr.String("n"), Zone: "z"})
+	assert.NotSameInstance(t, batcher3, batcher)
+
+	batcher4 := client.getBatcher(&statsapi.Payload{Source: "s", Node: ptr.String("n"), Zone: "z"})
+	assert.SameInstance(t, batcher4, batcher3)
 }
 
 func TestHttpBatchingStatsV2Forward(t *testing.T) {
@@ -245,7 +266,38 @@ func TestHttpBatchingStatsV2Forward(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, result.NumAccepted, 3)
 
-	batcher, ok := client.batchers[expectedPayload.Source+"|"+expectedPayload.Zone]
+	batcher, ok := client.batchers[expectedPayload.Source+"||"+expectedPayload.Zone]
+	assert.True(t, ok)
+	assert.NonNil(t, batcher)
+	defer close(batcher.ch)
+
+	select {
+	case payload := <-batcher.ch:
+		assert.SameInstance(t, payload, expectedPayload)
+
+	default:
+		assert.Failed(t, "payload not enqueued in batcher's channel")
+	}
+}
+
+func TestHttpBatchingStatsV2ForwardWithNode(t *testing.T) {
+	client := &httpBatchingStatsV2{
+		batchers: map[string]*payloadV2Batcher{},
+		mutex:    &sync.RWMutex{},
+	}
+
+	expectedPayload := payloadV2OfSize(3)
+	expectedPayload.Node = ptr.String("nodelay")
+	result, err := client.ForwardV2(expectedPayload)
+	assert.NonNil(t, result)
+	assert.Nil(t, err)
+	assert.Equal(t, result.NumAccepted, 3)
+
+	batcherKey :=
+		expectedPayload.Source + "|" +
+			ptr.StringValue(expectedPayload.Node) + "|" +
+			expectedPayload.Zone
+	batcher, ok := client.batchers[batcherKey]
 	assert.True(t, ok)
 	assert.NonNil(t, batcher)
 	defer close(batcher.ch)
@@ -267,11 +319,13 @@ func TestHttpBatchingStatsV2Close(t *testing.T) {
 	}
 
 	client.getBatcher(&statsapi.Payload{Source: "this-source", Zone: "zone"})
-	client.getBatcher(&statsapi.Payload{Source: "that-source", Zone: "zone"})
+	client.getBatcher(
+		&statsapi.Payload{Source: "that-source", Node: ptr.String("node"), Zone: "zone"},
+	)
 	assert.Equal(t, len(client.batchers), 2)
 
-	ch1 := client.batchers["this-source|zone"].ch
-	ch2 := client.batchers["that-source|zone"].ch
+	ch1 := client.batchers["this-source||zone"].ch
+	ch2 := client.batchers["that-source|node|zone"].ch
 
 	assert.Nil(t, client.Close())
 	assert.Equal(t, len(client.batchers), 0)
