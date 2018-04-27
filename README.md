@@ -31,7 +31,7 @@ and may be used to generate additional clients in the future.
 
 ## Requirements
 
-- Go 1.9 or later (previous versions may work, but we don't build or test against them)
+- Go 1.10.1 or later (previous versions may work, but we don't build or test against them)
 
 ## Dependencies
 
