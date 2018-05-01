@@ -34,7 +34,6 @@ import (
 
 const (
 	v2ForwardPath = "/v2.0/stats/forward"
-	v1QueryPath   = "/v1.0/stats/query"
 	v2QueryPath   = "/v2.0/stats/query"
 
 	queryArg = "query"

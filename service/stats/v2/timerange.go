@@ -25,12 +25,11 @@ type TimeRange struct {
 	// SimpleTimeRange specifies the window this time range covers.
 	SimpleTimeRange
 
-	// Duration specifies how long a time span of stats data to return. In the v1.0
-	// API, it is specified in microseconds. In the v2.0 API, it is specified in
-	// seconds. End takes precedence over Duration. If Start is specified, Duration
-	// sets the end of the time span (e.g. from Start for a period of Duration). If
-	// Start is not specified, Duration sets the start of the time span that period
-	// into the past (e.g., a period lasting Duration, until now).
+	// Duration specifies how long a time span of stats data to return, in seconds.
+	// End takes precedence over Duration. If Start is specified, Duration sets the
+	// end of the time span (e.g. from Start for a period of Duration). If Start is
+	// not specified, Duration sets the start of the time span that period into the
+	// past (e.g., a period lasting Duration, until now).
 	Duration *int64 `json:"duration,omitempty" form:"duration"`
 
 	// Granularity specifies how much time each data point represents. If absent, it
