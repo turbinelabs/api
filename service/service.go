@@ -17,7 +17,7 @@ limitations under the License.
 // Package service defines interfaces representing the Turbine Labs public API
 package service
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE --write_package_comment=false
 
 import (
 	"time"

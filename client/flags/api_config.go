@@ -16,7 +16,7 @@ limitations under the License.
 
 package flags
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=../../http/fromflags.go"
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files "apihttp=../../http/fromflags.go" --write_package_comment=false
 
 import (
 	"errors"

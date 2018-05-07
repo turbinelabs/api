@@ -27,7 +27,7 @@ import (
 	tbnflag "github.com/turbinelabs/nonstdlib/flag"
 )
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE --write_package_comment=false
 
 const (
 	DefaultMaxBatchDelay = 1 * time.Second

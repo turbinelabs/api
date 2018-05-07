@@ -22,7 +22,7 @@ import (
 	"github.com/turbinelabs/nonstdlib/flag/usage"
 )
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE --write_package_comment=false
 
 // ProxyFromFlags installs flags to obtain a proxy from a proxy name
 type ProxyFromFlags interface {

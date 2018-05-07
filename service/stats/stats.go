@@ -22,7 +22,7 @@ import (
 	"github.com/turbinelabs/api/service/stats/v2"
 )
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE --write_package_comment=false
 
 // StatsService combines the current versions of the StatsForwardService and
 // StatsQueryService.

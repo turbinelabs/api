@@ -16,7 +16,7 @@ limitations under the License.
 
 package client
 
-//go:generate $TBN_HOME/scripts/mockgen_internal.sh -type internalStatsClient -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go statsv2api=../service/stats/v2/stats.go
+//go:generate $TBN_HOME/scripts/mockgen_internal.sh -type internalStatsClient -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE -aux_files statsapi=../service/stats/stats.go statsv2api=../service/stats/v2/stats.go --write_package_comment=false
 
 import (
 	"bytes"

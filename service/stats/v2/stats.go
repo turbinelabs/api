@@ -18,7 +18,7 @@ limitations under the License.
 // Turbine Labs public API prefixed by /v2.0/stats.
 package v2
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE --write_package_comment=false
 
 // StatsForwardService forwards stats data to a remote stats-server using
 // the version 2 forwarding API.

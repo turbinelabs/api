@@ -24,7 +24,7 @@ import (
 	"github.com/turbinelabs/api"
 )
 
-//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE
+//go:generate mockgen -source $GOFILE -destination mock_$GOFILE -package $GOPACKAGE --write_package_comment=false
 
 // ProxyRef encapsulates a lookup of a Proxy by Name and Zone Name
 type ProxyRef interface {
