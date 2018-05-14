@@ -254,22 +254,21 @@ func TestHttpBatchingStatsV2GetBatcher(t *testing.T) {
 }
 
 func TestHttpBatchingStatsV2Forward(t *testing.T) {
+	expectedPayload := payloadV2OfSize(3)
+
+	batcherKey := expectedPayload.Source + "||" + expectedPayload.Zone
+	batcher := &payloadV2Batcher{ch: make(chan *statsapi.Payload, 10)}
+	defer close(batcher.ch)
+
 	client := &httpBatchingStatsV2{
-		batchers: map[string]*payloadV2Batcher{},
+		batchers: map[string]*payloadV2Batcher{batcherKey: batcher},
 		mutex:    &sync.RWMutex{},
 	}
-
-	expectedPayload := payloadV2OfSize(3)
 
 	result, err := client.ForwardV2(expectedPayload)
 	assert.NonNil(t, result)
 	assert.Nil(t, err)
 	assert.Equal(t, result.NumAccepted, 3)
-
-	batcher, ok := client.batchers[expectedPayload.Source+"||"+expectedPayload.Zone]
-	assert.True(t, ok)
-	assert.NonNil(t, batcher)
-	defer close(batcher.ch)
 
 	select {
 	case payload := <-batcher.ch:
@@ -281,26 +280,25 @@ func TestHttpBatchingStatsV2Forward(t *testing.T) {
 }
 
 func TestHttpBatchingStatsV2ForwardWithNode(t *testing.T) {
-	client := &httpBatchingStatsV2{
-		batchers: map[string]*payloadV2Batcher{},
-		mutex:    &sync.RWMutex{},
-	}
-
 	expectedPayload := payloadV2OfSize(3)
 	expectedPayload.Node = ptr.String("nodelay")
-	result, err := client.ForwardV2(expectedPayload)
-	assert.NonNil(t, result)
-	assert.Nil(t, err)
-	assert.Equal(t, result.NumAccepted, 3)
 
 	batcherKey :=
 		expectedPayload.Source + "|" +
 			ptr.StringValue(expectedPayload.Node) + "|" +
 			expectedPayload.Zone
-	batcher, ok := client.batchers[batcherKey]
-	assert.True(t, ok)
-	assert.NonNil(t, batcher)
+	batcher := &payloadV2Batcher{ch: make(chan *statsapi.Payload, 10)}
 	defer close(batcher.ch)
+
+	client := &httpBatchingStatsV2{
+		batchers: map[string]*payloadV2Batcher{batcherKey: batcher},
+		mutex:    &sync.RWMutex{},
+	}
+
+	result, err := client.ForwardV2(expectedPayload)
+	assert.NonNil(t, result)
+	assert.Nil(t, err)
+	assert.Equal(t, result.NumAccepted, 3)
 
 	select {
 	case payload := <-batcher.ch:
