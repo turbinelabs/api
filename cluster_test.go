@@ -29,7 +29,21 @@ func getClusters() (Cluster, Cluster) {
 	ic := Instance{"Host3", 1234, nil}
 	i := Instances{ia, ib, ic}
 	cb := CircuitBreakers{ptr.Int(1), ptr.Int(2), ptr.Int(3), ptr.Int(4)}
-	c := Cluster{"ckey", "zkey", "name", true, i, "okey1", &cb, Checksum{}}
+	od := OutlierDetection{
+		IntervalMsec:                       ptr.Int(1),
+		BaseEjectionTimeMsec:               ptr.Int(2),
+		MaxEjectionPercent:                 ptr.Int(3),
+		Consecutive5xx:                     ptr.Int(4),
+		EnforcingConsecutive5xx:            ptr.Int(5),
+		EnforcingSuccessRate:               ptr.Int(6),
+		SuccessRateMinimumHosts:            ptr.Int(7),
+		SuccessRateRequestVolume:           ptr.Int(8),
+		SuccessRateStdevFactor:             ptr.Int(9),
+		ConsecutiveGatewayFailure:          ptr.Int(10),
+		EnforcingConsecutiveGatewayFailure: ptr.Int(11),
+	}
+
+	c := Cluster{"ckey", "zkey", "name", true, i, "okey1", &cb, &od, Checksum{}}
 	return c, c
 }
 
@@ -123,6 +137,14 @@ func TestClusterEqualCircuitBreakersVaries(t *testing.T) {
 	assert.False(t, c2.Equals(c1))
 }
 
+func TestClusterEqualOutlierDetectionVaries(t *testing.T) {
+	c1, c2 := getClusters()
+	c2.OutlierDetection = &OutlierDetection{EnforcingSuccessRate: ptr.Int(100)}
+
+	assert.False(t, c1.Equals(c2))
+	assert.False(t, c2.Equals(c1))
+}
+
 func TestClustersGroupBy(t *testing.T) {
 	c := Clusters{
 		Cluster{Name: "a", ClusterKey: "a"},
@@ -163,9 +185,10 @@ func mkTestC() *Cluster {
 			{"foo", 9090, MetadataFromMap(map[string]string{"key1": "value1"})},
 			{"bar", 9090, MetadataFromMap(map[string]string{"key1": "value1", "key2": "value2"})},
 		},
-		OrgKey:          "ok-1",
-		CircuitBreakers: &CircuitBreakers{ptr.Int(1), ptr.Int(2), ptr.Int(3), ptr.Int(4)},
-		Checksum:        Checksum{"ck-1"},
+		OrgKey:           "ok-1",
+		CircuitBreakers:  &CircuitBreakers{ptr.Int(1), ptr.Int(2), ptr.Int(3), ptr.Int(4)},
+		OutlierDetection: &OutlierDetection{EnforcingConsecutive5xx: ptr.Int(100)},
+		Checksum:         Checksum{"ck-1"},
 	}
 }
 
@@ -206,5 +229,11 @@ func TestClusterIsValidBadInstances(t *testing.T) {
 func TestClusterIsValidBadCircuitBreakers(t *testing.T) {
 	c := mkTestC()
 	c.CircuitBreakers.MaxConnections = ptr.Int(-1)
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterIsValidBadOutlierDetection(t *testing.T) {
+	c := mkTestC()
+	c.OutlierDetection.EnforcingSuccessRate = ptr.Int(-1)
 	assert.NonNil(t, c.IsValid())
 }

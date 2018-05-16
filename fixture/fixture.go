@@ -74,26 +74,28 @@ type DataFixturesT struct {
 	UserSlice       api.Users
 	PublicUserSlice api.Users
 
-	ClusterKey1             api.ClusterKey // UUID of cluster 1
-	ClusterZone1            api.ZoneKey    // zone key for cluster 1
-	ClusterName1            string         // name of cluster 1
-	ClusterRequireTLS1      bool           // should cluster 1 require TLS communications
-	ClusterChecksum1        api.Checksum   // the checksum for cluster 1
-	ClusterOrgKey1          api.OrgKey
-	ClusterCircuitBreakers1 *api.CircuitBreakers // circuit breakers for cluster 1
-	ClusterKey2             api.ClusterKey       // UUId of cluster 2
-	ClusterZone2            api.ZoneKey          // zone key for cluster 2
-	ClusterName2            string               // name of cluster 2
-	ClusterRequireTLS2      bool                 // should cluster 2 require TLS communications
-	ClusterChecksum2        api.Checksum         // the checksum for cluster 2
-	ClusterOrgKey2          api.OrgKey
-	ClusterCircuitBreakers2 *api.CircuitBreakers // circuit breakers for cluster 2
-	Cluster1                api.Cluster          // instance of cluster 1
-	Cluster2                api.Cluster          // instance of cluster 1
-	Instance21              api.Instance         // first instance on cluster 2
-	Instance22              api.Instance         // first instance on cluster 2
-	ClusterSlice            api.Clusters         // slice of the two clusters
-	PublicClusterSlice      api.Clusters
+	ClusterKey1              api.ClusterKey // UUID of cluster 1
+	ClusterZone1             api.ZoneKey    // zone key for cluster 1
+	ClusterName1             string         // name of cluster 1
+	ClusterRequireTLS1       bool           // should cluster 1 require TLS communications
+	ClusterChecksum1         api.Checksum   // the checksum for cluster 1
+	ClusterOrgKey1           api.OrgKey
+	ClusterCircuitBreakers1  *api.CircuitBreakers  // circuit breakers for cluster 1
+	ClusterOutlierDetection1 *api.OutlierDetection // outlier detection for cluster 1
+	ClusterKey2              api.ClusterKey        // UUId of cluster 2
+	ClusterZone2             api.ZoneKey           // zone key for cluster 2
+	ClusterName2             string                // name of cluster 2
+	ClusterRequireTLS2       bool                  // should cluster 2 require TLS communications
+	ClusterChecksum2         api.Checksum          // the checksum for cluster 2
+	ClusterOrgKey2           api.OrgKey
+	ClusterCircuitBreakers2  *api.CircuitBreakers  // circuit breakers for cluster 2
+	ClusterOutlierDetection2 *api.OutlierDetection // outlier detection for cluster 2
+	Cluster1                 api.Cluster           // instance of cluster 1
+	Cluster2                 api.Cluster           // instance of cluster 1
+	Instance21               api.Instance          // first instance on cluster 2
+	Instance22               api.Instance          // first instance on cluster 2
+	ClusterSlice             api.Clusters          // slice of the two clusters
+	PublicClusterSlice       api.Clusters
 
 	DomainKey1         api.DomainKey // UUID of domain 1
 	DomainZone1        api.ZoneKey   // zone of domain 1
@@ -271,6 +273,16 @@ func New() DataFixturesT {
 			MaxRetries:         ptr.Int(3),
 			MaxRequests:        ptr.Int(4),
 		},
+		ClusterOutlierDetection1: &api.OutlierDetection{
+			IntervalMsec:                       ptr.Int(1),
+			BaseEjectionTimeMsec:               ptr.Int(2),
+			MaxEjectionPercent:                 ptr.Int(3),
+			EnforcingConsecutive5xx:            ptr.Int(5),
+			SuccessRateMinimumHosts:            ptr.Int(7),
+			SuccessRateStdevFactor:             ptr.Int(9),
+			ConsecutiveGatewayFailure:          ptr.Int(10),
+			EnforcingConsecutiveGatewayFailure: ptr.Int(11),
+		},
 		ClusterKey2:        "2794c958-d44c-418c-5cac-4d1af020df99",
 		ClusterZone2:       "zk2",
 		ClusterName2:       "cluster2",
@@ -280,6 +292,16 @@ func New() DataFixturesT {
 		ClusterCircuitBreakers2: &api.CircuitBreakers{
 			MaxConnections: ptr.Int(5),
 			MaxRequests:    ptr.Int(8),
+		},
+		ClusterOutlierDetection2: &api.OutlierDetection{
+			IntervalMsec:              ptr.Int(12),
+			BaseEjectionTimeMsec:      ptr.Int(13),
+			Consecutive5xx:            ptr.Int(15),
+			EnforcingSuccessRate:      ptr.Int(17),
+			SuccessRateMinimumHosts:   ptr.Int(18),
+			SuccessRateRequestVolume:  ptr.Int(19),
+			SuccessRateStdevFactor:    ptr.Int(20),
+			ConsecutiveGatewayFailure: ptr.Int(21),
 		},
 		DomainKey1:       "asonetuhasonetuh",
 		DomainZone1:      "zk1",
@@ -442,13 +464,14 @@ func New() DataFixturesT {
 	}
 
 	df.Cluster1 = api.Cluster{
-		ClusterKey:      df.ClusterKey1,
-		ZoneKey:         df.ClusterZone1,
-		Name:            df.ClusterName1,
-		RequireTLS:      df.ClusterRequireTLS1,
-		OrgKey:          df.ClusterOrgKey1,
-		CircuitBreakers: df.ClusterCircuitBreakers1,
-		Checksum:        df.ClusterChecksum1,
+		ClusterKey:       df.ClusterKey1,
+		ZoneKey:          df.ClusterZone1,
+		Name:             df.ClusterName1,
+		RequireTLS:       df.ClusterRequireTLS1,
+		OrgKey:           df.ClusterOrgKey1,
+		CircuitBreakers:  df.ClusterCircuitBreakers1,
+		OutlierDetection: df.ClusterOutlierDetection1,
+		Checksum:         df.ClusterChecksum1,
 	}
 
 	df.Instance21 = api.Instance{
@@ -463,14 +486,15 @@ func New() DataFixturesT {
 	df.Instance22 = api.Instance{Host: "int-host-2", Port: 1234}
 
 	df.Cluster2 = api.Cluster{
-		ClusterKey:      df.ClusterKey2,
-		ZoneKey:         df.ClusterZone2,
-		Name:            df.ClusterName2,
-		RequireTLS:      df.ClusterRequireTLS2,
-		Instances:       api.Instances{df.Instance21, df.Instance22},
-		OrgKey:          df.ClusterOrgKey2,
-		CircuitBreakers: df.ClusterCircuitBreakers2,
-		Checksum:        df.ClusterChecksum2,
+		ClusterKey:       df.ClusterKey2,
+		ZoneKey:          df.ClusterZone2,
+		Name:             df.ClusterName2,
+		RequireTLS:       df.ClusterRequireTLS2,
+		Instances:        api.Instances{df.Instance21, df.Instance22},
+		OrgKey:           df.ClusterOrgKey2,
+		CircuitBreakers:  df.ClusterCircuitBreakers2,
+		OutlierDetection: df.ClusterOutlierDetection2,
+		Checksum:         df.ClusterChecksum2,
 	}
 
 	df.ClusterSlice = []api.Cluster{df.Cluster1, df.Cluster2}

@@ -42,13 +42,14 @@ type ClusterKey string
 
 // A Cluster is a named list of Instances within a zone
 type Cluster struct {
-	ClusterKey      ClusterKey       `json:"cluster_key"` // overwritten on create
-	ZoneKey         ZoneKey          `json:"zone_key"`
-	Name            string           `json:"name"`
-	RequireTLS      bool             `json:"require_tls,omitempty"`
-	Instances       Instances        `json:"instances"`
-	OrgKey          OrgKey           `json:"-"`
-	CircuitBreakers *CircuitBreakers `json:"circuit_breakers"`
+	ClusterKey       ClusterKey        `json:"cluster_key"` // overwritten on create
+	ZoneKey          ZoneKey           `json:"zone_key"`
+	Name             string            `json:"name"`
+	RequireTLS       bool              `json:"require_tls,omitempty"`
+	Instances        Instances         `json:"instances"`
+	OrgKey           OrgKey            `json:"-"`
+	CircuitBreakers  *CircuitBreakers  `json:"circuit_breakers"`
+	OutlierDetection *OutlierDetection `json:"outlier_detection"`
 	Checksum
 }
 
@@ -68,6 +69,7 @@ func (c Cluster) Equals(o Cluster) bool {
 		c.OrgKey == o.OrgKey &&
 		c.RequireTLS == o.RequireTLS &&
 		CircuitBreakersPtrEquals(c.CircuitBreakers, o.CircuitBreakers) &&
+		OutlierDetectionPtrEquals(c.OutlierDetection, o.OutlierDetection) &&
 		c.Checksum.Equals(o.Checksum)
 
 	if !coreResp {
@@ -96,6 +98,10 @@ func (c *Cluster) IsValid() *ValidationError {
 	errs.MergePrefixed(c.Instances.IsValid(), "cluster")
 	if c.CircuitBreakers != nil {
 		errs.MergePrefixed(c.CircuitBreakers.IsValid(), "cluster")
+	}
+
+	if c.OutlierDetection != nil {
+		errs.MergePrefixed(c.OutlierDetection.IsValid(), "cluster")
 	}
 
 	return errs.OrNil()
