@@ -39,6 +39,12 @@ const (
 	// MiscErrorCode indicates a miscellaneous error.
 	MiscErrorCode ErrorCode = "MiscCode"
 
+	// MiscBackpressure indicates this request was rejected before completion
+	// to provide limit impact on some part of the underlying infrastructure.
+	// A frindly client should limit not retry requests that get back pressure
+	// responses.
+	MiscBackpressure ErrorCode = "MiscBackpressure"
+
 	// NotFoundErrorCode indicates the request object does not exist.
 	NotFoundErrorCode ErrorCode = "NotFound"
 
