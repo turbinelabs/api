@@ -149,6 +149,7 @@ func (hs *httpBatchingStatsV2) Close() error {
 	for time.Since(start) < 15*time.Second {
 		time.Sleep(100 * time.Millisecond)
 		if atomic.LoadInt32(&hs.inFlight) == 0 {
+			hs.logger.Print("final requests completed")
 			return nil
 		}
 	}
