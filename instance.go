@@ -37,6 +37,7 @@ var hostPattern = regexp.MustCompile(HostPatternString)
 // Instances is a slice of Instance
 type Instances []Instance
 
+// Equals checks two Instances for equality
 func (i Instances) Equals(o Instances) bool {
 	if len(i) != len(o) {
 		return false
