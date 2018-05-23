@@ -29,8 +29,10 @@ const (
 	UpstreamLatency   = "us_latency"
 
 	// Proxy stats
-	Poll   = "poll"
-	Config = "config"
+	Poll           = "poll"
+	Config         = "config"
+	ConfigLatency  = "config_latency"
+	ConfigInterval = "config_interval"
 )
 
 // Valid tag names
@@ -53,10 +55,11 @@ const (
 	PollSuccessResult = "success"
 	PollErrorResult   = "error"
 
-	// Config tags
+	// Config tags and values.
 	ConfigState   = "state"
 	ConfigValid   = "valid"
 	ConfigInvalid = "invalid"
+	ConfigType    = "type"
 )
 
 // DefaultLimitName specifies the name of the default limits. See
