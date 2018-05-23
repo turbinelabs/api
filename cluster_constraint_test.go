@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"errors"
 	"sort"
 	"testing"
 
@@ -505,4 +506,69 @@ func TestAllConstraintsIsValidBad(t *testing.T) {
 		{"ac.dark[cck-1].weight", "must be greater than 0"},
 		{"ac.tap[cck-1].weight", "must be greater than 0"},
 	}})
+}
+
+func doTestIndexOf(
+	t *testing.T,
+	pred func(ClusterConstraint) (bool, error),
+	wantIdx int,
+	wantErr error,
+) {
+	in := ClusterConstraints{
+		{ConstraintKey: "ck-0"},
+		{ConstraintKey: "ck-1"},
+		{ConstraintKey: "ck-2"},
+		{ConstraintKey: "ck-3"},
+		{ConstraintKey: "ck-4"},
+		{ConstraintKey: "ck-1"},
+	}
+
+	gotIdx, gotErr := in.IndexOf(pred)
+
+	assert.Equal(t, gotIdx, wantIdx)
+	assert.Equal(t, gotErr, wantErr)
+}
+func TestIndexOfNotFound(t *testing.T) {
+	doTestIndexOf(
+		t,
+		func(cc ClusterConstraint) (bool, error) {
+			return cc.ConstraintKey == "aoeu", nil
+		},
+		-1,
+		nil,
+	)
+}
+
+func TestIndexOfFound(t *testing.T) {
+	doTestIndexOf(
+		t,
+		func(cc ClusterConstraint) (bool, error) {
+			return cc.ConstraintKey == "ck-2", nil
+		},
+		2,
+		nil,
+	)
+}
+
+func TestIndoxOfFindsFirst(t *testing.T) {
+	doTestIndexOf(
+		t,
+		func(cc ClusterConstraint) (bool, error) {
+			return cc.ConstraintKey == "ck-1", nil
+		},
+		1,
+		nil,
+	)
+}
+
+func TestIndexOfError(t *testing.T) {
+	e := errors.New("aoeu")
+	doTestIndexOf(
+		t,
+		func(cc ClusterConstraint) (bool, error) {
+			return true, e
+		},
+		-1,
+		e,
+	)
 }

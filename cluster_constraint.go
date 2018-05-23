@@ -95,6 +95,23 @@ type AllConstraints struct {
 
 type ClusterConstraints []ClusterConstraint
 
+// IndexOf returns the index of the first instance of a ClusterConstraint that
+// returns true for pred. If pred returns an error when checking a constraint
+// IndexOf stops walking ClusterConstraints and returns -1, <the error>
+func (ccs ClusterConstraints) IndexOf(pred func(ClusterConstraint) (bool, error)) (int, error) {
+	for idx := range ccs {
+		v, err := pred(ccs[idx])
+		if err != nil {
+			return -1, err
+		}
+		if v {
+			return idx, nil
+		}
+	}
+
+	return -1, nil
+}
+
 // Check the Equality of two ClusterConstraint slices. Order agnostic.
 func (ccs ClusterConstraints) Equals(o ClusterConstraints) bool {
 	if len(ccs) != len(o) {

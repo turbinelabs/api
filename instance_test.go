@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -166,4 +167,158 @@ func TestInstanceMetadataIsValidDupes(t *testing.T) {
 	im := mkTestIMD()
 	im = append(im, im[0])
 	assert.NonNil(t, InstanceMetadataIsValid(im))
+}
+
+var selectFixture = Instances{
+	{Host: "host", Port: 0},
+	{Host: "host", Port: 1},
+	{Host: "host", Port: 2},
+	{Host: "host", Port: 3},
+}
+
+func doTestSelect(
+	t *testing.T,
+	fn func(Instance) (bool, error),
+	want Instances,
+	wantErr error,
+) {
+	got, gotErr := selectFixture.Select(fn)
+	assert.DeepEqual(t, got, want)
+	assert.DeepEqual(t, gotErr, wantErr)
+}
+
+func TestSelectNone(t *testing.T) {
+	doTestSelect(
+		t,
+		func(i Instance) (bool, error) {
+			return false, nil
+		},
+		Instances{},
+		nil,
+	)
+}
+
+func TestSelectSome(t *testing.T) {
+	doTestSelect(
+		t,
+		func(i Instance) (bool, error) {
+			return i.Port == 1 || i.Port == 3, nil
+		},
+		Instances{selectFixture[1], selectFixture[3]},
+		nil,
+	)
+}
+
+func TestSelectOrror(t *testing.T) {
+	e := errors.New("aoesntuh")
+
+	doTestSelect(
+		t,
+		func(i Instance) (bool, error) {
+			return i.Port == 1 || i.Port == 3, e
+		},
+		nil,
+		e,
+	)
+}
+
+func doTestMatchesMetadata(
+	t *testing.T,
+	mdMap map[string]string,
+	meets bool,
+) {
+	inst := Instance{
+		Metadata: MetadataFromMap(map[string]string{
+			"k1": "v1",
+			"k2": "v2",
+			"k3": "v3",
+		}),
+	}
+
+	var md Metadata = nil
+	if mdMap != nil {
+		md = MetadataFromMap(mdMap)
+	}
+
+	assert.Equal(t, inst.MatchesMetadata(md), meets)
+}
+
+func TestMatchesMetadataNil(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		nil,
+		true,
+	)
+}
+
+func TestMatchesMetadataEmpty(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		map[string]string{},
+		true,
+	)
+}
+
+func TestMatchesMetadataFalse(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		map[string]string{
+			"aoeu": "snth",
+		},
+		false,
+	)
+}
+
+func TestMatchesMetadataSubsetTrue(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		map[string]string{
+			"k2": "v2",
+		},
+		true,
+	)
+}
+
+func TestMatchesMetadataSubsetFalse(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		map[string]string{
+			"k1": "v1",
+			"k2": "v2-different",
+		},
+		false,
+	)
+}
+
+func TestMatchesMetadataSupersetFalse(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		map[string]string{
+			"k1": "v1",
+			"k2": "v2",
+			"k3": "v3",
+			"k4": "v4",
+		},
+		false,
+	)
+}
+
+func TestMeetsConstraintKeyCaseSensitivityFalse(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		map[string]string{
+			"K2": "v2",
+		},
+		false,
+	)
+}
+
+func TestMatchesMetadataValueCaseSensitivityFalse(t *testing.T) {
+	doTestMatchesMetadata(
+		t,
+		map[string]string{
+			"k2": "V2",
+		},
+		false,
+	)
 }

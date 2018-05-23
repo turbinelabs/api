@@ -60,6 +60,27 @@ func (i Instances) Equals(o Instances) bool {
 	return true
 }
 
+// Select returns an array of Instance objects that match the provided
+// predicate. If predicate returns an error when checking an instance Select
+// returns nil, <the error>.
+func (i Instances) Select(
+	predicate func(Instance) (bool, error),
+) (Instances, error) {
+	results := Instances{}
+
+	for _, inst := range i {
+		test, err := predicate(inst)
+		if err != nil {
+			return nil, err
+		}
+		if test {
+			results = append(results, inst)
+		}
+	}
+
+	return results, nil
+}
+
 // Checks a collection of instances to ensure all are valid
 func (i Instances) IsValid() *ValidationError {
 	errs := &ValidationError{}
@@ -93,6 +114,26 @@ func (i Instance) Key() string {
 
 func (i Instance) hostPortCheck(i2 Instance) bool {
 	return !(i.Host != i2.Host || i.Port != i2.Port)
+}
+
+// MatchesMetadata returns true if this instance contains all key value
+// pairs in the provided Metadata. The Instance may have more metadata than
+// md and will still be considered to successfully match md.
+func (i Instance) MatchesMetadata(md Metadata) bool {
+	mdMap := md.Map()
+	instMD := i.Metadata.Map()
+
+	for k, v := range mdMap {
+		iv, ok := instMD[k]
+		if !ok {
+			return false
+		}
+		if iv != v {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Checks for exact object equality. This requires Instance host and port are
