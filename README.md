@@ -25,8 +25,7 @@ implementations; as such this project represents the source of truth for how
 our public API is defined.
 
 We also provide a swagger definition, which backs our
-[public API documentation](https://docs.turbinelabs.io/docs/versions/1.0/) and
-[API explorer](https://docs.turbinelabs.io/api-explorer/turbine-labs/versions/1.0/)
+[API documentation](https://docs.turbinelabs.io/api)
 and may be used to generate additional clients in the future.
 
 ## Requirements

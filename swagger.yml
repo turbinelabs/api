@@ -15,7 +15,16 @@
 swagger: '2.0'
 info:
   title: Turbine Labs API
-  description: Turbine Labs Public REST API
+  description: |
+    The Turbine Labs API provides CRUD operations for core object types, and is
+    mostly RESTy. The easiest way to interact with the API is with
+    [tbnctl](https://docs.turbinelabs.io/advanced/tbnctl.html).
+    If you want to make direct HTTP calls, however, you can obtain an access
+    token using tbnctl, and then pass it in the Authorization header,
+    prefixed by `Token `:
+    ```console
+    curl -H "Authorization: Token <access token>" https://api.turbinelabs.io/v1.0/cluster
+    ```
   version: "1.0"
 # the domain of the service
 host: api.turbinelabs.io
@@ -25,7 +34,7 @@ schemes:
 securityDefinitions:
   api_key:
     type: apiKey
-    name: X-Turbine-API-Key
+    name: Authorization
     in: header
 
 security:
@@ -1280,13 +1289,24 @@ definitions:
         $ref: "#/definitions/Zone"
 
   Domain:
+    allOf:
+      - $ref: "#/definitions/DomainCreate"
+      - type: object
+        required:
+        - domain_key
+        - checksum
+        properties:
+          domain_key:
+            type: string
+          checksum:
+            type: string
+
+  DomainCreate:
     type: object
     required:
-      - domain_key
       - zone_key
       - name
       - port
-      - checksum
     properties:
       domain_key:
         type: string
@@ -1310,12 +1330,12 @@ definitions:
       cors_config:
          $ref: "#/definitions/CORSConfig"
       aliases:
-          description: |
-            A set of alternate names that this Domain may be referenced by. May
-            start ('*.') or end ('.*') with a wildcard.
-          type: array
-          items:
-            type: string
+        description: |
+          A set of alternate names that this Domain may be referenced by. May
+          start ('*.') or end ('.*') with a wildcard.
+        type: array
+        items:
+          type: string
 
   Redirect:
     description: |
@@ -1474,19 +1494,7 @@ definitions:
         description: |
           Path to a file with the secret key in the PEM format for the domain.
         type: string
-  DomainCreate:
-    type: object
-    required:
-      - zone_key
-      - name
-      - port
-    properties:
-      zone_key:
-        type: string
-      name:
-        type: string
-      port:
-        type: integer
+
   MultiDomainResult:
     type: object
     properties:
@@ -1494,26 +1502,27 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Domain"
+
   DomainResult:
     type: object
     properties:
       result:
         $ref: "#/definitions/Domain"
+
   Proxy:
-    type: object
-    properties:
-      proxy_key:
-        type: string
-      name:
-        type: string
-      zone_key:
-        type: string
-      domain_keys:
-        type: array
-        items:
-          type: string
-      checksum:
-        type: string
+    allOf:
+      - $ref: "#/definitions/ProxyCreate"
+      - type: object
+        required:
+        - proxy_key
+        - zone_key
+        - checksum
+        properties:
+          proxy_key:
+            type: string
+          checksum:
+            type: string
+
   ProxyCreate:
     type: object
     required:
@@ -1528,6 +1537,7 @@ definitions:
         type: array
         items:
           type: string
+
   MultiProxyResult:
     type: object
     properties:
@@ -1535,6 +1545,7 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Proxy"
+
   ProxyResult:
     type: object
     properties:
@@ -1542,13 +1553,24 @@ definitions:
         $ref: "#/definitions/Proxy"
 
   Route:
+    allOf:
+      - $ref: "#/definitions/RouteCreate"
+      - type: object
+        required:
+        - route_key
+        - checksum
+        properties:
+          route_key:
+            type: string
+          checksum:
+            type: string
+
+  RouteCreate:
     type: object
     required:
-      - route_key
       - domain_key
       - zone_key
       - path
-      - checksum
       - shared_rules_key
     properties:
       route_key:
@@ -1579,6 +1601,7 @@ definitions:
         $ref: '#/definitions/CohortSeed'
       retry_policy:
         $ref: '#/definitions/RetryPolicy'
+
   Rule:
     type: object
     properties:
@@ -1594,10 +1617,12 @@ definitions:
         $ref: "#/definitions/AllConstraints"
       cohort_seed:
         $ref: '#/definitions/CohortSeed'
+
   Matches:
     type: array
     items:
       $ref: "#/definitions/Match"
+
   Match:
     type: object
     properties:
@@ -1607,6 +1632,7 @@ definitions:
         $ref: "#/definitions/Metadatum"
       to:
         $ref: "#/definitions/Metadatum"
+
   Metadatum:
     type: object
     properties:
@@ -1614,10 +1640,12 @@ definitions:
         type: string
       value:
         type: string
+
   Metadata:
     type: array
     items:
       $ref: "#/definitions/Metadatum"
+
   AllConstraints:
     type: object
     required:
@@ -1629,10 +1657,12 @@ definitions:
         $ref: "#/definitions/ClusterConstraints"
       tap:
         $ref: "#/definitions/ClusterConstraints"
+
   ClusterConstraints:
     type: array
     items:
       $ref: "#/definitions/ClusterConstraint"
+
   ClusterConstraint:
     type: object
     properties:
@@ -1654,25 +1684,7 @@ definitions:
           precedence over those from a Route or SharedRules object.
       weight:
         type: integer
-  RouteCreate:
-    type: object
-    required:
-      - zone_key
-      - name
-      - domain_keys
-    properties:
-      name:
-        type: string
-      zone_key:
-        type: string
-      domain_keys:
-        type: array
-        items:
-          type: string
-      rules:
-        type: array
-        items:
-          $ref: "#/definitions/Rule"
+
   MultiRouteResult:
     type: object
     properties:
@@ -1680,74 +1692,25 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Route"
+
   RouteResult:
     type: object
     properties:
       result:
         $ref: "#/definitions/Route"
 
-  CircuitBreakers:
-    description: |
-      Provides limits on various parameters to protect clusters against sudden
-      surges in traffic.
-    type: object
-    properties:
-      max_connections:
-        type: integer
-        description: |
-          Maximum number of connections that will be established to all
-          instances in a cluster within a proxy. If set to 0, no new connections
-          will be created. If not specified, defaults to 1024.
-      max_pending_requests:
-        type: integer
-        description: |
-          Maximum number of requests that will be queued while waiting on a
-          connection pool to a cluster within a proxy. If set to 0, no requests
-          will be queued. If not specified, defaults to 1024.
-      max_retries:
-        type: integer
-        description: |
-          Maximum number of retries that can be outstanding to all instances in
-          a cluster within a proxy. If set to 0, requests will not be retried.
-          If not specified, defaults to 3.
-      max_requests:
-        type: integer
-        description: |
-          Maximum number of requests that can be outstanding to all instances in
-          a cluster within  a proxy. Only applicable to HTTP/2 traffic since
-          HTTP/1.1 clusters are governed by the maximum connections circuit
-          breaker. If set to 0, no requests will be made. If not specified,
-          defaults to 1024.
-
   Cluster:
-    type: object
-    required:
-      - cluster_key
-      - zone_key
-      - name
-      - checksum
-    properties:
-      cluster_key:
-        type: string
-      zone_key:
-        type: string
-      name:
-        type: string
-      require_tls:
-        description: |
-          Experimental:
-          If set, requests to this collection of hosts will be made via HTTPS.
-          At this time neither certificate validation and certificate pinning
-          are supported for proxy clients of this cluster.
-        type: boolean
-      instances:
-        $ref: "#/definitions/Instances"
-      circuit_breakers:
-        $ref: "#/definitions/CircuitBreakers"
-      outlier_detection:
-        $ref: "#/definitions/OutlierDetection"
-      checksum:
-        type: string
+    allOf:
+      - $ref: "#/definitions/ClusterCreate"
+      - type: object
+        required:
+        - cluster_key
+        - checksum
+        properties:
+          cluster_key:
+            type: string
+          checksum:
+            type: string
 
   ClusterCreate:
     type: object
@@ -1759,8 +1722,18 @@ definitions:
         type: string
       name:
         type: string
+      require_tls:
+        description: |
+          If set, requests to this collection of hosts will be made via HTTPS.
+          At this time neither certificate validation and certificate pinning
+          are supported for proxy clients of this cluster.
+        type: boolean
       instances:
         $ref: "#/definitions/Instances"
+      circuit_breakers:
+        $ref: "#/definitions/CircuitBreakers"
+      outlier_detection:
+        $ref: "#/definitions/OutlierDetection"
 
   Instances:
     type: array
@@ -1797,6 +1770,39 @@ definitions:
         $ref: "#/definitions/Instance"
   Empty:
     type: object
+
+  CircuitBreakers:
+    description: |
+      Provides limits on various parameters to protect clusters against sudden
+      surges in traffic.
+    type: object
+    properties:
+      max_connections:
+        type: integer
+        description: |
+          Maximum number of connections that will be established to all
+          instances in a cluster within a proxy. If set to 0, no new connections
+          will be created. If not specified, defaults to 1024.
+      max_pending_requests:
+        type: integer
+        description: |
+          Maximum number of requests that will be queued while waiting on a
+          connection pool to a cluster within a proxy. If set to 0, no requests
+          will be queued. If not specified, defaults to 1024.
+      max_retries:
+        type: integer
+        description: |
+          Maximum number of retries that can be outstanding to all instances in
+          a cluster within a proxy. If set to 0, requests will not be retried.
+          If not specified, defaults to 3.
+      max_requests:
+        type: integer
+        description: |
+          Maximum number of requests that can be outstanding to all instances in
+          a cluster within  a proxy. Only applicable to HTTP/2 traffic since
+          HTTP/1.1 clusters are governed by the maximum connections circuit
+          breaker. If set to 0, no requests will be made. If not specified,
+          defaults to 1024.
 
   OutlierDetection:
     description: |
@@ -1886,10 +1892,24 @@ definitions:
           used to disable ejection or to ramp it up slowly. Defaults to 0.
 
   SharedRules:
+    allOf:
+      - $ref: "#/definitions/SharedRulesCreate"
+      - type: object
+        required:
+        - shared_rules_key
+        - checksum
+        properties:
+          shared_rules_key:
+            type: string
+          checksum:
+            type: string
+
+  SharedRulesCreate:
     type: object
     required:
+      - name
       - zone_key
-      - checksum
+      - default
     properties:
       shared_rules_key:
         type: string
@@ -1918,26 +1938,6 @@ definitions:
         $ref: "#/definitions/Metadata"
       checksum:
         type: string
-
-  SharedRulesCreate:
-    type: object
-    required:
-      - name
-      - zone_key
-      - default
-    properties:
-      name:
-        type: string
-      shared_rules_key:
-        type: string
-      zone_key:
-        type: string
-      default:
-        $ref: "#/definitions/AllConstraints"
-      rules:
-        type: array
-        items:
-          $ref: "#/definitions/Rule"
 
   MultiSharedRulesResult:
     type: object
