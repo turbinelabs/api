@@ -42,8 +42,21 @@ func getClusters() (Cluster, Cluster) {
 		ConsecutiveGatewayFailure:          ptr.Int(10),
 		EnforcingConsecutiveGatewayFailure: ptr.Int(11),
 	}
-
-	c := Cluster{"ckey", "zkey", "name", true, i, "okey1", &cb, &od, Checksum{}}
+	hc := HealthChecks{
+		{
+			TimeoutMsec:        100,
+			IntervalMsec:       200,
+			UnhealthyThreshold: 1,
+			HealthyThreshold:   2,
+			HealthChecker: HealthChecker{
+				HTTPHealthCheck: &HTTPHealthCheck{
+					Path: "/path/to/healthcheck",
+					Host: "host.com",
+				},
+			},
+		},
+	}
+	c := Cluster{"ckey", "zkey", "name", true, i, "okey1", &cb, &od, hc, Checksum{}}
 	return c, c
 }
 
@@ -145,6 +158,68 @@ func TestClusterEqualOutlierDetectionVaries(t *testing.T) {
 	assert.False(t, c2.Equals(c1))
 }
 
+func TestClusterEqualHealthChecksVary(t *testing.T) {
+	c1, c2 := getClusters()
+	hc := c1.HealthChecks[0]
+	hc.TimeoutMsec = 1000
+	c2.HealthChecks = HealthChecks{hc}
+
+	assert.False(t, c1.Equals(c2))
+	assert.False(t, c2.Equals(c1))
+
+	c2.HealthChecks = nil
+	assert.False(t, c1.Equals(c2))
+	assert.False(t, c2.Equals(c1))
+}
+
+func TestClusterEqualsHealthChecksEmptyNil(t *testing.T) {
+	c1, c2 := getClusters()
+	c1.HealthChecks = nil
+	c2.HealthChecks = HealthChecks{}
+	assert.True(t, c1.Equals(c2))
+	assert.True(t, c2.Equals(c1))
+}
+
+// Somewhat of a contrived example since only one HealthCheck
+// should ever be defined.
+func TestClusterEqualHealthCheckOrderVaries(t *testing.T) {
+	c1, c2 := getClusters()
+	c1.HealthChecks = append(
+		c1.HealthChecks,
+		HealthCheck{
+			TimeoutMsec:        100,
+			IntervalMsec:       200,
+			UnhealthyThreshold: 1,
+			HealthyThreshold:   2,
+			HealthChecker: HealthChecker{
+				HTTPHealthCheck: &HTTPHealthCheck{
+					Path: "/path/to/another/healthcheck",
+					Host: "host.com",
+				},
+			},
+		},
+	)
+	c1.HealthChecks = append(
+		c1.HealthChecks,
+		HealthCheck{
+			TimeoutMsec:        100,
+			IntervalMsec:       200,
+			UnhealthyThreshold: 1,
+			HealthyThreshold:   2,
+			HealthChecker: HealthChecker{
+				TCPHealthCheck: &TCPHealthCheck{
+					Send: "bytes",
+				},
+			},
+		},
+	)
+
+	hc2 := c1.HealthChecks
+	c2.HealthChecks = HealthChecks{hc2[1], hc2[2], hc2[0]}
+	assert.True(t, c1.Equals(c2))
+	assert.True(t, c2.Equals(c1))
+}
+
 func TestClustersGroupBy(t *testing.T) {
 	c := Clusters{
 		Cluster{Name: "a", ClusterKey: "a"},
@@ -188,7 +263,21 @@ func mkTestC() *Cluster {
 		OrgKey:           "ok-1",
 		CircuitBreakers:  &CircuitBreakers{ptr.Int(1), ptr.Int(2), ptr.Int(3), ptr.Int(4)},
 		OutlierDetection: &OutlierDetection{EnforcingConsecutive5xx: ptr.Int(100)},
-		Checksum:         Checksum{"ck-1"},
+		HealthChecks: HealthChecks{
+			{
+				TimeoutMsec:        100,
+				IntervalMsec:       200,
+				UnhealthyThreshold: 1,
+				HealthyThreshold:   2,
+				HealthChecker: HealthChecker{
+					HTTPHealthCheck: &HTTPHealthCheck{
+						Path: "/path/to/healthcheck",
+						Host: "host.com",
+					},
+				},
+			},
+		},
+		Checksum: Checksum{"ck-1"},
 	}
 }
 
@@ -235,5 +324,19 @@ func TestClusterIsValidBadCircuitBreakers(t *testing.T) {
 func TestClusterIsValidBadOutlierDetection(t *testing.T) {
 	c := mkTestC()
 	c.OutlierDetection.EnforcingSuccessRate = ptr.Int(-1)
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterIsValidBadHealthChecksSingleInvalidHealthCheck(t *testing.T) {
+	c := mkTestC()
+	c.HealthChecks[0].TimeoutMsec = 0
+	assert.NonNil(t, c.IsValid())
+}
+
+func TestClusterIsValidBadHealthChecksMultipleHealthChecks(t *testing.T) {
+	c := mkTestC()
+	a, b := getHealthChecks()
+	c.HealthChecks = append(c.HealthChecks, a)
+	c.HealthChecks = append(c.HealthChecks, b)
 	assert.NonNil(t, c.IsValid())
 }

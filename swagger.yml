@@ -1734,6 +1734,8 @@ definitions:
         $ref: "#/definitions/CircuitBreakers"
       outlier_detection:
         $ref: "#/definitions/OutlierDetection"
+      health_checks:
+        $ref: "#/definitions/HealthChecks"
 
   Instances:
     type: array
@@ -1803,6 +1805,147 @@ definitions:
           HTTP/1.1 clusters are governed by the maximum connections circuit
           breaker. If set to 0, no requests will be made. If not specified,
           defaults to 1024.
+
+  HealthChecks:
+    type: array
+    items:
+      $ref: "#/definitions/HealthCheck"
+
+  HealthCheck:
+    description: |
+      Configures active health checking for every instance in a cluster.
+    type: object
+    required:
+      - timeout_msec
+      - interval_msec
+      - unhealthy_threshold
+      - healthy_threshold
+      - health_checker
+    properties:
+      timeout_msec:
+        type: integer
+        description: |
+          The time to wait for a health check response. If the timeout is
+          reached without a response, the health check attempt will be
+          considered a failure. This is a required field and must be greater
+          than 0.
+      interval_msec:
+        type: integer
+        description: |
+          The interval between health checks. The first round of health checks
+          will occur during startup before any traffic is routed to a cluster.
+          This means that the \'no_traffic_interval_msec\' value will be used as
+          the first interval of health checks.
+      interval_jitter_msec:
+        type: integer
+        description: |
+          An optional jitter amount that is added to each interval value
+          calculated by the proxy. If not specified, defaults to 0.
+      unhealthy_threshold:
+        type: integer
+        description: |
+          The number of unhealthy health checks required before a host is
+          marked unhealthy. Note that for *http* health checking, if a host
+          responds with 503, this threshold is ignored and the host is
+          considered unhealthy immediately.
+      healthy_threshold:
+        type: integer
+        description: |
+          The number of healthy health checks required before a host is marked
+          healthy. Note that during startup, only a single successful health
+          check is required to mark a host healthy.
+      reuse_connection:
+        type: boolean
+        description: |
+          Whether or not to reuse health check connections between health checks.
+          Default is true.
+      no_traffic_interval_msec:
+        type: integer
+        description: |
+          Interval used when a cluster has never had traffic routed to it. It
+          allows cluster information to be kept up to date, without sending a
+          potentially large amount of active health checking traffic for no
+          reason. Once a cluster has been used for traffic routing, The proxy
+          will shift back to using the standard health check interval that is
+          defined. Note that this interval takes precedence over any other.
+          Defaults to 60s.
+      unhealthy_interval_msec:
+        type: integer
+        description: |
+          Interval used for hosts that are marked as unhealthy. As soon as the
+          host is marked as healthy, The proxy will shift back to using the
+          standard health check interval that is defined. This defaults to the
+          same value as \'interval_msec\' if not specified.
+      unhealthy_edge_interval_msec:
+        type: integer
+        description: |
+          Interval used for the first health check right after a host is marked
+          as unhealthy. For subsequent health checks, the proxy will shift back
+          to using either \'unhealthy_interval_msec\' if present or the standard
+          health check interval, \'interval_msec\'.
+      healthy_edge_interval_msec:
+        type: integer
+        description: |
+          Interval used for the first health check right after a host is marked
+          as healthy. For subsequent health checks, the proxy will shift back to
+          using the standard health check interval(\'interval_msec\') that is
+          defined. Defaults to the same value as \'interval_msec\' if not
+          specified.
+      health_checker:
+        type: object
+        description: |
+          Defines the type of health checker to use. Only a single health
+          checker can be defined per HealthCheck.
+        properties:
+          http_health_check:
+            $ref: "#/definitions/HTTPHealthCheck"
+          tcp_health_check:
+            $ref: "#/definitions/TCPHealthCheck"
+
+  HTTPHealthCheck:
+    type: object
+    properties:
+      host:
+        type: string
+        description: |
+          The value of the host header in the HTTP health check request.
+          If left empty, the name of the cluster being health checked
+          will be used.
+      path:
+        type: string
+        description: |
+          Specifies the HTTP path that will be requested during health
+          checking.
+      service_name:
+        type: string
+        description: |
+          An optional service name parameter which is used to validate
+          the identity of the health checked cluster.
+      request_headers_to_add:
+        $ref: "#/definitions/Metadata"
+        description: |
+          Specifies a list of HTTP headers that should be added to each request
+          sent to the health checked cluster.
+
+  TCPHealthCheck:
+    type: object
+    properties:
+      send:
+        type: string
+        description: |
+          Base64 encoded string representing an array of bytes to be
+          sent in health check requests. Leaving this field empty
+          implies a connect-only health check.
+      receive:
+        type: array
+        items:
+          type: string
+        description: |
+          An array of base64 encoded strings, each representing array of
+          bytes that is expected in health check responses. When
+          checking the response, "fuzzy" matching is performed such that
+          each binary block must be found, and in the order specified,
+          but not necessarily contiguously.
 
   OutlierDetection:
     description: |

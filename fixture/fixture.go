@@ -82,6 +82,7 @@ type DataFixturesT struct {
 	ClusterOrgKey1           api.OrgKey
 	ClusterCircuitBreakers1  *api.CircuitBreakers  // circuit breakers for cluster 1
 	ClusterOutlierDetection1 *api.OutlierDetection // outlier detection for cluster 1
+	ClusterHealthChecks1     api.HealthChecks      // health checks for cluster 1
 	ClusterKey2              api.ClusterKey        // UUId of cluster 2
 	ClusterZone2             api.ZoneKey           // zone key for cluster 2
 	ClusterName2             string                // name of cluster 2
@@ -90,6 +91,7 @@ type DataFixturesT struct {
 	ClusterOrgKey2           api.OrgKey
 	ClusterCircuitBreakers2  *api.CircuitBreakers  // circuit breakers for cluster 2
 	ClusterOutlierDetection2 *api.OutlierDetection // outlier detection for cluster 2
+	ClusterHealthChecks2     api.HealthChecks      // health checks for cluster 2
 	Cluster1                 api.Cluster           // instance of cluster 1
 	Cluster2                 api.Cluster           // instance of cluster 1
 	Instance21               api.Instance          // first instance on cluster 2
@@ -283,6 +285,29 @@ func New() DataFixturesT {
 			ConsecutiveGatewayFailure:          ptr.Int(10),
 			EnforcingConsecutiveGatewayFailure: ptr.Int(11),
 		},
+		ClusterHealthChecks1: api.HealthChecks{
+			{
+				TimeoutMsec:           100,
+				IntervalMsec:          10000,
+				IntervalJitterMsec:    ptr.Int(300),
+				UnhealthyThreshold:    10,
+				HealthyThreshold:      5,
+				NoTrafficIntervalMsec: ptr.Int(15000),
+				UnhealthyIntervalMsec: ptr.Int(30000),
+				HealthChecker: api.HealthChecker{
+					HTTPHealthCheck: &api.HTTPHealthCheck{
+						Host: "checker.com",
+						Path: "/hc",
+						RequestHeadersToAdd: api.Metadata{
+							{
+								Key:   "hc-req",
+								Value: "true",
+							},
+						},
+					},
+				},
+			},
+		},
 		ClusterKey2:        "2794c958-d44c-418c-5cac-4d1af020df99",
 		ClusterZone2:       "zk2",
 		ClusterName2:       "cluster2",
@@ -303,6 +328,23 @@ func New() DataFixturesT {
 			SuccessRateStdevFactor:    ptr.Int(20),
 			ConsecutiveGatewayFailure: ptr.Int(21),
 		},
+		ClusterHealthChecks2: api.HealthChecks{
+			{
+				TimeoutMsec:           100,
+				IntervalMsec:          15000,
+				IntervalJitterMsec:    ptr.Int(300),
+				UnhealthyThreshold:    10,
+				HealthyThreshold:      5,
+				NoTrafficIntervalMsec: ptr.Int(15000),
+				UnhealthyIntervalMsec: ptr.Int(30000),
+				HealthChecker: api.HealthChecker{
+					TCPHealthCheck: &api.TCPHealthCheck{
+						Send: "aGVhbHRoIGNoZWNrCg==",
+					},
+				},
+			},
+		},
+
 		DomainKey1:       "asonetuhasonetuh",
 		DomainZone1:      "zk1",
 		DomainName1:      "domain-1",
@@ -471,6 +513,7 @@ func New() DataFixturesT {
 		OrgKey:           df.ClusterOrgKey1,
 		CircuitBreakers:  df.ClusterCircuitBreakers1,
 		OutlierDetection: df.ClusterOutlierDetection1,
+		HealthChecks:     df.ClusterHealthChecks1,
 		Checksum:         df.ClusterChecksum1,
 	}
 
@@ -494,6 +537,7 @@ func New() DataFixturesT {
 		OrgKey:           df.ClusterOrgKey2,
 		CircuitBreakers:  df.ClusterCircuitBreakers2,
 		OutlierDetection: df.ClusterOutlierDetection2,
+		HealthChecks:     df.ClusterHealthChecks2,
 		Checksum:         df.ClusterChecksum2,
 	}
 

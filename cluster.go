@@ -50,6 +50,7 @@ type Cluster struct {
 	OrgKey           OrgKey            `json:"-"`
 	CircuitBreakers  *CircuitBreakers  `json:"circuit_breakers"`
 	OutlierDetection *OutlierDetection `json:"outlier_detection"`
+	HealthChecks     HealthChecks      `json:"health_checks"`
 	Checksum
 }
 
@@ -70,6 +71,7 @@ func (c Cluster) Equals(o Cluster) bool {
 		c.RequireTLS == o.RequireTLS &&
 		CircuitBreakersPtrEquals(c.CircuitBreakers, o.CircuitBreakers) &&
 		OutlierDetectionPtrEquals(c.OutlierDetection, o.OutlierDetection) &&
+		c.HealthChecks.Equals(o.HealthChecks) &&
 		c.Checksum.Equals(o.Checksum)
 
 	if !coreResp {
@@ -103,6 +105,8 @@ func (c *Cluster) IsValid() *ValidationError {
 	if c.OutlierDetection != nil {
 		errs.MergePrefixed(c.OutlierDetection.IsValid(), "cluster")
 	}
+
+	errs.MergePrefixed(c.HealthChecks.IsValid(), "cluster")
 
 	return errs.OrNil()
 }
