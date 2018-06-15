@@ -19,6 +19,8 @@ package api
 import (
 	"fmt"
 	"sort"
+
+	"github.com/turbinelabs/nonstdlib/ptr"
 )
 
 // HealthCheck configures the parameters to do health checking against instances
@@ -209,7 +211,7 @@ func (hc HealthCheck) IsValid() *ValidationError {
 		errs.AddNew(ErrorCase{scope("interval_msec"), "must be greater than zero"})
 	}
 
-	if hc.IntervalJitterMsec != nil && *hc.IntervalJitterMsec < 1 {
+	if v, ok := ptr.IntValueOk(hc.IntervalJitterMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
 				scope("interval_jitter_msec"),
@@ -226,7 +228,7 @@ func (hc HealthCheck) IsValid() *ValidationError {
 		errs.AddNew(ErrorCase{scope("healthy_threshold"), "must be greater than zero"})
 	}
 
-	if hc.NoTrafficIntervalMsec != nil && *hc.NoTrafficIntervalMsec < 1 {
+	if v, ok := ptr.IntValueOk(hc.NoTrafficIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
 				scope("no_traffic_interval_msec"),
@@ -235,7 +237,7 @@ func (hc HealthCheck) IsValid() *ValidationError {
 		)
 	}
 
-	if hc.UnhealthyIntervalMsec != nil && *hc.UnhealthyIntervalMsec < 1 {
+	if v, ok := ptr.IntValueOk(hc.UnhealthyIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
 				scope("unhealthy_interval_msec"),
@@ -244,7 +246,7 @@ func (hc HealthCheck) IsValid() *ValidationError {
 		)
 	}
 
-	if hc.UnhealthyEdgeIntervalMsec != nil && *hc.UnhealthyEdgeIntervalMsec < 1 {
+	if v, ok := ptr.IntValueOk(hc.UnhealthyEdgeIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
 				scope("unhealthy_edge_interval_msec"),
@@ -253,7 +255,7 @@ func (hc HealthCheck) IsValid() *ValidationError {
 		)
 	}
 
-	if hc.HealthyEdgeIntervalMsec != nil && *hc.HealthyEdgeIntervalMsec < 1 {
+	if v, ok := ptr.IntValueOk(hc.HealthyEdgeIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
 				scope("healthy_edge_interval_msec"),
