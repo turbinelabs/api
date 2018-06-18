@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/turbinelabs/nonstdlib/arrays"
 	"github.com/turbinelabs/nonstdlib/ptr"
 )
 
@@ -420,7 +421,7 @@ func (thc *TCPHealthCheck) compare(othc *TCPHealthCheck) int {
 			return 1
 		}
 
-		return compareStrings(thc.Receive, othc.Receive)
+		return arrays.CompareStringSlices(thc.Receive, othc.Receive)
 	}
 
 	return 0

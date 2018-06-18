@@ -27,27 +27,3 @@ func compareInts(a, b int) int {
 		return 0
 	}
 }
-
-// Treats smaller slices as being less than bigger ones and then does a per index
-// comparison betweeen the two.
-func compareStrings(a, b []string) int {
-	if len(a) < len(b) {
-		return -1
-	}
-
-	if len(a) > len(b) {
-		return 1
-	}
-
-	for i, av := range a {
-		if av < b[i] {
-			return -1
-		}
-
-		if av > b[i] {
-			return 1
-		}
-	}
-
-	return 0
-}
