@@ -20,125 +20,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/turbinelabs/nonstdlib/ptr"
 	"github.com/turbinelabs/test/assert"
 )
-
-func TestCompareIntPtrs(t *testing.T) {
-	tcs := []struct {
-		left, right *int
-		expected    int
-	}{
-		{
-			left:     nil,
-			right:    nil,
-			expected: 0,
-		},
-		{
-			left:     ptr.Int(1),
-			right:    nil,
-			expected: 1,
-		},
-		{
-			left:     nil,
-			right:    ptr.Int(1),
-			expected: -1,
-		},
-		{
-			left:     ptr.Int(1),
-			right:    ptr.Int(1),
-			expected: 0,
-		},
-		{
-			left:     ptr.Int(1),
-			right:    ptr.Int(2),
-			expected: -1,
-		},
-		{
-			left:     ptr.Int(2),
-			right:    ptr.Int(1),
-			expected: 1,
-		},
-	}
-
-	for i, tc := range tcs {
-		assert.Group(
-			fmt.Sprintf("testCases[%d]: left=[%#v], right=[%#v]", i, tc.left, tc.right),
-			t,
-			func(g *assert.G) {
-				assert.Equal(g, compareIntPtrs(tc.left, tc.right), tc.expected)
-			},
-		)
-	}
-}
 
 func TestCompareInts(t *testing.T) {
 	assert.Equal(t, compareInts(1, 2), -1)
 	assert.Equal(t, compareInts(2, 2), 0)
 	assert.Equal(t, compareInts(3, 2), 1)
-}
-
-func TestCompareBoolPtrs(t *testing.T) {
-	tcs := []struct {
-		left, right *bool
-		expected    int
-	}{
-		{
-			left:     nil,
-			right:    nil,
-			expected: 0,
-		},
-		{
-			left:     ptr.Bool(true),
-			right:    nil,
-			expected: 1,
-		},
-		{
-			left:     ptr.Bool(false),
-			right:    nil,
-			expected: 1,
-		},
-		{
-			left:     nil,
-			right:    ptr.Bool(true),
-			expected: -1,
-		},
-		{
-			left:     nil,
-			right:    ptr.Bool(false),
-			expected: -1,
-		},
-		{
-			left:     ptr.Bool(false),
-			right:    ptr.Bool(true),
-			expected: -1,
-		},
-		{
-			left:     ptr.Bool(true),
-			right:    ptr.Bool(false),
-			expected: 1,
-		},
-		{
-			left:     ptr.Bool(true),
-			right:    ptr.Bool(true),
-			expected: 0,
-		},
-		{
-			left:     ptr.Bool(false),
-			right:    ptr.Bool(false),
-			expected: 0,
-		},
-	}
-
-	for i, tc := range tcs {
-		assert.Group(
-			fmt.Sprintf("testCases[%d]: left=[%#v], right=[%#v]", i, tc.left, tc.right),
-			t,
-			func(g *assert.G) {
-				assert.Equal(g, compareBoolPtrs(tc.left, tc.right), tc.expected)
-			},
-		)
-	}
 }
 
 func TestCompareStrings(t *testing.T) {

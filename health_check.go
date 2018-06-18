@@ -163,23 +163,23 @@ func (hc HealthCheck) compare(ohc HealthCheck) int {
 		return cmp
 	}
 
-	if cmp := compareIntPtrs(hc.IntervalJitterMsec, ohc.IntervalJitterMsec); cmp != 0 {
+	if cmp := ptr.CompareInts(hc.IntervalJitterMsec, ohc.IntervalJitterMsec); cmp != 0 {
 		return cmp
 	}
 
-	if cmp := compareIntPtrs(hc.NoTrafficIntervalMsec, ohc.NoTrafficIntervalMsec); cmp != 0 {
+	if cmp := ptr.CompareInts(hc.NoTrafficIntervalMsec, ohc.NoTrafficIntervalMsec); cmp != 0 {
 		return cmp
 	}
 
-	if cmp := compareIntPtrs(hc.UnhealthyIntervalMsec, ohc.UnhealthyIntervalMsec); cmp != 0 {
+	if cmp := ptr.CompareInts(hc.UnhealthyIntervalMsec, ohc.UnhealthyIntervalMsec); cmp != 0 {
 		return cmp
 	}
 
-	if cmp := compareIntPtrs(hc.UnhealthyEdgeIntervalMsec, ohc.UnhealthyEdgeIntervalMsec); cmp != 0 {
+	if cmp := ptr.CompareInts(hc.UnhealthyEdgeIntervalMsec, ohc.UnhealthyEdgeIntervalMsec); cmp != 0 {
 		return cmp
 	}
 
-	if cmp := compareIntPtrs(hc.HealthyEdgeIntervalMsec, ohc.HealthyEdgeIntervalMsec); cmp != 0 {
+	if cmp := ptr.CompareInts(hc.HealthyEdgeIntervalMsec, ohc.HealthyEdgeIntervalMsec); cmp != 0 {
 		return cmp
 	}
 
@@ -191,7 +191,7 @@ func (hc HealthCheck) compare(ohc HealthCheck) int {
 		return cmp
 	}
 
-	if cmp := compareBoolPtrs(hc.ReuseConnection, ohc.ReuseConnection); cmp != 0 {
+	if cmp := ptr.CompareBools(hc.ReuseConnection, ohc.ReuseConnection); cmp != 0 {
 		return cmp
 	}
 

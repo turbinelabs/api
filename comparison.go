@@ -16,46 +16,12 @@ limitations under the License.
 
 package api
 
-// Treats nil pointers as being less than non-nil pointers. Falls back on int
-// comparison when both arguments are non-nil
-func compareIntPtrs(a, b *int) int {
-	switch {
-	case a == nil && b == nil:
-		return 0
-	case a == nil && b != nil:
-		return -1
-	case a != nil && b == nil:
-		return 1
-	default:
-		return compareInts(*a, *b)
-	}
-}
-
 // Returns 1 if a > b, -1 if a < b, 0 if a == b
 func compareInts(a, b int) int {
 	switch {
 	case a < b:
 		return -1
 	case a > b:
-		return 1
-	default:
-		return 0
-	}
-}
-
-// Treats nil pointers are less than non-nil pointers. False is considered less
-// than true.
-func compareBoolPtrs(a, b *bool) int {
-	switch {
-	case a == nil && b == nil:
-		return 0
-	case a == nil && b != nil:
-		return -1
-	case a != nil && b == nil:
-		return 1
-	case !*a && *b:
-		return -1
-	case *a && !*b:
 		return 1
 	default:
 		return 0
