@@ -73,7 +73,7 @@ const (
 	UnknownTransportCode ErrorCode = "UnknownTransportCode"
 
 	// UnknownUnauthorizedCode indicates that authorization for this request failed.
-	UnknownUnauthorizedCode ErrorCode = "UnknownUnathorizedCode"
+	UnknownUnauthorizedCode ErrorCode = "UnknownUnauthorizedCode"
 
 	// UnknownUnclassifiedCode indicates an unclassified failure.
 	UnknownUnclassifiedCode ErrorCode = "UnknownUnclassifiedCode"
