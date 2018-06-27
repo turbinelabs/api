@@ -115,5 +115,9 @@ func (r SharedRules) IsValid() *ValidationError {
 // SharedRulesPropertiesValid ensures that the metadata has no duplicate
 // or empty keys.
 func SharedRulesPropertiesValid(m Metadata) *ValidationError {
-	return MetadataValid("properties", m, MetadataCheckNonEmptyKeys)
+	return MetadataValid(
+		"properties",
+		m,
+		MetadataCheckKeysMatchPattern(AllowedIndexPattern, AllowedIndexPatternMatchFailure),
+	)
 }

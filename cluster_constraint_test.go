@@ -357,6 +357,15 @@ func TestConstraintMetadataValidFailed(t *testing.T) {
 	}})
 }
 
+func TestMetadataIsValidKeyFailsCheck(t *testing.T) {
+	md := getTestMD()
+	md = append(md, Metadatum{"ke[y", "value"})
+	errs := ConstraintMetadataValid(md)
+	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
+		{"metadata[ke[y].key", "may not contain [ or ] characters"},
+	}})
+}
+
 func TestConstraintPropertiesValid(t *testing.T) {
 	mgood := Metadatum{"key", "value"}
 	mgood2 := Metadatum{"key2", ""}
@@ -380,6 +389,15 @@ func TestConstraintPropertiesValidFailedDupes(t *testing.T) {
 	errs := ConstraintPropertiesValid(m)
 	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
 		{"properties", "duplicate properties key 'key'"},
+	}})
+}
+
+func TestConstraintPropertiesValidFailedKey(t *testing.T) {
+	md := getTestMD()
+	md = append(md, Metadatum{"ke[y", "value"})
+	errs := ConstraintPropertiesValid(md)
+	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
+		{"properties[ke[y].key", "may not contain [ or ] characters"},
 	}})
 }
 

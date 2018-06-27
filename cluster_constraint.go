@@ -61,13 +61,22 @@ func (cc ClusterConstraint) IsValid() *ValidationError {
 // ConstraintMetadataValid ensures that the metadata has no duplicate keys or
 // or empty keys or values.
 func ConstraintMetadataValid(m Metadata) *ValidationError {
-	return MetadataValid("metadata", m, MetadataCheckNonEmptyKeys, MetadataCheckNonEmptyValues)
+	return MetadataValid(
+		"metadata",
+		m,
+		MetadataCheckKeysMatchPattern(AllowedIndexPattern, AllowedIndexPatternMatchFailure),
+		MetadataCheckNonEmptyValues,
+	)
 }
 
 // ConstraintPropertiesValid ensures that the metadata has no duplicate
 // or empty keys.
 func ConstraintPropertiesValid(m Metadata) *ValidationError {
-	return MetadataValid("properties", m, MetadataCheckNonEmptyKeys)
+	return MetadataValid(
+		"properties",
+		m,
+		MetadataCheckKeysMatchPattern(AllowedIndexPattern, AllowedIndexPatternMatchFailure),
+	)
 }
 
 /*

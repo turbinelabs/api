@@ -332,6 +332,14 @@ func TestSharedRulesIsValidBadProperty(t *testing.T) {
 	}})
 }
 
+func TestSharedRuleIsValidBadKey(t *testing.T) {
+	r, _ := getSharedRulesDefaults()
+	r.Properties[0].Key = "bad]key"
+	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
+		{"shared_rules.properties[bad]key].key", "may not contain [ or ] characters"},
+	}})
+}
+
 func TestSharedRulesIsValidNoMetadataNoProperty(t *testing.T) {
 	r, _ := getSharedRulesDefaults()
 	r.Properties = nil
