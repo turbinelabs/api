@@ -47,6 +47,8 @@ tags:
   - name: Proxy
     description: A configuration that can be applied to one or more running
                  Proxies serving one or more Domains.
+  - name: Listener
+    description: An interface and port a Proxy will listen on
   - name: Domain
     description: A served hostname and port.
   - name: Route
@@ -801,6 +803,131 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /listener:
+    get:
+      tags:
+        - Listener
+      summary: list listeners
+      description: Get a list of listeners
+      parameters:
+        - name: filters
+          in: query
+          description: |
+            A JSON encoded array of ListenerFilter objects. The filter is taken
+            as a union of intersections. In other words an object that matches
+            every constraint in any ListenerFilter will be included.
+          type: string
+      responses:
+        200:
+          description: a result containing a list of listeners
+          schema:
+            $ref: "#/definitions/MultiListenerResult"
+        default:
+          description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+    post:
+      tags:
+        - Listener
+      summary: create listener
+      description: Create a new listener
+      consumes:
+        - application/json
+      parameters:
+        - name: listener
+          in: body
+          description: the listener to create
+          required: true
+          schema:
+            $ref: "#/definitions/ListenerCreate"
+      responses:
+        200:
+          description: the newly created listener
+          schema:
+            $ref: "#/definitions/ListenerResult"
+        default:
+          description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+  /listener/{listenerKey}:
+    get:
+      summary: get listener
+      description: Get details for a single listener
+      tags:
+        - Listener
+      parameters:
+        - name: listenerKey
+          in: path
+          description: the listener key
+          required: true
+          type: string
+          x-example: 72c86057-ee8d-4a2b-a3a7-760fbd1d3b9f
+      responses:
+        200:
+          description: a result containing a single listener
+          schema:
+            $ref: "#/definitions/ListenerResult"
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    put:
+      summary: modify listener
+      description: Modify an existing listener
+      tags:
+        - Listener
+      consumes:
+        - application/json
+      parameters:
+        - name: listenerKey
+          in: path
+          description: the listener key
+          required: true
+          type: string
+          x-example: 5074fe62-821e-4034-55bd-b9caa09af2a1
+        - name: listener
+          in: body
+          description: the listener to modify
+          required: true
+          schema:
+            $ref: "#/definitions/Listener"
+      responses:
+        200:
+          description: A result containing the modified cluster
+          schema:
+            $ref: "#/definitions/ListenerResult"
+        default:
+          description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+    delete:
+      summary: delete listener
+      description: Delete existing listener
+      tags:
+        - Listener
+      parameters:
+        - name: listenerKey
+          in: path
+          description: the listener key
+          required: true
+          type: string
+          x-example: 72c86057-ee8d-4a2b-a3a7-760fbd1d3b9f
+        - name: checksum
+          in: query
+          description: the current checksum of the listener to be deleted
+          required: true
+          type: string
+          x-example: 9cd24183-f848-48f8-6f55-0f07240700b9
+      responses:
+        200:
+          description: an empty result
+          schema:
+            $ref: "#/definitions/Listener"
+        default:
+          description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+
   /shared_rules:
     get:
       summary: get shared_rules
@@ -1537,6 +1664,10 @@ definitions:
         type: array
         items:
           type: string
+      listener_keys:
+        type: array
+        items:
+          type: string
 
   MultiProxyResult:
     type: object
@@ -1551,6 +1682,95 @@ definitions:
     properties:
       result:
         $ref: "#/definitions/Proxy"
+
+  Listener:
+    allOf:
+      - $ref: "#/definitions/ListenerCreate"
+      - type: object
+        required:
+        - listener_key
+        - zone_key
+        - checksum
+        properties:
+          listener_key:
+            x-example: 9cd24183-f848-48f8-6f55-0f0724070000
+            type: string
+          checksum:
+            type: string
+
+  ListenerCreate:
+    type: object
+    required:
+      - listener_key
+      - name
+      - host
+      - port
+      - protocol
+    properties:
+      name:
+        x-example: http-web
+        type: string
+      ip:
+        x-example: 0.0.0.0
+        description: the interface this listener should bind to.
+        type: string
+      port:
+        x-example: 80
+        description: the port this listener should bind to.
+        type: integer
+      protocol:
+        description: |
+          the protocol this listener will handle. http and http2 configure the listener to only
+          process requests of that type. http_auto will adapt to HTTP/1.1 and HTTP/2 as needed.
+          tcp configures the listener to be a tcp proxy
+        type: string
+        enum:
+          - http
+          - http2
+          - http_auto
+          - tcp
+      domain_keys:
+        x-example: ["9cd24183-f848-48f8-6f55-0f0724070000", "9cd24183-f848-48f8-6f55-0f0724070001"]
+        type: array
+        items:
+          type: string
+      tracing_config:
+        $ref: "#/definitions/TracingConfig"
+      zone_key:
+        type: string
+
+  MultiListenerResult:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          $ref: "#/definitions/Listener"
+
+  ListenerResult:
+    type: object
+    properties:
+      result:
+        $ref: "#/definitions/Listener"
+
+  TracingConfig:
+    description: |
+      Configures tracing operations to be performed on the given listener
+    type: object
+    properties:
+      ingress:
+        x-example: true
+        type: boolean
+        description: |
+          Determines whether spans sent from this listener should be treated as ingress
+          or egress operations.
+      request_headers_for_tags:
+        description: |
+          the headers specified here will be added to the generated spans as annotations
+        x-example: ['x-forwarded-for', 'x-user-id']
+        type: array
+        items:
+          type: string
 
   Route:
     allOf:

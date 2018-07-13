@@ -48,6 +48,7 @@ type All interface {
 	SharedRules() SharedRules
 	Route() Route
 	Proxy() Proxy
+	Listener() Listener
 	Zone() Zone
 	History() History
 }
@@ -131,6 +132,7 @@ type Cluster interface {
 }
 
 // DomainFilter describes a filter on the full list of Domains
+// per #5628 we should add the ability to find Listeners a Domain is attached to
 type DomainFilter struct {
 	DomainKey api.DomainKey `json:"domain_key"`
 	Name      string        `json:"name"`
@@ -222,14 +224,24 @@ type ProxyFilter struct {
 	// slice with a single value of "-" will produce Proxies with no linked
 	// Domains.
 	DomainKeys []api.DomainKey `json:"domain_keys"`
-	ZoneKey    api.ZoneKey     `json:"zone_key"`
-	OrgKey     api.OrgKey      `json:"org_key"`
+	// ListenerKeys matches Proxies with a superset of the specified ListenerKeys. A
+	// slice with a single value of "-" will produce Proxies with no linked
+	// Listeners.
+	ListenerKeys []api.ListenerKey `json:"listener_keys"`
+	ZoneKey      api.ZoneKey       `json:"zone_key"`
+	OrgKey       api.OrgKey        `json:"org_key"`
 }
 
 // HasNoDomains returns true if DomainKeys has been set to the monitor
 // value indicating a filter for Proxies with no linked Domains.
 func (pf ProxyFilter) HasNoDomains() bool {
 	return len(pf.DomainKeys) == 1 && pf.DomainKeys[0] == None
+}
+
+// HasNoListeners returns true if ListenerKeys has been set to the monitor
+// value indicating a filter for Proxies with no linked Listeners.
+func (pf ProxyFilter) HasNoListeners() bool {
+	return len(pf.ListenerKeys) == 1 && pf.ListenerKeys[0] == None
 }
 
 // IsNil returns true if the receiver is the zero value
@@ -243,7 +255,8 @@ func (pf ProxyFilter) Equals(o ProxyFilter) bool {
 		pf.Name == o.Name &&
 		pf.ZoneKey == o.ZoneKey &&
 		pf.OrgKey == o.OrgKey &&
-		len(pf.DomainKeys) == len(o.DomainKeys)) {
+		len(pf.DomainKeys) == len(o.DomainKeys) &&
+		len(pf.ListenerKeys) == len(o.ListenerKeys)) {
 		return false
 	}
 
@@ -253,6 +266,16 @@ func (pf ProxyFilter) Equals(o ProxyFilter) bool {
 	}
 	for _, e := range o.DomainKeys {
 		if !m[string(e)] {
+			return false
+		}
+	}
+
+	ml := make(map[string]bool)
+	for _, e := range pf.ListenerKeys {
+		ml[string(e)] = true
+	}
+	for _, e := range o.ListenerKeys {
+		if !ml[string(e)] {
 			return false
 		}
 	}
@@ -296,6 +319,91 @@ type Proxy interface {
 	// If the checksum does not match no action is taken and an error
 	// is returned.
 	Delete(proxyKey api.ProxyKey, checksum api.Checksum) error
+}
+
+// ListenerFilter describes a filter on the full list of Listeners
+// per #5629 we should add the ability to find Proxies a Listener is attached to
+type ListenerFilter struct {
+	ListenerKey api.ListenerKey `json:"listener_key"`
+	Name        string          `json:"name"`
+	// DomainKeys matches Listeners with a superset of the specified DomainKeys. A
+	// slice with a single value of "-" will produce Listeners with no linked
+	// Domains.
+	DomainKeys []api.DomainKey `json:"domain_keys"`
+	ZoneKey    api.ZoneKey     `json:"zone_key"`
+	OrgKey     api.OrgKey      `json:"org_key"`
+}
+
+// HasNoDomains returns true if DomainKeys has been set to the monitor
+// value indicating a filter for Listeners with no linked Domains.
+func (lf ListenerFilter) HasNoDomains() bool {
+	return len(lf.DomainKeys) == 1 && lf.DomainKeys[0] == None
+}
+
+// IsNil returns true if the receiver is the zero value
+func (lf ListenerFilter) IsNil() bool {
+	return lf.Equals(ListenerFilter{})
+}
+
+// Equals returns true if the target is equal to the receiver
+func (lf ListenerFilter) Equals(o ListenerFilter) bool {
+	if !(lf.ListenerKey == o.ListenerKey &&
+		lf.Name == o.Name &&
+		lf.ZoneKey == o.ZoneKey &&
+		lf.OrgKey == o.OrgKey &&
+		len(lf.DomainKeys) == len(o.DomainKeys)) {
+		return false
+	}
+
+	m := make(map[string]bool)
+	for _, e := range lf.DomainKeys {
+		m[string(e)] = true
+	}
+	for _, e := range o.DomainKeys {
+		if !m[string(e)] {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Listener describes the CRUD interface for api.Listener
+type Listener interface {
+	// GET /v1.0/listeners
+	//
+	// Index returns all listeners to which the given filters apply. All non-empty
+	// fields in a filter must apply for the filter to apply. Any Listener to which
+	// any filter applies is included in the result.
+	//
+	// If no filters are supplied, all Listeners are returned.
+	Index(filters ...ListenerFilter) (api.Listeners, error)
+
+	// GET /v1.0/listeners/<string:listenerKey>[?include_deleted]
+	//
+	// Get returns a Listener for the given ListenerKey. If the Listener does not
+	// exist, an error is returned.
+	Get(listenerKey api.ListenerKey) (api.Listener, error)
+
+	// POST /v1.0/listeners
+	//
+	// Create creates the given Listener. The tuple of (Host, Port, ZoneKey) must be
+	// unique. If a ListenerKey is specified in the Listener, it is ignored and
+	// replaced in the result with the authoritative ListenerKey.
+	Create(listener api.Listener) (api.Listener, error)
+
+	// PUT /v1.0/listeners/<string:listenerKey>
+	//
+	// Modify Modifies the given Listener. The tuple of (Host, Port, ZoneKey) must be
+	// unique. The given Listener Checksum must match the existing Checksum.
+	Modify(listener api.Listener) (api.Listener, error)
+
+	// DELETE /v1.0/listeners/<string:listenerKey>?checksum=<string:checksum>
+	//
+	// Delete completely removes the Listener from the database.
+	// If the checksum does not match no action is taken and an error
+	// is returned.
+	Delete(listenerKey api.ListenerKey, checksum api.Checksum) error
 }
 
 // SharedRulesFilter describes a filter on the full list of SharedRules

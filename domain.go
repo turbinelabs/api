@@ -128,9 +128,9 @@ type Domains []Domain
 
 // Checks for validity of a domain. A domain is considered valid if it has a:
 //  1. DomainKey OR is being checked in before creation
-//  2. non empty ZoneKey
-//  3. non empty Name
-//  4. non zero Port
+//  2. non-empty ZoneKey
+//  3. non-empty Name
+//  4. non-zero Port
 func (d Domain) IsValid() *ValidationError {
 	scope := func(n string) string { return "domain." + n }
 	ecase := func(f, m string) ErrorCase {
@@ -144,8 +144,8 @@ func (d Domain) IsValid() *ValidationError {
 	errCheckIndex(d.Name, errs, scope("name"))
 	errCheckKey(string(d.OrgKey), errs, scope("org_key"))
 
-	if d.Port == 0 {
-		errs.AddNew(ecase("port", "must be non-zero"))
+	if d.Port <= 0 {
+		errs.AddNew(ecase("port", "must be positive"))
 	}
 
 	parent := "domain"

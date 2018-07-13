@@ -85,6 +85,10 @@ func NewAll(
 	if err != nil {
 		return nil, err
 	}
+	l, err := NewListenerV1(dest)
+	if err != nil {
+		return nil, err
+	}
 	z, err := NewZoneV1(dest)
 	if err != nil {
 		return nil, err
@@ -94,7 +98,7 @@ func NewAll(
 		return nil, err
 	}
 
-	httpService := httpServiceV1{c, d, r, s, p, z, h}
+	httpService := httpServiceV1{c, d, r, s, p, l, z, h}
 
 	return &httpService, nil
 }
@@ -157,6 +161,7 @@ type httpServiceV1 struct {
 	routeV1       *httpRouteV1
 	sharedRulesV1 *httpSharedRulesV1
 	proxyV1       *httpProxyV1
+	listenerV1    *httpListenerV1
 	zoneV1        *httpZoneV1
 	historyV1     *httpHistoryV1
 }
@@ -184,6 +189,11 @@ func (hs *httpServiceV1) Route() service.Route {
 // Returns an implementation of service.Proxy.
 func (hs *httpServiceV1) Proxy() service.Proxy {
 	return hs.proxyV1
+}
+
+// Returns an implementation of service.Listener
+func (hs *httpServiceV1) Listener() service.Listener {
+	return hs.listenerV1
 }
 
 // Returns an implementation of service.Zone.

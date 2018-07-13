@@ -92,6 +92,18 @@ func (mr *MockAllMockRecorder) Proxy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Proxy", reflect.TypeOf((*MockAll)(nil).Proxy))
 }
 
+// Listener mocks base method
+func (m *MockAll) Listener() Listener {
+	ret := m.ctrl.Call(m, "Listener")
+	ret0, _ := ret[0].(Listener)
+	return ret0
+}
+
+// Listener indicates an expected call of Listener
+func (mr *MockAllMockRecorder) Listener() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Listener", reflect.TypeOf((*MockAll)(nil).Listener))
+}
+
 // Zone mocks base method
 func (m *MockAll) Zone() Zone {
 	ret := m.ctrl.Call(m, "Zone")
@@ -413,6 +425,97 @@ func (m *MockProxy) Delete(proxyKey api.ProxyKey, checksum api.Checksum) error {
 // Delete indicates an expected call of Delete
 func (mr *MockProxyMockRecorder) Delete(proxyKey, checksum interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockProxy)(nil).Delete), proxyKey, checksum)
+}
+
+// MockListener is a mock of Listener interface
+type MockListener struct {
+	ctrl     *gomock.Controller
+	recorder *MockListenerMockRecorder
+}
+
+// MockListenerMockRecorder is the mock recorder for MockListener
+type MockListenerMockRecorder struct {
+	mock *MockListener
+}
+
+// NewMockListener creates a new mock instance
+func NewMockListener(ctrl *gomock.Controller) *MockListener {
+	mock := &MockListener{ctrl: ctrl}
+	mock.recorder = &MockListenerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockListener) EXPECT() *MockListenerMockRecorder {
+	return m.recorder
+}
+
+// Index mocks base method
+func (m *MockListener) Index(filters ...ListenerFilter) (api.Listeners, error) {
+	varargs := []interface{}{}
+	for _, a := range filters {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Index", varargs...)
+	ret0, _ := ret[0].(api.Listeners)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Index indicates an expected call of Index
+func (mr *MockListenerMockRecorder) Index(filters ...interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Index", reflect.TypeOf((*MockListener)(nil).Index), filters...)
+}
+
+// Get mocks base method
+func (m *MockListener) Get(listenerKey api.ListenerKey) (api.Listener, error) {
+	ret := m.ctrl.Call(m, "Get", listenerKey)
+	ret0, _ := ret[0].(api.Listener)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockListenerMockRecorder) Get(listenerKey interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockListener)(nil).Get), listenerKey)
+}
+
+// Create mocks base method
+func (m *MockListener) Create(listener api.Listener) (api.Listener, error) {
+	ret := m.ctrl.Call(m, "Create", listener)
+	ret0, _ := ret[0].(api.Listener)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockListenerMockRecorder) Create(listener interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockListener)(nil).Create), listener)
+}
+
+// Modify mocks base method
+func (m *MockListener) Modify(listener api.Listener) (api.Listener, error) {
+	ret := m.ctrl.Call(m, "Modify", listener)
+	ret0, _ := ret[0].(api.Listener)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Modify indicates an expected call of Modify
+func (mr *MockListenerMockRecorder) Modify(listener interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Modify", reflect.TypeOf((*MockListener)(nil).Modify), listener)
+}
+
+// Delete mocks base method
+func (m *MockListener) Delete(listenerKey api.ListenerKey, checksum api.Checksum) error {
+	ret := m.ctrl.Call(m, "Delete", listenerKey, checksum)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockListenerMockRecorder) Delete(listenerKey, checksum interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockListener)(nil).Delete), listenerKey, checksum)
 }
 
 // MockSharedRules is a mock of SharedRules interface

@@ -70,6 +70,7 @@ var (
 	Cluster     = ObjectType{"cluster", 7}
 	SharedRules = ObjectType{"shared_rules", 8}
 	AccessToken = ObjectType{"access_token", 9}
+	Listener    = ObjectType{"listener", 10}
 )
 
 func (ot ObjectType) ID() int64 {
@@ -100,6 +101,8 @@ func FromName(s string) (ObjectType, error) {
 		return SharedRules, nil
 	case AccessToken.Name:
 		return AccessToken, nil
+	case Listener.Name:
+		return Listener, nil
 	}
 
 	return ObjectType{}, UnrecognizedObjectTypeError
@@ -125,6 +128,8 @@ func FromID(i int) (ObjectType, error) {
 		return SharedRules, nil
 	case AccessToken.id:
 		return AccessToken, nil
+	case Listener.id:
+		return Listener, nil
 	}
 
 	return ObjectType{}, UnrecognizedObjectTypeError

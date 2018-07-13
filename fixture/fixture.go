@@ -126,26 +126,53 @@ type DataFixturesT struct {
 	DomainSlice        api.Domains  // slice of the two domains
 	PublicDomainSlice  api.Domains
 
-	ProxyKey1        api.ProxyKey
-	ProxyZone1       api.ZoneKey
-	ProxyMetadata1   api.Metadata
-	ProxyName1       string
-	ProxyDomainKeys1 []api.DomainKey
-	ProxyChecksum1   api.Checksum
-	ProxyOrgKey1     api.OrgKey
-	ProxyKey2        api.ProxyKey
-	ProxyZone2       api.ZoneKey
-	ProxyMetadata2   api.Metadata
-	ProxyName2       string
-	ProxyDomainKeys2 []api.DomainKey
-	ProxyChecksum2   api.Checksum
-	ProxyOrgKey2     api.OrgKey
-	ProxyDomain21    api.Domain
-	ProxyDomain22    api.Domain
-	Proxy1           api.Proxy
-	Proxy2           api.Proxy
-	ProxySlice       api.Proxies
-	PublicProxySlice api.Proxies
+	ProxyKey1          api.ProxyKey
+	ProxyZone1         api.ZoneKey
+	ProxyMetadata1     api.Metadata
+	ProxyName1         string
+	ProxyDomainKeys1   []api.DomainKey
+	ProxyListenerKeys1 []api.ListenerKey
+	ProxyChecksum1     api.Checksum
+	ProxyOrgKey1       api.OrgKey
+	ProxyKey2          api.ProxyKey
+	ProxyZone2         api.ZoneKey
+	ProxyMetadata2     api.Metadata
+	ProxyName2         string
+	ProxyDomainKeys2   []api.DomainKey
+	ProxyListenerKeys2 []api.ListenerKey
+	ProxyChecksum2     api.Checksum
+	ProxyOrgKey2       api.OrgKey
+	ProxyDomain21      api.Domain
+	ProxyDomain22      api.Domain
+	Proxy1             api.Proxy
+	Proxy2             api.Proxy
+	ProxySlice         api.Proxies
+	PublicProxySlice   api.Proxies
+
+	ListenerKey1           api.ListenerKey
+	ListenerZone1          api.ZoneKey
+	ListenerName1          string
+	ListenerIP1            string
+	ListenerPort1          int
+	ListenerProtocol1      api.ListenerProtocol
+	ListenerDomainKeys1    []api.DomainKey
+	ListenerTracingConfig1 api.TracingConfig
+	ListenerChecksum1      api.Checksum
+	ListenerOrgKey1        api.OrgKey
+	Listener1              api.Listener
+	ListenerKey2           api.ListenerKey
+	ListenerZone2          api.ZoneKey
+	ListenerName2          string
+	ListenerIP2            string
+	ListenerPort2          int
+	ListenerProtocol2      api.ListenerProtocol
+	ListenerDomainKeys2    []api.DomainKey
+	ListenerTracingConfig2 api.TracingConfig
+	ListenerChecksum2      api.Checksum
+	ListenerOrgKey2        api.OrgKey
+	Listener2              api.Listener
+	ListenerSlice          api.Listeners
+	PublicListenerSlice    api.Listeners
 
 	RouteKey1            api.RouteKey
 	RouteDomain1         api.DomainKey
@@ -399,6 +426,24 @@ func New() DataFixturesT {
 		ProxyOrgKey2:   "1",
 		ProxyChecksum2: api.Checksum{Checksum: "proxy-cs-2"},
 
+		ListenerKey1:      "listener-1",
+		ListenerZone1:     "listener-zone-1",
+		ListenerName1:     "listener-name-1",
+		ListenerIP1:       "127.0.0.1",
+		ListenerPort1:     80,
+		ListenerProtocol1: "http",
+		ListenerChecksum1: api.Checksum{Checksum: "listener-cs-1"},
+		ListenerOrgKey1:   "1",
+
+		ListenerKey2:      "listener-2",
+		ListenerZone2:     "listener-zone-2",
+		ListenerName2:     "listener-name-2",
+		ListenerIP2:       "10.0.0.1",
+		ListenerPort2:     8080,
+		ListenerProtocol2: "http2",
+		ListenerChecksum2: api.Checksum{Checksum: "listener-cs-2"},
+		ListenerOrgKey2:   "1",
+
 		RouteKey1:         "route-key-1",
 		RouteDomain1:      "route-dom-1",
 		RouteZone1:        "route-zone-1",
@@ -589,23 +634,28 @@ func New() DataFixturesT {
 		df.Domain1.DomainKey,
 		df.Domain2.DomainKey,
 	}
+	df.ProxyListenerKeys1 = []api.ListenerKey{
+		df.ListenerKey1,
+	}
 	df.Proxy1 = api.Proxy{
-		ProxyKey:   df.ProxyKey1,
-		ZoneKey:    df.ProxyZone1,
-		Name:       df.ProxyName1,
-		DomainKeys: df.ProxyDomainKeys1,
-		OrgKey:     df.ProxyOrgKey1,
-		Checksum:   df.ProxyChecksum1,
+		ProxyKey:     df.ProxyKey1,
+		ZoneKey:      df.ProxyZone1,
+		Name:         df.ProxyName1,
+		DomainKeys:   df.ProxyDomainKeys1,
+		ListenerKeys: df.ProxyListenerKeys1,
+		OrgKey:       df.ProxyOrgKey1,
+		Checksum:     df.ProxyChecksum1,
 	}
 
 	df.ProxyDomainKeys2 = df.ProxyDomainKeys1
 	df.Proxy2 = api.Proxy{
-		ProxyKey:   df.ProxyKey2,
-		ZoneKey:    df.ProxyZone2,
-		Name:       df.ProxyName2,
-		DomainKeys: df.ProxyDomainKeys2,
-		OrgKey:     df.ProxyOrgKey2,
-		Checksum:   df.ProxyChecksum2,
+		ProxyKey:     df.ProxyKey2,
+		ZoneKey:      df.ProxyZone2,
+		Name:         df.ProxyName2,
+		DomainKeys:   df.ProxyDomainKeys2,
+		ListenerKeys: []api.ListenerKey{},
+		OrgKey:       df.ProxyOrgKey2,
+		Checksum:     df.ProxyChecksum2,
 	}
 
 	df.ProxySlice = []api.Proxy{df.Proxy1, df.Proxy2}
@@ -613,6 +663,56 @@ func New() DataFixturesT {
 	for i, p := range df.ProxySlice {
 		p.OrgKey = ""
 		df.PublicProxySlice[i] = p
+	}
+
+	// listener setup
+	df.ListenerDomainKeys1 = []api.DomainKey{
+		df.Domain1.DomainKey,
+		df.Domain2.DomainKey,
+	}
+
+	df.ListenerTracingConfig1 = api.TracingConfig{
+		Ingress:               true,
+		RequestHeadersForTags: []string{"x-header-1-1"},
+	}
+	df.Listener1 = api.Listener{
+		OrgKey:        df.ListenerOrgKey1,
+		ListenerKey:   df.ListenerKey1,
+		ZoneKey:       df.ListenerZone1,
+		Name:          df.ListenerName1,
+		IP:            df.ListenerIP1,
+		Port:          df.ListenerPort1,
+		Protocol:      df.ListenerProtocol1,
+		DomainKeys:    df.ListenerDomainKeys1,
+		TracingConfig: &df.ListenerTracingConfig1,
+		Checksum:      df.ListenerChecksum1,
+	}
+
+	df.ListenerDomainKeys2 = []api.DomainKey{
+		df.Domain2.DomainKey,
+	}
+
+	df.ListenerTracingConfig2 = api.TracingConfig{
+		Ingress:               false,
+		RequestHeadersForTags: []string{"x-header-2-1", "x-header-2-2"},
+	}
+	df.Listener2 = api.Listener{
+		OrgKey:        df.ListenerOrgKey2,
+		ListenerKey:   df.ListenerKey2,
+		ZoneKey:       df.ListenerZone2,
+		Name:          df.ListenerName2,
+		IP:            df.ListenerIP2,
+		Port:          df.ListenerPort2,
+		Protocol:      df.ListenerProtocol2,
+		DomainKeys:    df.ListenerDomainKeys2,
+		TracingConfig: &df.ListenerTracingConfig2,
+		Checksum:      df.ListenerChecksum2,
+	}
+	df.ListenerSlice = api.Listeners{df.Listener1, df.Listener2}
+	df.PublicListenerSlice = make(api.Listeners, len(df.ListenerSlice))
+	for i, l := range df.ListenerSlice {
+		l.OrgKey = ""
+		df.PublicListenerSlice[i] = l
 	}
 
 	// route setup

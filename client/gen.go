@@ -19,6 +19,7 @@ package client
 //go:generate codegen --output=gen_cluster.go object.template Key=github.com/turbinelabs/api.ClusterKey Object=github.com/turbinelabs/api.Cluster ObjectArray=github.com/turbinelabs/api.Clusters Root=
 //go:generate codegen --output=gen_domain.go object.template Key=github.com/turbinelabs/api.DomainKey Object=github.com/turbinelabs/api.Domain ObjectArray=github.com/turbinelabs/api.Domains Root=
 //go:generate codegen --output=gen_proxy.go object.template Key=github.com/turbinelabs/api.ProxyKey Object=github.com/turbinelabs/api.Proxy ObjectArray=github.com/turbinelabs/api.Proxies Root=
+//go:generate codegen --output=gen_listener.go object.template Key=github.com/turbinelabs/api.ListenerKey Object=github.com/turbinelabs/api.Listener ObjectArray=github.com/turbinelabs/api.Listeners Root=
 //go:generate codegen --output=gen_route.go object.template Key=github.com/turbinelabs/api.RouteKey Object=github.com/turbinelabs/api.Route ObjectArray=github.com/turbinelabs/api.Routes Root=
 //go:generate codegen --output=gen_shared_rules.go object.template Key=github.com/turbinelabs/api.SharedRulesKey Object=github.com/turbinelabs/api.SharedRules ObjectArray=github.com/turbinelabs/api.SharedRulesSlice Root=
 //go:generate codegen --output=gen_zone.go object.template Key=github.com/turbinelabs/api.ZoneKey Object=github.com/turbinelabs/api.Zone ObjectArray=github.com/turbinelabs/api.Zones Root=

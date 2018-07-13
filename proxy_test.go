@@ -25,12 +25,13 @@ import (
 
 func getProxies() (Proxy, Proxy) {
 	p := Proxy{
-		ProxyKey:   "pkey1",
-		Name:       "name1",
-		ZoneKey:    "zkey1",
-		OrgKey:     "okey1",
-		Checksum:   Checksum{"csum1"},
-		DomainKeys: []DomainKey{"dkey1", "dkey2"},
+		ProxyKey:     "pkey1",
+		Name:         "name1",
+		ZoneKey:      "zkey1",
+		OrgKey:       "okey1",
+		Checksum:     Checksum{"csum1"},
+		DomainKeys:   []DomainKey{"dkey1", "dkey2"},
+		ListenerKeys: []ListenerKey{"lkey1", "lkey2"},
 	}
 
 	return p, p
@@ -91,13 +92,28 @@ func TestProxyEqualsDiffDomainOrder(t *testing.T) {
 	assert.True(t, p2.Equals(p1))
 }
 
+func TestProxyEqualsDiffListeners(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.ListenerKeys = []ListenerKey{"lkey1"}
+	assert.True(t, p1.Equals(p2))
+	assert.True(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffListenerOrder(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.ListenerKeys = []ListenerKey{"lkey2", "lkey1"}
+	assert.True(t, p1.Equals(p2))
+	assert.True(t, p2.Equals(p1))
+}
+
 func mkTestP() Proxy {
 	return Proxy{
-		ProxyKey:   "pk-1",
-		ZoneKey:    "zk-1",
-		Name:       "my neat proxy!",
-		DomainKeys: []DomainKey{"dk-1", "dk-2"},
-		OrgKey:     "ok-1",
+		ProxyKey:     "pk-1",
+		ZoneKey:      "zk-1",
+		Name:         "my neat proxy!",
+		DomainKeys:   []DomainKey{"dk-1", "dk-2"},
+		ListenerKeys: []ListenerKey{"lk-1", "lk-2"},
+		OrgKey:       "ok-1",
 	}
 }
 
@@ -160,6 +176,28 @@ func TestProxyIsValidDupeDomainKeys(t *testing.T) {
 	gotErr := p.IsValid()
 	assert.DeepEqual(t, gotErr, &ValidationError{[]ErrorCase{
 		{"proxy.domain_keys", fmt.Sprintf("duplicate domain key '%v'", p.DomainKeys[0])},
+	}})
+}
+
+func TestProxyIsValidBadListenerKeys(t *testing.T) {
+	badKey := "aoentuhahoe1120[]]"
+	p := mkTestP()
+	p.ListenerKeys = []ListenerKey{ListenerKey(badKey)}
+	gotErr := p.IsValid()
+	assert.DeepEqual(t, gotErr, &ValidationError{[]ErrorCase{
+		{
+			fmt.Sprintf("proxy.listener_keys[%v]", badKey),
+			"must match pattern: ^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$",
+		},
+	}})
+}
+
+func TestProxyIsValidDupeListenerKeys(t *testing.T) {
+	p := mkTestP()
+	p.ListenerKeys = append(p.ListenerKeys, p.ListenerKeys[0])
+	gotErr := p.IsValid()
+	assert.DeepEqual(t, gotErr, &ValidationError{[]ErrorCase{
+		{"proxy.listener_keys", fmt.Sprintf("duplicate listener key '%v'", p.ListenerKeys[0])},
 	}})
 }
 

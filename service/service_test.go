@@ -106,6 +106,7 @@ func getRouteFilterTestRoute() api.Route {
 func TestProxyFilterMatches(t *testing.T) {
 	type pf ProxyFilter
 	type dk []api.DomainKey
+	type lk []api.ListenerKey
 	type testcase struct {
 		name        string
 		f1          pf
@@ -124,6 +125,9 @@ func TestProxyFilterMatches(t *testing.T) {
 		{"only domainkeys, nil", pf{DomainKeys: dk{"a", "b"}}, pf{}, false},
 		{"different domainkeys, nil", pf{DomainKeys: dk{"a", "b"}}, pf{DomainKeys: dk{"a", "c"}}, false},
 		{"same domain keys, different order", pf{DomainKeys: dk{"a", "b"}}, pf{DomainKeys: dk{"b", "a"}}, true},
+		{"only listenerkeys, nil", pf{ListenerKeys: lk{"a", "b"}}, pf{}, false},
+		{"different listenerkeys, nil", pf{ListenerKeys: lk{"a", "b"}}, pf{ListenerKeys: lk{"a", "c"}}, false},
+		{"same listener keys, different order", pf{ListenerKeys: lk{"a", "b"}}, pf{ListenerKeys: lk{"b", "a"}}, true},
 	}
 
 	for _, c := range cases {
@@ -136,6 +140,7 @@ func getProxyFilter() ProxyFilter {
 		"proxy-key",
 		"proxy-name",
 		[]api.DomainKey{"key", "key2"},
+		[]api.ListenerKey{"lkey", "lkey2"},
 		"zone-key",
 		"org-key",
 	}
