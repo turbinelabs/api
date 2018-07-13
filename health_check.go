@@ -201,38 +201,36 @@ func (hc HealthCheck) compare(ohc HealthCheck) int {
 
 // IsValid checks that a HealthCheck object is valid.
 func (hc HealthCheck) IsValid() *ValidationError {
-	scope := func(s string) string { return "health_check." + s }
-
 	errs := &ValidationError{}
 	if hc.TimeoutMsec < 1 {
-		errs.AddNew(ErrorCase{scope("timeout_msec"), "must be greater than zero"})
+		errs.AddNew(ErrorCase{"timeout_msec", "must be greater than zero"})
 	}
 
 	if hc.IntervalMsec < 1 {
-		errs.AddNew(ErrorCase{scope("interval_msec"), "must be greater than zero"})
+		errs.AddNew(ErrorCase{"interval_msec", "must be greater than zero"})
 	}
 
 	if v, ok := ptr.IntValueOk(hc.IntervalJitterMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
-				scope("interval_jitter_msec"),
+				"interval_jitter_msec",
 				"must be greater than zero",
 			},
 		)
 	}
 
 	if hc.UnhealthyThreshold < 1 {
-		errs.AddNew(ErrorCase{scope("unhealthy_threshold"), "must be greater than zero"})
+		errs.AddNew(ErrorCase{"unhealthy_threshold", "must be greater than zero"})
 	}
 
 	if hc.HealthyThreshold < 1 {
-		errs.AddNew(ErrorCase{scope("healthy_threshold"), "must be greater than zero"})
+		errs.AddNew(ErrorCase{"healthy_threshold", "must be greater than zero"})
 	}
 
 	if v, ok := ptr.IntValueOk(hc.NoTrafficIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
-				scope("no_traffic_interval_msec"),
+				"no_traffic_interval_msec",
 				"must be greater than zero",
 			},
 		)
@@ -241,7 +239,7 @@ func (hc HealthCheck) IsValid() *ValidationError {
 	if v, ok := ptr.IntValueOk(hc.UnhealthyIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
-				scope("unhealthy_interval_msec"),
+				"unhealthy_interval_msec",
 				"must be greater than zero",
 			},
 		)
@@ -250,7 +248,7 @@ func (hc HealthCheck) IsValid() *ValidationError {
 	if v, ok := ptr.IntValueOk(hc.UnhealthyEdgeIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
-				scope("unhealthy_edge_interval_msec"),
+				"unhealthy_edge_interval_msec",
 				"must be greater than zero",
 			},
 		)
@@ -259,13 +257,13 @@ func (hc HealthCheck) IsValid() *ValidationError {
 	if v, ok := ptr.IntValueOk(hc.HealthyEdgeIntervalMsec); ok && v < 1 {
 		errs.AddNew(
 			ErrorCase{
-				scope("healthy_edge_interval_msec"),
+				"healthy_edge_interval_msec",
 				"must be greater than zero",
 			},
 		)
 	}
 
-	errs.MergePrefixed(hc.HealthChecker.IsValid(), "health_check")
+	errs.Merge(hc.HealthChecker.IsValid())
 	return errs.OrNil()
 }
 

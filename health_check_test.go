@@ -629,7 +629,7 @@ func TestHealthCheckIsValidTimeoutMsecInvalid(t *testing.T) {
 		a.IsValid(),
 		&ValidationError{
 			[]ErrorCase{
-				{"health_check.timeout_msec", "must be greater than zero"},
+				{"timeout_msec", "must be greater than zero"},
 			},
 		},
 	)
@@ -643,7 +643,7 @@ func TestHealthCheckIsValidIntervalMsecInvalid(t *testing.T) {
 		a.IsValid(),
 		&ValidationError{
 			[]ErrorCase{
-				{"health_check.interval_msec", "must be greater than zero"},
+				{"interval_msec", "must be greater than zero"},
 			},
 		},
 	)
@@ -658,7 +658,7 @@ func TestHealthCheckIsValidIntervalJitterMsecInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.interval_jitter_msec",
+					"interval_jitter_msec",
 					"must be greater than zero",
 				},
 			},
@@ -675,7 +675,7 @@ func TestHealthCheckIsValidUnhealthyThresholdInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.unhealthy_threshold",
+					"unhealthy_threshold",
 					"must be greater than zero",
 				},
 			},
@@ -692,7 +692,7 @@ func TestHealthCheckIsValidHealthyThresholdInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.healthy_threshold",
+					"healthy_threshold",
 					"must be greater than zero",
 				},
 			},
@@ -709,7 +709,7 @@ func TestHealthCheckIsValidNoTrafficIntervalMsecInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.no_traffic_interval_msec",
+					"no_traffic_interval_msec",
 					"must be greater than zero",
 				},
 			},
@@ -726,7 +726,7 @@ func TestHealthCheckIsValidUnhealthyIntervalMsecInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.unhealthy_interval_msec",
+					"unhealthy_interval_msec",
 					"must be greater than zero",
 				},
 			},
@@ -743,7 +743,7 @@ func TestHealthCheckIsValidUnhealthyEdgeIntervalMsecInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.unhealthy_edge_interval_msec",
+					"unhealthy_edge_interval_msec",
 					"must be greater than zero",
 				},
 			},
@@ -760,7 +760,7 @@ func TestHealthCheckIsValidHealthyEdgeIntervalMsecInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.healthy_edge_interval_msec",
+					"healthy_edge_interval_msec",
 					"must be greater than zero",
 				},
 			},
@@ -777,7 +777,7 @@ func TestHealthCheckIsValidEmptyHealthCheckerInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.health_checker",
+					"health_checker",
 					"must have one health check defined",
 				},
 			},
@@ -795,7 +795,7 @@ func TestHealthCheckIsValidMultipleHealthChecksDefinedInvalid(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_check.health_checker",
+					"health_checker",
 					"must not have more than one type of health check defined",
 				},
 			},
@@ -848,7 +848,7 @@ func TestHealthCheckIsValidReportsIndexOfFailure(t *testing.T) {
 		&ValidationError{
 			[]ErrorCase{
 				{
-					"health_checks[0].health_check.timeout_msec",
+					"health_checks[0].timeout_msec",
 					"must be greater than zero",
 				},
 			},
