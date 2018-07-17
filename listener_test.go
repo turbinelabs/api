@@ -17,7 +17,6 @@ limitations under the License.
 package api
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -28,9 +27,9 @@ func getListeners() (Listener, Listener) {
 		ListenerKey: "lkey1",
 		ZoneKey:     "zkey1",
 		Name:        "name1",
-		IP:          "127.0.0.1",
+		IP:          "0.0.0.0",
 		Port:        80,
-		Protocol:    "http",
+		Protocol:    "http_auto",
 		DomainKeys:  []DomainKey{"dkey1", "dkey2"},
 		TracingConfig: &TracingConfig{
 			Ingress:               true,
@@ -116,29 +115,15 @@ func TestListenerEqualsDiffChecksum(t *testing.T) {
 	assert.False(t, l2.Equals(l1))
 }
 
-func TestListenerEqualsDiffDomains(t *testing.T) {
-	l1, l2 := getListeners()
-	l2.DomainKeys = []DomainKey{"dkey1"}
-	assert.False(t, l1.Equals(l2))
-	assert.False(t, l2.Equals(l1))
-}
-
-func TestListenerEqualsDiffDomainOrder(t *testing.T) {
-	p1, p2 := getProxies()
-	p2.DomainKeys = []DomainKey{"dkey2", "dkey1"}
-	assert.True(t, p1.Equals(p2))
-	assert.True(t, p2.Equals(p1))
-}
-
 func mkTestL() Listener {
 	return Listener{
 		ListenerKey: "lkey1",
 		ZoneKey:     "zkey1",
 		Name:        "name1",
-		IP:          "127.0.0.1",
+		IP:          "0.0.0.0",
 		Port:        80,
-		Protocol:    "http",
-		DomainKeys:  []DomainKey{"dkey1", "dkey2"},
+		Protocol:    "http_auto",
+		DomainKeys:  []DomainKey{},
 		TracingConfig: &TracingConfig{
 			Ingress:               true,
 			RequestHeadersForTags: []string{"x-foo"},
@@ -195,6 +180,12 @@ func TestListenerIsValidBadIP(t *testing.T) {
 	assert.NonNil(t, l.IsValid())
 }
 
+func TestListenerIsValidSpecificInterface(t *testing.T) {
+	l := mkTestL()
+	l.IP = "10.0.0.10"
+	assert.NonNil(t, l.IsValid())
+}
+
 func TestListenerIsValidBadPort(t *testing.T) {
 	l := mkTestL()
 	l.Port = -1
@@ -207,26 +198,17 @@ func TestListenerIsValidBadProtocol(t *testing.T) {
 	assert.NonNil(t, l.IsValid())
 }
 
-func TestListenerIsValidBadDomainKeys(t *testing.T) {
+func TestListenerIsValidNonHttpAutoProtocol(t *testing.T) {
 	l := mkTestL()
-	badKey := "anethircgoenith]]"
-	l.DomainKeys = []DomainKey{DomainKey(badKey)}
-	gotErr := l.IsValid()
-	assert.DeepEqual(t, gotErr, &ValidationError{[]ErrorCase{
-		{
-			fmt.Sprintf("listener.domain_keys[%v]", badKey),
-			"must match pattern: ^[0-9a-zA-Z]+(-[0-9a-zA-Z]+)*$",
-		},
-	}})
+	l.Protocol = "http2"
+	assert.NonNil(t, l.IsValid())
 }
 
-func TestListenerIsValidDupeDomainKeys(t *testing.T) {
+func TestListenerIsValidHasDomainKeys(t *testing.T) {
 	l := mkTestL()
-	l.DomainKeys = append(l.DomainKeys, l.DomainKeys[0])
-	gotErr := l.IsValid()
-	assert.DeepEqual(t, gotErr, &ValidationError{[]ErrorCase{
-		{"listener.domain_keys", fmt.Sprintf("duplicate domain key '%v'", l.DomainKeys[0])},
-	}})
+	key := "domain-key"
+	l.DomainKeys = []DomainKey{DomainKey(key)}
+	assert.NonNil(t, l.IsValid())
 }
 
 func TestListenerIsValidBadOrgKey(t *testing.T) {

@@ -18,7 +18,6 @@ package api
 
 import (
 	"fmt"
-	"net"
 )
 
 type ListenerProtocol string
@@ -42,6 +41,8 @@ func ListenerProtocolFromString(s string) (ListenerProtocol, error) {
 	return ListenerProtocol(""), fmt.Errorf("unknown ListenerProtocol: %s", s)
 }
 
+// right now we only support the http_auto protocol. This will
+// be expanded as we fully convert to the proxy -> listener -> domain model.
 func (lp ListenerProtocol) IsValid() bool {
 	_, err := ListenerProtocolFromString(string(lp))
 	return err == nil
@@ -78,9 +79,9 @@ type Listeners []Listener
 //  1. ListenerKey OR is being checked before creation
 //  2. non-empty ZoneKey
 //  3. non-empty Name
-//  4. non-empty IP
+//  4. an IP equal to 0..0.0.0 (tobe expanded as we add full listener support)
 //  5. non-zero Port
-//  6. non-empty Protocol, one of http, http2, http_auto or tcp
+//  6. a protocol equal to http_auto (to be expanded as we add full listener support)
 func (l Listener) IsValid() *ValidationError {
 	scope := func(s string) string { return "listener." + s }
 	ecase := func(f, m string) ErrorCase {
@@ -88,12 +89,6 @@ func (l Listener) IsValid() *ValidationError {
 	}
 
 	errs := &ValidationError{}
-
-	if !l.Protocol.IsValid() {
-		errs.AddNew(ecase(
-			"protocol",
-			fmt.Sprintf("%s is not a valid listener protocol", string(l.Protocol))))
-	}
 
 	errCheckKey(string(l.ListenerKey), errs, scope("listener_key"))
 	errCheckKey(string(l.ZoneKey), errs, scope("zone_key"))
@@ -114,8 +109,13 @@ func (l Listener) IsValid() *ValidationError {
 		errs.AddNew(ecase("ip", "must be specified"))
 	}
 
-	if net.ParseIP(l.IP) == nil {
-		errs.AddNew(ecase("host", fmt.Sprintf("%s is not a valid ip", l.IP)))
+	if len(l.DomainKeys) > 0 {
+		errs.AddNew(ecase("domain_keys", "currently domain keys must be empty"))
+	}
+
+	// replace with net.ParseIP(l.IP) == nil when we add support for specific addresses
+	if l.IP != "0.0.0.0" {
+		errs.AddNew(ecase("host", "IP must be '0.0.0.0'"))
 	}
 
 	if l.Port <= 0 {
@@ -123,7 +123,13 @@ func (l Listener) IsValid() *ValidationError {
 	}
 
 	if !l.Protocol.IsValid() {
-		errs.AddNew(ecase("protocol", "must be one of http, http2, http_auto, or tcp"))
+		errs.AddNew(ecase(
+			"protocol",
+			fmt.Sprintf("%s is not a valid listener protocol", string(l.Protocol))))
+	}
+
+	if l.Protocol != HttpAutoListenerProtocol {
+		errs.AddNew(ecase("protocol", "must be http_auto"))
 	}
 
 	if l.TracingConfig != nil {

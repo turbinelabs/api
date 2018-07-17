@@ -429,18 +429,18 @@ func New() DataFixturesT {
 		ListenerKey1:      "listener-1",
 		ListenerZone1:     "listener-zone-1",
 		ListenerName1:     "listener-name-1",
-		ListenerIP1:       "127.0.0.1",
+		ListenerIP1:       "0.0.0.0",
 		ListenerPort1:     80,
-		ListenerProtocol1: "http",
+		ListenerProtocol1: "http_auto",
 		ListenerChecksum1: api.Checksum{Checksum: "listener-cs-1"},
 		ListenerOrgKey1:   "1",
 
 		ListenerKey2:      "listener-2",
 		ListenerZone2:     "listener-zone-2",
 		ListenerName2:     "listener-name-2",
-		ListenerIP2:       "10.0.0.1",
+		ListenerIP2:       "0.0.0.0",
 		ListenerPort2:     8080,
-		ListenerProtocol2: "http2",
+		ListenerProtocol2: "http_auto",
 		ListenerChecksum2: api.Checksum{Checksum: "listener-cs-2"},
 		ListenerOrgKey2:   "1",
 
@@ -666,10 +666,7 @@ func New() DataFixturesT {
 	}
 
 	// listener setup
-	df.ListenerDomainKeys1 = []api.DomainKey{
-		df.Domain1.DomainKey,
-		df.Domain2.DomainKey,
-	}
+	df.ListenerDomainKeys1 = []api.DomainKey{}
 
 	df.ListenerTracingConfig1 = api.TracingConfig{
 		Ingress:               true,
@@ -688,9 +685,7 @@ func New() DataFixturesT {
 		Checksum:      df.ListenerChecksum1,
 	}
 
-	df.ListenerDomainKeys2 = []api.DomainKey{
-		df.Domain2.DomainKey,
-	}
+	df.ListenerDomainKeys2 = []api.DomainKey{}
 
 	df.ListenerTracingConfig2 = api.TracingConfig{
 		Ingress:               false,
