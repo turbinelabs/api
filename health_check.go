@@ -90,7 +90,7 @@ type HealthCheck struct {
 	// healthy. For subsequent health checks the proxy will shift back to
 	// using the standard health check interval that is defined. Defaults
 	// to the same value as IntervalMsec if not specified
-	HealthyEdgeIntervalMsec *int `json:"health_edge_interval_msec,omitempty"`
+	HealthyEdgeIntervalMsec *int `json:"healthy_edge_interval_msec,omitempty"`
 
 	// HealthChecker defines the type of health checking to use.
 	HealthChecker HealthChecker `json:"health_checker"`
