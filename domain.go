@@ -231,7 +231,9 @@ func (ds Domains) IsValid() *ValidationError {
 
 // CorsConfig describes how the domain should respond to OPTIONS requests.
 // For a detailed discussion of what each attribute means see
-// https://developer.mozilla.org/docs/Web/HTTP/Access_control_CORS
+// https://developer.mozilla.org/docs/Web/HTTP/Access_control_CORS.
+// For an even simpler flowchart of how things work see
+// https://www.html5rocks.com/static/images/cors_server_flowchart.png
 type CorsConfig struct {
 	AllowedOrigins   []string `json:"allowed_origins"`
 	AllowCredentials bool     `json:"allow_credentials"`
