@@ -31,7 +31,6 @@ func mkHD() HeaderDatum {
 			"X-Header-Name",
 			"Header-Value",
 			false,
-			true,
 		},
 	}
 }
@@ -42,7 +41,6 @@ func mkCD() CookieDatum {
 			"Cookie-name",
 			"cookie-value",
 			true,
-			false,
 		},
 		nil,
 		"domain.com",
@@ -105,12 +103,6 @@ func TestHeaderDatumLiteralChanged(t *testing.T) {
 	headerDatumTest{t, hd, false}.run()
 }
 
-func TestHeaderDatumAlwaysChanged(t *testing.T) {
-	hd := mkHD()
-	hd.AlwaysSend = !hd.AlwaysSend
-	headerDatumTest{t, hd, false}.run()
-}
-
 func TestHeaderDatumCanonicalName(t *testing.T) {
 	hd := mkHD()
 	assert.Equal(t, hd.CanonicalName(), strings.ToLower(hd.Name))
@@ -155,12 +147,6 @@ func TestCookieDatumChangeValue(t *testing.T) {
 func TestCookieDatumChangeLiteral(t *testing.T) {
 	ck := mkCD()
 	ck.ValueIsLiteral = !ck.ValueIsLiteral
-	testCk(t, ck)
-}
-
-func TestCookieDatumChangeAlways(t *testing.T) {
-	ck := mkCD()
-	ck.AlwaysSend = !ck.AlwaysSend
 	testCk(t, ck)
 }
 

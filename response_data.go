@@ -200,11 +200,6 @@ type ResponseDatum struct {
 	// instead of a reference to be resolved as the key of a metadatum set on
 	// the server handling a request.
 	ValueIsLiteral bool `json:"value_is_literal,omitempty"`
-
-	// AlwaysSend, if set, will cause a ResponseDatum to always be returned with
-	// a request. If false the annotation will only be set on response codes of
-	// 2xx or 3xx.
-	AlwaysSend bool `json:"always_send"`
 }
 
 // HeaderDatum represents a header that should be attached to a response to
@@ -216,13 +211,12 @@ type HeaderDatum struct {
 }
 
 // Equals compares two HeaderDatum objects. A HeaderDatum is determined to be
-// equal if the name (case insensitive check), value, ValueIsLiteral, and
-// AlwaysSend attributes are equal.
+// equal if the name (case insensitive check), value, and ValueIsLiteral
+// attributes are equal.
 func (hd HeaderDatum) Equals(o HeaderDatum) bool {
 	return hd.CanonicalName() == o.CanonicalName() &&
 		hd.Value == o.Value &&
-		hd.ValueIsLiteral == o.ValueIsLiteral &&
-		hd.AlwaysSend == o.AlwaysSend
+		hd.ValueIsLiteral == o.ValueIsLiteral
 }
 
 // IsValid ensures that HeaderDatum attributes have reasonable values:
@@ -304,7 +298,6 @@ func (cd CookieDatum) Equals(o CookieDatum) bool {
 	return cd.Name == o.Name &&
 		cd.Value == o.Value &&
 		cd.ValueIsLiteral == o.ValueIsLiteral &&
-		cd.AlwaysSend == o.AlwaysSend &&
 		expTimeEq &&
 		cd.Domain == o.Domain &&
 		cd.Path == o.Path &&

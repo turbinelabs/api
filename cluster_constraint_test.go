@@ -26,7 +26,7 @@ import (
 
 func getRD() ResponseData {
 	return ResponseData{
-		[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}},
+		[]HeaderDatum{{ResponseDatum{"x-header", "value", true}}},
 		nil,
 	}
 }
@@ -37,7 +37,7 @@ func TestClusterConstraintsEqualsSuccess(t *testing.T) {
 		"ckey1",
 		Metadata{{"key", "value"}, {"key2", "value2"}},
 		Metadata{{"state", "released"}},
-		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true}}}, nil},
 		1234,
 	}
 	cc2 := ClusterConstraint{
@@ -45,7 +45,7 @@ func TestClusterConstraintsEqualsSuccess(t *testing.T) {
 		"ckey2",
 		Metadata{{"key-2", "value-2"}},
 		Metadata{{"stata", "testing"}},
-		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true}}}, nil},
 		1234,
 	}
 
@@ -62,7 +62,7 @@ func TestClusterConstraintsEqualsDiffernetOrder(t *testing.T) {
 		"ckey1",
 		Metadata{{"key", "value"}, {"key2", "value2"}},
 		Metadata{{"state", "released"}},
-		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true}}}, nil},
 		1234,
 	}
 	cc2 := ClusterConstraint{
@@ -70,7 +70,7 @@ func TestClusterConstraintsEqualsDiffernetOrder(t *testing.T) {
 		"ckey2",
 		Metadata{{"key-2", "value-2"}},
 		Metadata{{"stata", "testing"}},
-		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true, false}}}, nil},
+		ResponseData{[]HeaderDatum{{ResponseDatum{"x-header", "value", true}}}, nil},
 		1234,
 	}
 

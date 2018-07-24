@@ -2514,12 +2514,6 @@ definitions:
         description: |
           If true then the value attribute is treated as a literal and no attempt
           to resolve instance metadatum to find a value.
-      always_send:
-        type: boolean
-        description: |
-          If false or not set then this header will only be sent on HTTP response codes
-          of 2xx and 3xx. If true then data will be returned for 4xx and 5xx responses
-          as well.
 
   CookieDatum:
     description: |
@@ -2540,12 +2534,6 @@ definitions:
         description: |
           If true then the value attribute is treated as a literal and no attempt
           to resolve to a server metadatum.
-      always_send:
-        type: boolean
-        description: |
-          If false or not set then this cookie will only be sent on HTTP response codes
-          of 2xx and 3xx. If true then data will be returned for 4xx and 5xx responses
-          as well.
       expires_in_sec:
         type: integer
         description: |
