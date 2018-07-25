@@ -41,6 +41,7 @@ func getDomains() (Domain, Domain) {
 		mkCC(),
 		DomainAliases{},
 		"okey",
+		true,
 		Checksum{"aoeusnth"},
 	}
 	d2 := d
@@ -104,6 +105,13 @@ func TestDomainEqualsCorsConfigChanges(t *testing.T) {
 	assert.False(t, d1.Equals(d2))
 }
 
+func TestDomainEqualsForceHTTPSChanged(t *testing.T) {
+	d1, d2 := getDomains()
+	d2.ForceHTTPS = false
+	assert.False(t, d2.Equals(d1))
+	assert.False(t, d1.Equals(d2))
+}
+
 func TestDomainNotEqualsKeyVaries(t *testing.T) {
 	d1, d2 := getDomains()
 	d2.DomainKey = "dkey2"
@@ -156,6 +164,7 @@ func getDomain() Domain {
 		cc,
 		DomainAliases{},
 		"okey",
+		true,
 		Checksum{},
 	}
 }
@@ -285,9 +294,9 @@ func TestDomainIsValidAlias(t *testing.T) {
 }
 
 func getThreeDomains() (Domain, Domain, Domain) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
 
 	return d1, d2, d3
 }
@@ -320,27 +329,27 @@ func TestDomainsEqualsFailure(t *testing.T) {
 }
 
 func TestDomainsIsValidSuccess(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.Nil(t, ds.IsValid())
 }
 
 func TestDomainsIsValidFailureDupe(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d2 := Domain{"dkey-2", "zk", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
 	ds := Domains{d3, d2, d1, d3}
 
 	assert.NonNil(t, ds.IsValid())
 }
 
 func TestDomainsIsValidFailureBadDomain(t *testing.T) {
-	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d2 := Domain{"dkey-2", "", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
-	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", Checksum{}}
+	d1 := Domain{"dkey-1", "zk", "name", 10, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d2 := Domain{"dkey-2", "", "name", 20, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
+	d3 := Domain{"dkey-3", "zk", "name", 30, nil, nil, true, nil, DomainAliases{}, "okey", true, Checksum{}}
 	ds := Domains{d3, d2, d1}
 
 	assert.NonNil(t, ds.IsValid())

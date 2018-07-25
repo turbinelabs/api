@@ -108,6 +108,7 @@ type DataFixturesT struct {
 	DomainGzipEnabled1 bool          // part of domain 1
 	DomainCorsConfig1  *api.CorsConfig
 	DomainAliases1     api.DomainAliases
+	DomainForceHTTPS1  bool         // part of domain 1
 	DomainChecksum1    api.Checksum // checks for domain 1
 	DomainOrgKey1      api.OrgKey
 	DomainKey2         api.DomainKey // UUID of domain 2
@@ -120,6 +121,7 @@ type DataFixturesT struct {
 	DomainCorsConfig2  *api.CorsConfig
 	DomainAliases2     api.DomainAliases
 	DomainOrgKey2      api.OrgKey
+	DomainForceHTTPS2  bool         // part of domain 2
 	DomainChecksum2    api.Checksum // checks for domain 2
 	Domain1            api.Domain   // domain 1
 	Domain2            api.Domain   // domain 2
@@ -401,6 +403,7 @@ func New() DataFixturesT {
 			AllowedHeaders:   []string{"x-allowed-1", "x-allowed-2"},
 		},
 		DomainAliases1:     api.DomainAliases{"example.com", "*.example.com"},
+		DomainForceHTTPS1:  true,
 		DomainChecksum1:    api.Checksum{Checksum: "ck1"},
 		DomainOrgKey1:      "1",
 		DomainKey2:         "sntaohesntahoesuntaohe",
@@ -413,6 +416,7 @@ func New() DataFixturesT {
 		DomainCorsConfig2:  nil,
 		DomainAliases2:     nil,
 		DomainOrgKey2:      "1",
+		DomainForceHTTPS2:  false,
 		DomainChecksum2:    api.Checksum{Checksum: "ck2"},
 
 		ProxyKey1:      "proxy-1",
@@ -605,6 +609,7 @@ func New() DataFixturesT {
 		CorsConfig:  df.DomainCorsConfig1,
 		Aliases:     df.DomainAliases1,
 		OrgKey:      df.DomainOrgKey1,
+		ForceHTTPS:  df.DomainForceHTTPS1,
 		Checksum:    df.DomainChecksum1,
 	}
 
@@ -619,6 +624,7 @@ func New() DataFixturesT {
 		CorsConfig:  df.DomainCorsConfig2,
 		Aliases:     df.DomainAliases2,
 		OrgKey:      df.DomainOrgKey2,
+		ForceHTTPS:  df.DomainForceHTTPS2,
 		Checksum:    df.DomainChecksum2,
 	}
 

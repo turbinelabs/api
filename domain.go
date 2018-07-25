@@ -59,6 +59,7 @@ type Domain struct {
 	CorsConfig  *CorsConfig   `json:"cors_config"`
 	Aliases     DomainAliases `json:"aliases"`
 	OrgKey      OrgKey        `json:"-"`
+	ForceHTTPS  bool          `json:"force_https"`
 	Checksum
 }
 
@@ -182,6 +183,7 @@ func (d Domain) Equals(o Domain) bool {
 		d.OrgKey == o.OrgKey &&
 		d.GzipEnabled == o.GzipEnabled &&
 		d.Redirects.Equals(o.Redirects) &&
+		d.ForceHTTPS == o.ForceHTTPS &&
 		ccEq
 }
 

@@ -1463,6 +1463,12 @@ definitions:
         type: array
         items:
           type: string
+      force_https:
+        description: |
+          If set to true, requests must use TLS. If a request is not using TLS, (as determined by
+          the scheme or the presence of X-Forwarded-Proto header), a 301 redirect will be sent
+          telling the client to use HTTPS.
+        type: boolean
 
   Redirect:
     description: |
