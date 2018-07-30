@@ -26,20 +26,36 @@ import (
 func getSharedRulesFilterTestSharedRules() api.SharedRules {
 	defaultCC := api.AllConstraints{
 		Light: api.ClusterConstraints{
-			{"cc1", api.HeaderMatchKind, api.Metadata{{"k", "v"}, {"k2", "v2"}}, nil, api.ResponseData{}, 23}}}
+			{
+				ConstraintKey: "cc1",
+				ClusterKey:    "c1",
+				Metadata: api.Metadata{
+					{Key: "k", Value: "v"},
+					{Key: "k2", Value: "v2"},
+				},
+				ResponseData: api.ResponseData{},
+				Weight:       23,
+			},
+		},
+	}
 
 	rule1 := api.Rule{
 		"rk1",
 		[]string{"GET", "POST"},
 		api.Matches{
-			api.Match{
-				api.HeaderMatchKind,
-				api.Metadatum{"x-1", "value"},
-				api.Metadatum{"flag", "true"}},
-			api.Match{
-				api.CookieMatchKind,
-				api.Metadatum{"x-2", "value"},
-				api.Metadatum{"other", "true"}}},
+			{
+				Kind:     api.HeaderMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-1", Value: "value"},
+				To:       api.Metadatum{Key: "flag", Value: "true"},
+			},
+			{
+				Kind:     api.CookieMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-2", Value: "value"},
+				To:       api.Metadatum{Key: "other", Value: "true"},
+			},
+		},
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
 				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, api.ResponseData{}, 1234}}},
@@ -70,14 +86,19 @@ func getRouteFilterTestRoute() api.Route {
 		"rk1",
 		[]string{"GET", "POST"},
 		api.Matches{
-			api.Match{
-				api.HeaderMatchKind,
-				api.Metadatum{"x-1", "value"},
-				api.Metadatum{"flag", "true"}},
-			api.Match{
-				api.CookieMatchKind,
-				api.Metadatum{"x-2", "value"},
-				api.Metadatum{"other", "true"}}},
+			{
+				Kind:     api.HeaderMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-1", Value: "value"},
+				To:       api.Metadatum{Key: "flag", Value: "true"},
+			},
+			{
+				Kind:     api.CookieMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-2", Value: "value"},
+				To:       api.Metadatum{Key: "other", Value: "true"},
+			},
+		},
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
 				{"cckey2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "releasing"}}, api.ResponseData{}, 1234}}},

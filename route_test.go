@@ -27,8 +27,19 @@ func getRulesDefaults() (Rule, Rule) {
 		"rk0",
 		[]string{"GET", "POST"},
 		Matches{
-			Match{HeaderMatchKind, Metadatum{"x-1", "value"}, Metadatum{"flag", "true"}},
-			Match{CookieMatchKind, Metadatum{"x-2", "value"}, Metadatum{"other", "true"}}},
+			Match{
+				Kind:     HeaderMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-1", Value: "value"},
+				To:       Metadatum{Key: "flag", Value: "true"},
+			},
+			Match{
+				Kind:     CookieMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-2", Value: "value"},
+				To:       Metadatum{Key: "other", Value: "true"},
+			},
+		},
 		AllConstraints{
 			Light: ClusterConstraints{
 				ClusterConstraint{"cckey1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}}},
@@ -39,7 +50,13 @@ func getRulesDefaults() (Rule, Rule) {
 		"rk1",
 		[]string{"PUT", "DELETE"},
 		Matches{
-			Match{CookieMatchKind, Metadatum{"x-2", "value"}, Metadatum{"other", "true"}}},
+			Match{
+				Kind:     CookieMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-2", Value: "value"},
+				To:       Metadatum{Key: "other", Value: "true"},
+			},
+		},
 		AllConstraints{
 			Tap: ClusterConstraints{
 				ClusterConstraint{"cckey1", "ckey3", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},

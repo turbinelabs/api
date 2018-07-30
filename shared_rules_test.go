@@ -27,7 +27,7 @@ func getSharedRulesDefaults() (SharedRules, SharedRules) {
 		Light: ClusterConstraints{
 			ClusterConstraint{
 				"cckey1",
-				HeaderMatchKind,
+				"ckey1",
 				Metadata{{"k", "v"}, {"k2", "v2"}},
 				Metadata{{"state", "released"}},
 				getRD(),
@@ -184,8 +184,8 @@ func TestSharedRulesEqualsZoneKeyVaries(t *testing.T) {
 func TestSharedRulesEqualsDefaultVaries(t *testing.T) {
 	defaultCC := AllConstraints{
 		Light: ClusterConstraints{
-			ClusterConstraint{"cckey1", HeaderMatchKind, Metadata{{"k1", "v1"}, {"k2", "v2"}}, nil, ResponseData{}, 23},
-			ClusterConstraint{"cckey2", HeaderMatchKind, Metadata{{"k2", "v2"}, {"k2", "v2"}}, nil, ResponseData{}, 23}}}
+			ClusterConstraint{"cckey1", "ckey1", Metadata{{"k1", "v1"}, {"k2", "v2"}}, nil, ResponseData{}, 23},
+			ClusterConstraint{"cckey2", "ckey2", Metadata{{"k2", "v2"}, {"k2", "v2"}}, nil, ResponseData{}, 23}}}
 
 	r1, r2 := getSharedRulesDefaults()
 	r1.Default = defaultCC

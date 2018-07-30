@@ -27,8 +27,19 @@ func getRules() (Rule, Rule) {
 		"rkey1",
 		[]string{"GET", "POST"},
 		Matches{
-			Match{HeaderMatchKind, Metadatum{"x-random", "value"}, Metadatum{"randomflag", "true"}},
-			Match{CookieMatchKind, Metadatum{"x-other", "value"}, Metadatum{"otherflag", "true"}}},
+			{
+				Kind:     HeaderMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-random", Value: "value"},
+				To:       Metadatum{Key: "randomflag", Value: "true"},
+			},
+			{
+				Kind:     CookieMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-other", Value: "value"},
+				To:       Metadatum{Key: "otherflag", Value: "true"},
+			},
+		},
 		AllConstraints{
 			Light: ClusterConstraints{
 				ClusterConstraint{
@@ -52,8 +63,19 @@ func getRules() (Rule, Rule) {
 		"rkey1",
 		[]string{"POST", "GET"},
 		Matches{
-			Match{CookieMatchKind, Metadatum{"x-other", "value"}, Metadatum{"otherflag", "true"}},
-			Match{HeaderMatchKind, Metadatum{"x-random", "value"}, Metadatum{"randomflag", "true"}}},
+			{
+				Kind:     CookieMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-other", Value: "value"},
+				To:       Metadatum{Key: "otherflag", Value: "true"},
+			},
+			{
+				Kind:     HeaderMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-random", Value: "value"},
+				To:       Metadatum{Key: "randomflag", Value: "true"},
+			},
+		},
 		AllConstraints{
 			Light: ClusterConstraints{
 				ClusterConstraint{
@@ -206,8 +228,18 @@ func TestRuleIsValidBadMethod(t *testing.T) {
 func TestRuleIsValidBadMatches(t *testing.T) {
 	r := getRuleValid()
 	r.Matches = Matches{
-		Match{CookieMatchKind, Metadatum{"x-other", "value"}, Metadatum{"otherflag", "true"}},
-		Match{HeaderMatchKind, Metadatum{"x-random", "value"}, Metadatum{"", "aoeu"}},
+		Match{
+			Kind:     CookieMatchKind,
+			Behavior: ExactMatchBehavior,
+			From:     Metadatum{Key: "x-other", Value: "value"},
+			To:       Metadatum{Key: "otherflag", Value: "true"},
+		},
+		Match{
+			Kind:     HeaderMatchKind,
+			Behavior: ExactMatchBehavior,
+			From:     Metadatum{Key: "x-random", Value: "value"},
+			To:       Metadatum{Key: "", Value: "aoeu"},
+		},
 	}
 
 	assert.NonNil(t, r.IsValid())
@@ -226,8 +258,19 @@ func getRulesValidTestRules() (Rule, Rule) {
 		"rkey0",
 		[]string{"POST", "PUT"},
 		Matches{
-			Match{CookieMatchKind, Metadatum{"x-other", "value"}, Metadatum{"otherflag", "true"}},
-			Match{HeaderMatchKind, Metadatum{"x-random", "value"}, Metadatum{"randomflag", "true"}}},
+			{
+				Kind:     CookieMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-other", Value: "value"},
+				To:       Metadatum{Key: "otherflag", Value: "true"},
+			},
+			{
+				Kind:     HeaderMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "x-random", Value: "value"},
+				To:       Metadatum{Key: "randomflag", Value: "true"},
+			},
+		},
 		AllConstraints{
 			Light: ClusterConstraints{{"ck0", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 		},
@@ -238,8 +281,19 @@ func getRulesValidTestRules() (Rule, Rule) {
 		"rkey1",
 		[]string{"GET"},
 		Matches{
-			Match{CookieMatchKind, Metadatum{"other", "v"}, Metadatum{"flag", "true"}},
-			Match{HeaderMatchKind, Metadatum{"random", "v"}, Metadatum{"random", "true"}}},
+			{
+				Kind:     CookieMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "other", Value: "v"},
+				To:       Metadatum{Key: "flag", Value: "true"},
+			},
+			{
+				Kind:     HeaderMatchKind,
+				Behavior: ExactMatchBehavior,
+				From:     Metadatum{Key: "random", Value: "v"},
+				To:       Metadatum{Key: "random", Value: "true"},
+			},
+		},
 		AllConstraints{
 			Light: ClusterConstraints{{"ck1", "ckey2", Metadata{{"key-2", "value-2"}}, nil, ResponseData{}, 1234}},
 		},
@@ -272,7 +326,12 @@ func TestRulesIsValidEmptySuccess(t *testing.T) {
 
 func TestRulesIsValidFailureBadMatches(t *testing.T) {
 	r1, r2 := getRulesValidTestRules()
-	badMatch := Match{"whee", Metadatum{"other", "v"}, Metadatum{"flag", "true"}}
+	badMatch := Match{
+		Kind:     "whee",
+		Behavior: ExactMatchBehavior,
+		From:     Metadatum{Key: "other", Value: "v"},
+		To:       Metadatum{Key: "flag", Value: "true"},
+	}
 	r2.Matches[1] = badMatch
 	r := Rules{r1, r2}
 
@@ -288,7 +347,7 @@ func TestRulesIsValidFailureBadNesting(t *testing.T) {
 	r := Rules{r1, r2}
 
 	assert.DeepEqual(t, r.IsValid(), &ValidationError{[]ErrorCase{
-		{"rules[rkey1].matches[foo:other].kind", "foo is not a valid match kind"},
+		{"rules[rkey1].matches[foo:exact:other].kind", `"foo" is not a valid match kind`},
 		{"rules[rkey1].constraints.light[ck1].metadata[new-key].value", "must not be empty"},
 	}})
 }

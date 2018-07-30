@@ -718,12 +718,23 @@ func New() DataFixturesT {
 
 	// route setup
 	routeRule1 := api.Rule{
-		"rk-1-0",
-		[]string{"GET", "POST"},
-		api.Matches{
-			api.Match{api.HeaderMatchKind, api.Metadatum{"x-1", "value"}, api.Metadatum{"flag", "true"}},
-			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", ""}, api.Metadatum{"other", "true"}}},
-		api.AllConstraints{
+		RuleKey: "rk-1-0",
+		Methods: []string{"GET", "POST"},
+		Matches: api.Matches{
+			{
+				Kind:     api.HeaderMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-1", Value: "value"},
+				To:       api.Metadatum{Key: "flag", Value: "true"},
+			},
+			{
+				Kind:     api.CookieMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-2", Value: ""},
+				To:       api.Metadatum{Key: "other", Value: "true"},
+			},
+		},
+		Constraints: api.AllConstraints{
 			Light: api.ClusterConstraints{
 				{
 					"cc-0",
@@ -733,20 +744,24 @@ func New() DataFixturesT {
 					api.ResponseData{},
 					1234,
 				}}},
-		nil,
 	}
 
 	routeRule2 := api.Rule{
-		"rk-0-1",
-		[]string{"PUT", "DELETE"},
-		api.Matches{
-			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", "value"}, api.Metadatum{"other", "true"}}},
-		api.AllConstraints{
+		RuleKey: "rk-0-1",
+		Methods: []string{"PUT", "DELETE"},
+		Matches: api.Matches{
+			{
+				Kind:     api.CookieMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-2", Value: "value"},
+				To:       api.Metadatum{Key: "other", Value: "true"},
+			},
+		},
+		Constraints: api.AllConstraints{
 			Tap: api.ClusterConstraints{
 				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}},
 			Light: api.ClusterConstraints{
 				{"cc-2", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}}},
-		nil,
 	}
 
 	df.RouteRules1 = api.Rules{routeRule1}
@@ -827,8 +842,19 @@ func New() DataFixturesT {
 		"srk-1-0",
 		[]string{"GET", "POST"},
 		api.Matches{
-			api.Match{api.HeaderMatchKind, api.Metadatum{"x-1", "value"}, api.Metadatum{"flag", "true"}},
-			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", ""}, api.Metadatum{"other", "true"}}},
+			api.Match{
+				Kind:     api.HeaderMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-1", Value: "value"},
+				To:       api.Metadatum{Key: "flag", Value: "true"},
+			},
+			api.Match{
+				Kind:     api.CookieMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-2", Value: ""},
+				To:       api.Metadatum{Key: "other", Value: "true"},
+			},
+		},
 		api.AllConstraints{
 			Light: api.ClusterConstraints{
 				{"cc-0", "ckey2", api.Metadata{{"key-2", "value-2"}}, api.Metadata{{"state", "test"}}, api.ResponseData{}, 1234}}},
@@ -839,7 +865,13 @@ func New() DataFixturesT {
 		"srk-0-1",
 		[]string{"PUT", "DELETE"},
 		api.Matches{
-			api.Match{api.CookieMatchKind, api.Metadatum{"x-2", "value"}, api.Metadatum{"other", "true"}}},
+			api.Match{
+				Kind:     api.CookieMatchKind,
+				Behavior: api.ExactMatchBehavior,
+				From:     api.Metadatum{Key: "x-2", Value: "value"},
+				To:       api.Metadatum{Key: "other", Value: "true"},
+			},
+		},
 		api.AllConstraints{
 			Tap: api.ClusterConstraints{
 				{"cc-1", "ckey3", api.Metadata{{"key-2", "value-2"}}, api.Metadata{}, api.ResponseData{}, 1234}},
@@ -850,7 +882,7 @@ func New() DataFixturesT {
 
 	sharedRulesDefault1 := api.AllConstraints{
 		Light: api.ClusterConstraints{
-			{"cc-4", api.HeaderMatchKind, api.Metadata{{"k", "v"}, {"k2", "v2"}}, api.Metadata{{"state", "released"}}, api.ResponseData{}, 23}}}
+			{"cc-4", "ckey4", api.Metadata{{"k", "v"}, {"k2", "v2"}}, api.Metadata{{"state", "released"}}, api.ResponseData{}, 23}}}
 	sharedRulesDefault2 := sharedRulesDefault1
 
 	df.SharedRulesDefault1 = sharedRulesDefault1

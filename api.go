@@ -49,9 +49,12 @@ const (
 	// required.
 	HeaderNamePatternStr = "^[0-9A-Za-z-]+$"
 
-	// CookieNamePatternStr specifies what can be used when a cooke name is
+	// CookieNamePatternStr specifies what can be used when a cookie name is
 	// required.
 	CookieNamePatternStr = "^[0-9A-Za-z_.-]+$"
+
+	// RangePatternStr specifies the format expected for range matches.
+	RangeMatchPatternStr = `^\s*\[\s*([-+]?\d+),\s*([-+]?\d+)\s*\)\s*$`
 )
 
 var (
@@ -70,6 +73,9 @@ var (
 	// CookieNamePattern is the pattern that a string must match if it going to
 	// be used as a cookie name.
 	CookieNamePattern = regexp.MustCompile(CookieNamePatternStr)
+
+	// RangeMatchPattern is the pattern that a range match From.Value should have.
+	RangeMatchPattern = regexp.MustCompile(RangeMatchPatternStr)
 )
 
 // ErrorCase represents an error in an API object. It contains both the

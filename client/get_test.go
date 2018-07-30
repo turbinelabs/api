@@ -65,7 +65,11 @@ func (tc getTestCase) run(t *testing.T) {
 
 	got, gotErr := tc.svcCall(tc.key, s)
 
-	assert.DeepEqual(t, gotErr, tc.wantErr)
+	if !assert.DeepEqual(t, gotErr, tc.wantErr) {
+		fmt.Printf("got err: %s\n", gotErr)
+		fmt.Printf("want err: %s\n", tc.wantErr)
+	}
+
 	assert.True(t, tc.checkEquality(got, tc.wantResp))
 }
 
