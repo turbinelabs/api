@@ -1855,6 +1855,13 @@ definitions:
     description: |
       Represents a mapping of request attributes to constraints on a cluster
       using different matching schemes.
+
+      Certain combinations of `kind` and `behavior` are not allowed
+        | kind | behavior |
+        | ---- | -------- |
+        | query | regex |
+        | query | range |
+        | cookie | range |
     properties:
       kind:
         type: string

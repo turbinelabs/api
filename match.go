@@ -91,6 +91,24 @@ type Match struct {
 	To       Metadatum     `json:"to"`
 }
 
+var invalidKindBehaviorCombinations = []struct {
+	kind     MatchKind
+	behavior MatchBehavior
+}{
+	{
+		kind:     QueryMatchKind,
+		behavior: RegexMatchBehavior,
+	},
+	{
+		kind:     CookieMatchKind,
+		behavior: RangeMatchBehavior,
+	},
+	{
+		kind:     QueryMatchKind,
+		behavior: RangeMatchBehavior,
+	},
+}
+
 // Check this Match for validity. A valid match requires a valid matchkind,
 // a From datum with Key set, and either an empty To datum or one with both
 // Key and Value set.
@@ -140,30 +158,20 @@ func (m Match) IsValid() *ValidationError {
 		)
 	}
 
-	if m.Kind == QueryMatchKind && m.Behavior == RegexMatchBehavior {
-		errs.AddNew(
-			ecase(
-				"behavior",
-				fmt.Sprintf(
-					`%q kind not supported with %q behavior`,
-					QueryMatchKind,
-					RegexMatchBehavior,
+	for _, combo := range invalidKindBehaviorCombinations {
+		if m.Kind == combo.kind && m.Behavior == combo.behavior {
+			errs.AddNew(
+				ecase(
+					"kind",
+					fmt.Sprintf(
+						`%q kind not supported with %q behavior`,
+						m.Kind,
+						m.Behavior,
+					),
 				),
-			),
-		)
-	}
-
-	if m.Kind == CookieMatchKind && m.Behavior == RangeMatchBehavior {
-		errs.AddNew(
-			ecase(
-				"kind",
-				fmt.Sprintf(
-					`%q kind not supported with %q behavior`,
-					CookieMatchKind,
-					RegexMatchBehavior,
-				),
-			),
-		)
+			)
+			break
+		}
 	}
 
 	if m.Behavior == RegexMatchBehavior && m.From.Value != "" {

@@ -533,34 +533,40 @@ func TestMatchIsValidSucceedsOnValidRanges(t *testing.T) {
 	}
 }
 
-func TestMatchIsValidQueryMatchWithRegexBehavior(t *testing.T) {
-	m := Match{
-		Kind:     QueryMatchKind,
-		Behavior: RegexMatchBehavior,
-		From:     Metadatum{Key: "q1", Value: "(.*)"},
-		To:       Metadatum{Key: "stage", Value: "testing"},
+func TestMatchIsValidInvalidBehaviorKindCombinations(t *testing.T) {
+	for _, c := range invalidKindBehaviorCombinations {
+		assert.Group(
+			fmt.Sprintf(
+				"combo[kind=%q,behavior=%q]",
+				c.kind,
+				c.behavior,
+			),
+			t,
+			func(g *assert.G) {
+				var val = "value"
+				if c.behavior == RangeMatchBehavior {
+					val = "[0,100)"
+				}
+
+				m := Match{
+					Kind:     c.kind,
+					Behavior: c.behavior,
+					From:     Metadatum{Key: "q1", Value: val},
+					To:       Metadatum{Key: "stage", Value: "testing"},
+				}
+
+				vm := ValidationMatcher(
+					"kind",
+					fmt.Sprintf(
+						"%q kind not supported with %q behavior",
+						c.kind,
+						c.behavior,
+					),
+				)
+				assert.True(g, vm.Matches(m.IsValid()))
+			},
+		)
 	}
-
-	vm := ValidationMatcher(
-		"behavior",
-		`"query" kind not supported with "regex" behavior`,
-	)
-	assert.True(t, vm.Matches(m.IsValid()))
-}
-
-func TestMatchIsValidCookieMatchWithRangeBehavior(t *testing.T) {
-	m := Match{
-		Kind:     CookieMatchKind,
-		Behavior: RangeMatchBehavior,
-		From:     Metadatum{Key: "q1", Value: "[1,4)"},
-		To:       Metadatum{Key: "stage", Value: "testing"},
-	}
-
-	vm := ValidationMatcher(
-		"kind",
-		`"cookie" kind not supported with "regex" behavior`,
-	)
-	assert.True(t, vm.Matches(m.IsValid()))
 }
 
 func TestMatchesIsValidSuccess(t *testing.T) {
