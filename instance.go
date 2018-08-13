@@ -81,7 +81,7 @@ func (i Instances) Select(
 	return results, nil
 }
 
-// Checks a collection of instances to ensure all are valid
+// IsValid checks a collection of instances to ensure all are valid
 func (i Instances) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
@@ -136,14 +136,14 @@ func (i Instance) MatchesMetadata(md Metadata) bool {
 	return true
 }
 
-// Checks for exact object equality. This requires Instance host and port are
-// equal as well as its metadata.
+// Equals checks for exact object equality. This requires that Instance host and
+// port are equal as well as its metadata.
 func (i Instance) Equals(o Instance) bool {
 	return i.hostPortCheck(o) && i.Metadata.Equals(o.Metadata)
 }
 
-// checks for host and port data as both are required for an instance to be
-// well defined
+// IsValid checks for host and port data as both are required for an instance to
+// be well defined
 func (i Instance) IsValid() *ValidationError {
 	ecase := func(f, m string) ErrorCase {
 		return ErrorCase{f, m}
@@ -176,7 +176,7 @@ func InstanceMetadataIsValid(md Metadata) *ValidationError {
 	)
 }
 
-// Sort a Instancds by Host and Port.
+// InstancesByHostPort sorts Instances by Host and Port.
 // Eg: sort.Sort(InstancesByHostPort(instances))
 type InstancesByHostPort Instances
 
@@ -185,5 +185,11 @@ var _ sort.Interface = InstancesByHostPort{}
 func (b InstancesByHostPort) Len() int      { return len(b) }
 func (b InstancesByHostPort) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b InstancesByHostPort) Less(i, j int) bool {
-	return b[i].Host < b[j].Host && b[i].Port < b[j].Port
+	if b[i].Host < b[j].Host {
+		return true
+	}
+	if b[i].Host > b[j].Host {
+		return false
+	}
+	return b[i].Port < b[j].Port
 }
