@@ -16,26 +16,13 @@ limitations under the License.
 
 package api
 
-// A type commonly embedded in other domain objects to ensure modifications
-// are being on an underlying object in the expected state.
-type Checksum struct {
-	Checksum string `json:"checksum"` // may be overwritten
-}
+import (
+	"testing"
 
-// IsNil checks whether a Checksum object is nil.
-func (c *Checksum) IsNil() bool {
-	if c == nil {
-		return true
-	}
+	"github.com/turbinelabs/test/assert"
+)
 
-	return c.Equals(Checksum{})
-}
-
-// An empty checksum is equivalent to an unset checksum.
-func (c *Checksum) IsEmpty() bool {
-	return len(c.Checksum) == 0
-}
-
-func (c Checksum) Equals(o Checksum) bool {
-	return c.Checksum == o.Checksum
+func TestChecksumIsNilHandlesNilReceiver(t *testing.T) {
+	var c *Checksum
+	assert.True(t, c.IsNil())
 }
