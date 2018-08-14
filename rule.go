@@ -76,12 +76,22 @@ func (rs Rules) AsMap() map[RuleKey]Rule {
 	return m
 }
 
+// A verifiableMatch is a subset of the fields from a Match object, used
+// exclusively to check whether there are two Rule-s in the same Rules object
+// that match the same kind and value with the same behavior.
+type verifiableMatch struct {
+	Kind     MatchKind
+	Behavior MatchBehavior
+	From     Metadatum
+}
+
 // Check for validity of a slice of Rule objects. A valid rule is one that is
 // composed only of valid Rule structs.
 func (r Rules) IsValid() *ValidationError {
 	errs := &ValidationError{}
 
 	seenKey := map[RuleKey]bool{}
+	seenMatch := map[verifiableMatch]bool{}
 	for _, r := range r {
 		if seenKey[r.RuleKey] {
 			errs.AddNew(ErrorCase{
@@ -89,6 +99,22 @@ func (r Rules) IsValid() *ValidationError {
 			})
 		}
 		seenKey[r.RuleKey] = true
+
+		for _, m := range r.Matches {
+			vm := verifiableMatch{m.Kind, m.Behavior, m.From}
+			if seenMatch[vm] {
+				errs.AddNew(ErrorCase{
+					"rules",
+					fmt.Sprintf(
+						"multiple instances of match kind %s with behavior %s from {%s: %s}",
+						string(m.Kind),
+						string(m.Behavior),
+						string(m.From.Key),
+						string(m.From.Value)),
+				})
+			}
+			seenMatch[vm] = true
+		}
 
 		errs.MergePrefixed(r.IsValid(), fmt.Sprintf("rules[%v]", r.RuleKey))
 	}

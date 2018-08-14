@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -53,7 +54,7 @@ func getRulesDefaults() (Rule, Rule) {
 			Match{
 				Kind:     CookieMatchKind,
 				Behavior: ExactMatchBehavior,
-				From:     Metadatum{Key: "x-2", Value: "value"},
+				From:     Metadatum{Key: "x-3", Value: "value"},
 				To:       Metadatum{Key: "other", Value: "true"},
 			},
 		},
@@ -331,13 +332,16 @@ func TestRouteIsValidBadRules(t *testing.T) {
 	assert.NonNil(t, r.IsValid())
 }
 
-func TestRouteIsValidDupeRules(t *testing.T) {
+func TestRouteIsValidFailureDupeRules(t *testing.T) {
 	r, _ := getRouteDefaults()
 	rule1, _ := getRulesDefaults()
 	r.Rules = Rules{rule1, rule1}
+	errors := r.IsValid()
 
-	errs := r.IsValid()
-	assert.DeepEqual(t, errs, &ValidationError{[]ErrorCase{
-		{"route.rules", "multiple instances of key " + string(rule1.RuleKey)},
-	}})
+	assert.Equal(t, errors.Errors[1].Attribute, "route.rules")
+	assert.Equal(
+		t,
+		strings.HasPrefix(errors.Errors[1].Msg, "multiple instances of match kind"),
+		true,
+	)
 }

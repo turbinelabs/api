@@ -17,6 +17,7 @@ limitations under the License.
 package api
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/turbinelabs/test/assert"
@@ -303,7 +304,7 @@ func getRulesValidTestRules() (Rule, Rule) {
 	return r1, r2
 }
 
-func TestRulesIsValidSucces(t *testing.T) {
+func TestRulesIsValidSuccess(t *testing.T) {
 	r1, r2 := getRulesValidTestRules()
 	r := Rules{r1, r2}
 
@@ -316,6 +317,22 @@ func TestRulesIsValidFailureOnDupeKey(t *testing.T) {
 	r := Rules{r1, r2}
 
 	assert.NonNil(t, r.IsValid())
+}
+
+func TestRulesIsValidFailureOnDupeMatch(t *testing.T) {
+	r1, r2 := getRulesValidTestRules()
+	r2.Matches = append(r2.Matches, r1.Matches[0])
+	assert.Equal(t, r2.Matches[2], r1.Matches[0])
+
+	r := Rules{r1, r2}
+	errors := r.IsValid()
+
+	assert.Equal(t, errors.Errors[0].Attribute, "rules")
+	assert.Equal(
+		t,
+		strings.HasPrefix(errors.Errors[0].Msg, "multiple instances of match kind"),
+		true,
+	)
 }
 
 func TestRulesIsValidEmptySuccess(t *testing.T) {
