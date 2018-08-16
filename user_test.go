@@ -107,6 +107,43 @@ func TestUserEqualsDiffChecksum(t *testing.T) {
 	assert.False(t, u2.Equals(u1))
 }
 
+func TestUserEqualsPropertiesNilEmpty(t *testing.T) {
+	u1, u2 := getUsers()
+	u1.Properties = nil
+	u2.Properties = Metadata{}
+
+	assert.True(t, u1.Equals(u2))
+	assert.True(t, u2.Equals(u1))
+}
+
+func TestUserEqualsPropertiesEmptyEmpty(t *testing.T) {
+	u1, u2 := getUsers()
+	u1.Properties = Metadata{}
+	u2.Properties = Metadata{}
+
+	assert.True(t, u1.Equals(u2))
+	assert.True(t, u2.Equals(u1))
+}
+
+func TestUserEqualsPropertiesSame(t *testing.T) {
+	u1, u2 := getUsers()
+	u1.Properties = userProps()
+	u2.Properties = userProps()
+
+	assert.True(t, u1.Equals(u2))
+	assert.True(t, u2.Equals(u1))
+}
+
+func TestUserEqualsPropertiesDifferent(t *testing.T) {
+	u1, u2 := getUsers()
+	u1.Properties = userProps()
+	u2.Properties = userProps()
+	u2.Properties[1].Value = "new value"
+
+	assert.False(t, u1.Equals(u2))
+	assert.False(t, u2.Equals(u1))
+}
+
 func getUser() User {
 	now := time.Now()
 	return User{
@@ -183,4 +220,44 @@ func TestUserIsValidBadOrgKey(t *testing.T) {
 	u := getUser()
 	u.OrgKey = "bad-(-key"
 	assert.NonNil(t, u.IsValid())
+}
+
+func userProps() Metadata {
+	return Metadata{Metadatum{"key", "value"}, Metadatum{"key2", "value2"}}
+}
+
+func TestUserIsValidEmptyProperties(t *testing.T) {
+	u := getUser()
+	u.Properties = Metadata{}
+	assert.Nil(t, u.IsValid())
+}
+
+func TestUserIsValidSomeProperties(t *testing.T) {
+	u := getUser()
+	u.Properties = userProps()
+	assert.Nil(t, u.IsValid())
+}
+
+func TestUserIsValidPropertiesDupeFail(t *testing.T) {
+	u := getUser()
+	md := userProps()
+	md = append(md, Metadatum{"key", "value2"})
+	u.Properties = md
+	assert.HasSameElements(
+		t,
+		u.IsValid().Errors,
+		[]ErrorCase{{"user.properties", "duplicate properties key 'key'"}},
+	)
+}
+
+func TestUserIsValidPropertiesBadkeyFail(t *testing.T) {
+	u := getUser()
+	md := userProps()
+	md = append(md, Metadatum{"k[ey", "value2"})
+	u.Properties = md
+	assert.HasSameElements(
+		t,
+		u.IsValid().Errors,
+		[]ErrorCase{{"user.properties[k[ey].key", "may not contain [ or ] characters"}},
+	)
 }

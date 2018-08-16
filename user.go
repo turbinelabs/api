@@ -31,6 +31,7 @@ type APIAuthKey string
 type User struct {
 	UserKey    UserKey    `json:"user_key"`
 	LoginEmail string     `json:"login_email"`
+	Properties Metadata   `json:"properties"`
 	APIAuthKey APIAuthKey `json:"api_auth_key,omitempty"`
 	OrgKey     OrgKey     `json:"org_key"`
 	DeletedAt  *time.Time `json:"deleted_at,omitempty"`
@@ -63,7 +64,17 @@ func (u User) IsValid() *ValidationError {
 	}
 	errCheckKey(string(u.OrgKey), errs, scope("org_key"))
 
+	errs.MergePrefixed(UserPropertiesValid(u.Properties), "user")
+
 	return errs.OrNil()
+}
+
+func UserPropertiesValid(props Metadata) *ValidationError {
+	return MetadataValid(
+		"properties",
+		props,
+		MetadataCheckKeysMatchPattern(AllowedIndexPattern, AllowedIndexPatternMatchFailure),
+	)
 }
 
 func (u User) Equals(o User) bool {
@@ -72,5 +83,6 @@ func (u User) Equals(o User) bool {
 		u.APIAuthKey == o.APIAuthKey &&
 		u.OrgKey == o.OrgKey &&
 		tbntime.Equal(u.DeletedAt, o.DeletedAt) &&
-		u.Checksum == o.Checksum
+		u.Checksum == o.Checksum &&
+		u.Properties.Equals(o.Properties)
 }
