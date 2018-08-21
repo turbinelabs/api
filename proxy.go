@@ -46,6 +46,7 @@ type Proxy struct {
 	Name         string        `json:"name"`
 	DomainKeys   []DomainKey   `json:"domain_keys"`
 	ListenerKeys []ListenerKey `json:"listener_keys"`
+	Listeners    []Listener    `json:"listeners"`
 	OrgKey       OrgKey        `json:"-"`
 	Checksum
 }

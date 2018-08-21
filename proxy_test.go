@@ -32,6 +32,10 @@ func getProxies() (Proxy, Proxy) {
 		Checksum:     Checksum{"csum1"},
 		DomainKeys:   []DomainKey{"dkey1", "dkey2"},
 		ListenerKeys: []ListenerKey{"lkey1", "lkey2"},
+		Listeners: []Listener{
+			{Checksum: Checksum{"l-1"}},
+			{Checksum: Checksum{"l-2"}},
+		},
 	}
 
 	return p, p
@@ -92,16 +96,30 @@ func TestProxyEqualsDiffDomainOrder(t *testing.T) {
 	assert.True(t, p2.Equals(p1))
 }
 
-func TestProxyEqualsDiffListeners(t *testing.T) {
+func TestProxyEqualsDiffListenerKeys(t *testing.T) {
 	p1, p2 := getProxies()
 	p2.ListenerKeys = []ListenerKey{"lkey1"}
 	assert.True(t, p1.Equals(p2))
 	assert.True(t, p2.Equals(p1))
 }
 
-func TestProxyEqualsDiffListenerOrder(t *testing.T) {
+func TestProxyEqualsDiffListenerKeyOrder(t *testing.T) {
 	p1, p2 := getProxies()
 	p2.ListenerKeys = []ListenerKey{"lkey2", "lkey1"}
+	assert.True(t, p1.Equals(p2))
+	assert.True(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffListeners(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.Listeners = p2.Listeners[0:1]
+	assert.True(t, p1.Equals(p2))
+	assert.True(t, p2.Equals(p1))
+}
+
+func TestProxyEqualsDiffListenerOrder(t *testing.T) {
+	p1, p2 := getProxies()
+	p2.Listeners = []Listener{{Name: "l-2"}, {Name: "l-1"}}
 	assert.True(t, p1.Equals(p2))
 	assert.True(t, p2.Equals(p1))
 }
@@ -113,7 +131,11 @@ func mkTestP() Proxy {
 		Name:         "my neat proxy!",
 		DomainKeys:   []DomainKey{"dk-1", "dk-2"},
 		ListenerKeys: []ListenerKey{"lk-1", "lk-2"},
-		OrgKey:       "ok-1",
+		Listeners: []Listener{
+			{Checksum: Checksum{"l-1"}},
+			{Checksum: Checksum{"l-2"}},
+		},
+		OrgKey: "ok-1",
 	}
 }
 
