@@ -67,6 +67,11 @@ func New501(msg string, code ErrorCode) *Error {
 	return NewDetailed501(msg, code, nil)
 }
 
+// New403 returns a new error with status code 403
+func New403(msg string, code ErrorCode) *Error {
+	return &Error{msg, code, http.StatusForbidden, nil}
+}
+
 // NewDetailed404 constructs a new Error with status code 404, not found.
 func NewDetailed404(msg string, code ErrorCode, details interface{}) *Error {
 	return &Error{msg, code, http.StatusNotFound, details}
